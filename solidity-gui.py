@@ -41,6 +41,40 @@ from PySide6.QtWidgets import (
     QFrame,
 )
 
+def get_orientation(ren):
+    p = dict()
+    camera = ren.GetActiveCamera()
+    p['position'] = camera.GetPosition()
+    p['focal point'] = camera.GetFocalPoint()
+    p['view up'] = camera.GetViewUp()
+    p['distance'] = camera.GetDistance()
+    p['clipping range'] = camera.GetClippingRange()
+    p['orientation'] = camera.GetOrientation()
+    return p
+
+def set_orientation(ren, p):
+    camera = ren.GetActiveCamera()
+    camera.SetPosition(p['position'])
+    camera.SetFocalPoint(p['focal point'])
+    camera.SetViewUp(p['view up'])
+    camera.SetDistance(p['distance'])
+    camera.SetClippingRange(p['clipping range'])
+
+class resetView_widget(QWidget):
+    def __init__(self,parent,layout, ren, iren, original_orientation):
+        super(resetView_widget, self).__init__()
+        self.resetView=QPushButton("Reset view",parent)
+        def handler():
+            self.reset_camera(ren, iren, original_orientation)
+        self.resetView.clicked.connect(handler)
+
+        layout.addWidget(self.resetView)
+
+    def reset_camera(self, ren, iren, original_orientation):
+        set_orientation(ren, original_orientation)
+        ren.ResetCamera()
+        iren.ReInitialize()
+
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -173,8 +207,6 @@ class MainWindow(QMainWindow):
 
         ren.GetActiveCamera().Elevation(110)
 
-        ren.ResetCamera()
-
         vtkWidget.GetRenderWindow().AddRenderer(ren)
         self.iren = vtkWidget.GetRenderWindow().GetInteractor()
 
@@ -183,6 +215,11 @@ class MainWindow(QMainWindow):
 
         self.show()
         self.iren.Initialize()
+
+        ren.ResetCamera()
+
+        original_orientation = get_orientation(ren)
+        resetView_widget(self, self.vl, ren, self.iren, original_orientation)
 
 app = QApplication()
 window = MainWindow()
