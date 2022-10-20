@@ -1,0 +1,4 @@
+[project]
+name = "SolidityGUI"
+version = "0.1"
+dependencies = ["pygmsh", "pyside6", "vtk"]
