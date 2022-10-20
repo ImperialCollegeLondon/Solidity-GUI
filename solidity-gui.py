@@ -75,8 +75,43 @@ class resetView_widget(QWidget):
         ren.ResetCamera()
         iren.ReInitialize()
 
+class colourSelect_widget(QWidget):
+    def __init__(self,parent,layout, ren, iren, mesh, mapper, ugrid):
+        super(colourSelect_widget, self).__init__()
+
+        # Drop-down list of mesh cell sets
+        self.sidesComboBox = QComboBox(parent)
+        self.sidesComboBox.addItems(mesh.cell_sets.keys())
+        layout.addWidget(self.sidesComboBox)
+
+        def handler():
+            self.select_side(ren, iren, parent, mesh, mapper, ugrid)
+        self.sidesComboBox.currentTextChanged.connect(handler)
+
+        layout.addWidget(self.sidesComboBox)
+
+    def select_side(self, ren, iren, parent, mesh, mapper, ugrid):
+        selectedValue = self.sidesComboBox.currentText()
+        surface_point_ids = parent.get_point_ids_in_surface(selectedValue, mesh)
+        surface_uniq_point_ids = set(surface_point_ids.reshape(surface_point_ids.size))
+
+        # colour points in surface
+        point_colours = np.zeros(mesh.points.shape[0])
+        point_colours[np.array(list(surface_uniq_point_ids))] = 1.0
+        mapper.SetScalarModeToUsePointData()
+        ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
+
+        ren.ResetCamera()
+        iren.ReInitialize()
+
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
+
+    def get_point_ids_in_surface(self, name, mesh):
+        triangles = mesh.cells[1]
+        surface_cell_ids = mesh.cell_sets[name][1]
+        return triangles.data[surface_cell_ids]
+
     def __init__(self):
         super().__init__()
 
@@ -85,7 +120,6 @@ class MainWindow(QMainWindow):
         self.vl = QVBoxLayout()
         widgets = [
             QCheckBox,
-            QComboBox,
             QDateEdit,
             QDateTimeEdit,
             QDial,
@@ -145,14 +179,10 @@ class MainWindow(QMainWindow):
             for i, surface in enumerate(box.surface_loop.surfaces):
                 geom.add_physical(surface, f"box_side{i}")
             mesh = geom.generate_mesh()
+
             mesh2 = mesh.copy()
             mesh2.cell_sets = {}
             mesh2.write("test.vtu")
-
-        def get_point_ids_in_surface(name, mesh):
-            triangles = mesh.cells[1]
-            surface_cell_ids = mesh.cell_sets[name][1]
-            return triangles.data[surface_cell_ids]
 
         def get_points_in_surface(name, mesh):
             return mesh.points[get_point_ids_in_surface(name, mesh)]
@@ -178,7 +208,7 @@ class MainWindow(QMainWindow):
         mapper.SetLookupTable(lut)
 
         surface_name = "box_side3"
-        surface_point_ids = get_point_ids_in_surface(surface_name, mesh)
+        surface_point_ids = self.get_point_ids_in_surface(surface_name, mesh)
         surface_uniq_point_ids = set(surface_point_ids.reshape(surface_point_ids.size))
         surface_cells = mesh.cell_sets[surface_name][1]
 
@@ -220,6 +250,8 @@ class MainWindow(QMainWindow):
 
         original_orientation = get_orientation(ren)
         resetView_widget(self, self.vl, ren, self.iren, original_orientation)
+
+        colourSelect_widget(self, self.vl, ren, self.iren, mesh, mapper, ugrid)
 
 app = QApplication()
 window = MainWindow()
