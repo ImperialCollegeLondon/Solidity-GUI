@@ -1,21 +1,6 @@
-#import sys
-
 import numpy as np
 import pygmsh
 import vtk
-from vtk.util import numpy_support
-
-from vtkmodules.vtkRenderingCore import (
-    vtkActor,
-    vtkPolyDataMapper,
-    vtkRenderer
-)
-
-from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-
-from PySide6 import QtCore, QtGui
-from PySide6.QtCore import Qt
-
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -25,6 +10,8 @@ from PySide6.QtWidgets import (
     QDial,
     QDoubleSpinBox,
     QFontComboBox,
+    QFrame,
+    QHBoxLayout,
     QLabel,
     QLCDNumber,
     QLineEdit,
@@ -36,36 +23,41 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QTimeEdit,
     QVBoxLayout,
-    QHBoxLayout,
     QWidget,
-    QFrame,
 )
+from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtk.util import numpy_support
+
 
 def get_orientation(ren):
     p = dict()
     camera = ren.GetActiveCamera()
-    p['position'] = camera.GetPosition()
-    p['focal point'] = camera.GetFocalPoint()
-    p['view up'] = camera.GetViewUp()
-    p['distance'] = camera.GetDistance()
-    p['clipping range'] = camera.GetClippingRange()
-    p['orientation'] = camera.GetOrientation()
+    p["position"] = camera.GetPosition()
+    p["focal point"] = camera.GetFocalPoint()
+    p["view up"] = camera.GetViewUp()
+    p["distance"] = camera.GetDistance()
+    p["clipping range"] = camera.GetClippingRange()
+    p["orientation"] = camera.GetOrientation()
     return p
+
 
 def set_orientation(ren, p):
     camera = ren.GetActiveCamera()
-    camera.SetPosition(p['position'])
-    camera.SetFocalPoint(p['focal point'])
-    camera.SetViewUp(p['view up'])
-    camera.SetDistance(p['distance'])
-    camera.SetClippingRange(p['clipping range'])
+    camera.SetPosition(p["position"])
+    camera.SetFocalPoint(p["focal point"])
+    camera.SetViewUp(p["view up"])
+    camera.SetDistance(p["distance"])
+    camera.SetClippingRange(p["clipping range"])
+
 
 class resetView_widget(QWidget):
-    def __init__(self,parent,layout, ren, iren, original_orientation):
+    def __init__(self, parent, layout, ren, iren, original_orientation):
         super(resetView_widget, self).__init__()
-        self.resetView=QPushButton("Reset view",parent)
+        self.resetView = QPushButton("Reset view", parent)
+
         def handler():
             self.reset_camera(ren, iren, original_orientation)
+
         self.resetView.clicked.connect(handler)
 
         layout.addWidget(self.resetView)
@@ -75,8 +67,9 @@ class resetView_widget(QWidget):
         ren.ResetCamera()
         iren.ReInitialize()
 
+
 class colourSelect_widget(QWidget):
-    def __init__(self,parent,layout, ren, iren, mesh, mapper, ugrid):
+    def __init__(self, parent, layout, ren, iren, mesh, mapper, ugrid):
         super(colourSelect_widget, self).__init__()
 
         # Drop-down list of mesh cell sets
@@ -86,6 +79,7 @@ class colourSelect_widget(QWidget):
 
         def handler():
             self.select_side(ren, iren, parent, mesh, mapper, ugrid)
+
         self.sidesComboBox.currentTextChanged.connect(handler)
 
         layout.addWidget(self.sidesComboBox)
@@ -104,9 +98,9 @@ class colourSelect_widget(QWidget):
         ren.ResetCamera()
         iren.ReInitialize()
 
+
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
-
     def get_point_ids_in_surface(self, name, mesh):
         triangles = mesh.cells[1]
         surface_cell_ids = mesh.cell_sets[name][1]
@@ -184,9 +178,6 @@ class MainWindow(QMainWindow):
             mesh2.cell_sets = {}
             mesh2.write("test.vtu")
 
-        def get_points_in_surface(name, mesh):
-            return mesh.points[get_point_ids_in_surface(name, mesh)]
-
         filename = "test.vtu"
         reader = vtk.vtkXMLUnstructuredGridReader()
         reader.SetFileName(filename)
@@ -210,7 +201,6 @@ class MainWindow(QMainWindow):
         surface_name = "box_side3"
         surface_point_ids = self.get_point_ids_in_surface(surface_name, mesh)
         surface_uniq_point_ids = set(surface_point_ids.reshape(surface_point_ids.size))
-        surface_cells = mesh.cell_sets[surface_name][1]
 
         # colour points in surface
         point_colours = np.zeros(mesh.points.shape[0])
@@ -253,8 +243,8 @@ class MainWindow(QMainWindow):
 
         colourSelect_widget(self, self.vl, ren, self.iren, mesh, mapper, ugrid)
 
+
 app = QApplication()
 window = MainWindow()
-#window.show()
 
 app.exec_()
