@@ -1,0 +1,10 @@
+{
+    "python.formatting.provider": "black",
+    "[python]": {
+        "editor.formatOnSave": true,
+    },
+    "editor.rulers": [88],
+
+    // Enable relevant linters
+    "python.linting.flake8Enabled": true
+}
