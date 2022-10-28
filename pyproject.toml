@@ -2,3 +2,6 @@
 name = "SolidityGUI"
 version = "0.1"
 dependencies = ["pygmsh", "pyside6", "vtk"]
+
+[project.optional-dependencies]
+dev = ["black", "flake8", "flake8-docstrings", "isort", "pip-tools", "pre-commit"]
