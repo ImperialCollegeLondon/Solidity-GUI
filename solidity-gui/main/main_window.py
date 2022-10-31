@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QToolBar
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QToolBar, QComboBox
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
+import qtawesome as qta
 
 from .. import config
 from .control_panel import ControlPanel
@@ -49,13 +50,41 @@ class MainWindow(QMainWindow):
 
     def _top_toolbar(self):
         top_toolbar = QToolBar("Top toolbar")
+        top_toolbar.setIconSize(QSize(16, 16))
+        top_toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.addToolBar(Qt.TopToolBarArea, top_toolbar)
 
-        self.mask_action = QAction("&Mask", self)
-        self.view_mode_action = QAction("&View Mode", self)
-        self.modules_action = QAction("&Modules", self)
-        self.mask_action = QAction("&Mask", self)
+        self.mask_action = QAction(qta.icon("ei.adjust"), "&Mask", self)
+
+        self.view_mode_combo = QComboBox()
+        self.modules_combo = QComboBox()
+
+        self.grid_action = QAction(qta.icon("mdi.apps"), "", self)
+        self.rotation_action = QAction(qta.icon("mdi.rotate-3d-variant"), "&Rotation", self)
+        self.pan_action = QAction(qta.icon("fa5s.arrows-alt"), "&Pan", self)
+        self.zoom_action = QAction(qta.icon("ph.magnifying-glass-light"), "&Zoom", self)
+        self.transform_xy_action = QAction(qta.icon("mdi6.axis-arrow"), "&X-Y", self)
+        self.transform_xz_action = QAction(qta.icon("mdi6.axis-arrow"), "&X-Z", self)
+        self.transform_yz_action = QAction(qta.icon("mdi6.axis-arrow"), "&Y-Z", self)
+        self.three_d_action = QAction(qta.icon("mdi.cube-outline"), "&3D", self)
+        self.two_d_action = QAction(qta.icon("fa5.square"), "&2D", self)
+        self.screenshot_action = QAction(qta.icon("fa5s.camera"), "", self)
+        self.clip_action = QAction(qta.icon("mdi.select-compare"), "&Clip", self)
+
         top_toolbar.addAction(self.mask_action)
+        top_toolbar.addWidget(self.view_mode_combo)
+        top_toolbar.addWidget(self.modules_combo)
+        top_toolbar.addAction(self.grid_action)
+        top_toolbar.addAction(self.rotation_action)
+        top_toolbar.addAction(self.pan_action)
+        top_toolbar.addAction(self.zoom_action)
+        top_toolbar.addAction(self.transform_xy_action)
+        top_toolbar.addAction(self.transform_xz_action)
+        top_toolbar.addAction(self.transform_yz_action)
+        top_toolbar.addAction(self.three_d_action)
+        top_toolbar.addAction(self.two_d_action)
+        top_toolbar.addAction(self.screenshot_action)
+        top_toolbar.addAction(self.clip_action)
 
     def _left_toolbar(self):
         left_toolbar = QToolBar("Left toolbar")
