@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 
 from PySide6.QtWidgets import QPushButton
 from vtk import vtkRenderer
@@ -6,7 +6,7 @@ from vtk import vtkRenderer
 from .vtk_window import VTKWindow
 
 
-def set_orientation(ren: vtkRenderer, p: dict[str, Any]) -> None:
+def set_orientation(ren: vtkRenderer, p: Dict[str, Any]) -> None:
     camera = ren.GetActiveCamera()
     camera.SetPosition(p["position"])
     camera.SetFocalPoint(p["focal point"])
@@ -15,7 +15,7 @@ def set_orientation(ren: vtkRenderer, p: dict[str, Any]) -> None:
     camera.SetClippingRange(p["clipping range"])
 
 
-def get_orientation(ren: vtkRenderer) -> dict[str, Any]:
+def get_orientation(ren: vtkRenderer) -> Dict[str, Any]:
     p = dict()
     camera = ren.GetActiveCamera()
     p["position"] = camera.GetPosition()
