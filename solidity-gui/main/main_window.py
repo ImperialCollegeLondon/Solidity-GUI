@@ -6,6 +6,7 @@ import qtawesome as qta
 from .. import config
 from .control_panel import ControlPanel
 from .vtk_window import VTKWindow
+from .base_model_tree import BaseModelTree
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -18,13 +19,14 @@ class MainWindow(QMainWindow):
 
         self.vtk_window = VTKWindow()
         self.control_panel = ControlPanel(self.vtk_window)
+        self.model_tree = BaseModelTree(2)
+        layout.addLayout(self.model_tree)
         layout.addLayout(self.control_panel)
         layout.addLayout(self.vtk_window)
 
         self._menu_bar()
 
         self._top_toolbar()
-        self._left_toolbar()
 
         self.frame = QFrame()
         self.frame.setLayout(layout)
@@ -85,7 +87,3 @@ class MainWindow(QMainWindow):
         top_toolbar.addAction(self.two_d_action)
         top_toolbar.addAction(self.screenshot_action)
         top_toolbar.addAction(self.clip_action)
-
-    def _left_toolbar(self):
-        left_toolbar = QToolBar("Left toolbar")
-        self.addToolBar(Qt.LeftToolBarArea, left_toolbar)
