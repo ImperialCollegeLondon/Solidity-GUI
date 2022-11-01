@@ -6,7 +6,7 @@ from .vtk_window import VTKWindow
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.setWindowTitle(config.APP_NAME)
