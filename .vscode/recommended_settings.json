@@ -1,0 +1,12 @@
+// This file contains recommended settings for VS code users. To use it, copy it to
+// .vscode/settings.json (or create a symlink)
+{
+    "python.formatting.provider": "black",
+    "[python]": {
+        "editor.formatOnSave": true,
+    },
+    "editor.rulers": [88],
+
+    // Enable relevant linters
+    "python.linting.flake8Enabled": true
+}
