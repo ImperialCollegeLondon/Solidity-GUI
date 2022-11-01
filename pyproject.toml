@@ -10,4 +10,5 @@ authors = [
 dependencies = ["pygmsh", "pyside6", "vtk"]
 
 [project.optional-dependencies]
-dev = ["black", "flake8<5", "flake8-docstrings", "isort", "pip-tools", "pre-commit"]
+dev = ["black", "flake8<5", "flake8-docstrings", "isort", "pip-tools", "pre-commit",
+       "pytest", "pytest-cov", "pytest-flake8"]
