@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QToolBar, QComboBox
+from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QMainWindow, QTextEdit, QToolBar, QVBoxLayout
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
 import qtawesome as qta
@@ -14,26 +14,15 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(config.APP_NAME)
 
-        layout = QHBoxLayout()
-        layout.setSpacing(20)
+        self.create_menu_bar()
+        self.create_toolbar()
+        self.create_main_frame()
 
-        self.vtk_window = VTKWindow()
-        self.control_panel = ControlPanel(self.vtk_window)
-        self.model_tree = BaseModelTree(2)
-        layout.addLayout(self.model_tree)
-        layout.addLayout(self.control_panel)
-        layout.addLayout(self.vtk_window)
+        self.setCentralWidget(self.main_frame)
 
-        self._menu_bar()
-
-        self._top_toolbar()
-
-        self.frame = QFrame()
-        self.frame.setLayout(layout)
-        self.setCentralWidget(self.frame)
         self.show()
 
-    def _menu_bar(self):
+    def create_menu_bar(self):
         self.menu_bar = self.menuBar()
     
         file_menu = self.menu_bar.addMenu("&File")
@@ -50,11 +39,11 @@ class MainWindow(QMainWindow):
         view_menu = self.menu_bar.addMenu("&View")
         help_menu = self.menu_bar.addMenu("&Help")
 
-    def _top_toolbar(self):
-        top_toolbar = QToolBar("Top toolbar")
-        top_toolbar.setIconSize(QSize(16, 16))
-        top_toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.addToolBar(Qt.TopToolBarArea, top_toolbar)
+    def create_toolbar(self):
+        toolbar = QToolBar("Top toolbar")
+        toolbar.setIconSize(QSize(16, 16))
+        toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.addToolBar(Qt.TopToolBarArea, toolbar)
 
         self.mask_action = QAction(qta.icon("ei.adjust"), "&Mask", self)
 
@@ -73,17 +62,45 @@ class MainWindow(QMainWindow):
         self.screenshot_action = QAction(qta.icon("fa5s.camera"), "", self)
         self.clip_action = QAction(qta.icon("mdi.select-compare"), "&Clip", self)
 
-        top_toolbar.addAction(self.mask_action)
-        top_toolbar.addWidget(self.view_mode_combo)
-        top_toolbar.addWidget(self.modules_combo)
-        top_toolbar.addAction(self.grid_action)
-        top_toolbar.addAction(self.rotation_action)
-        top_toolbar.addAction(self.pan_action)
-        top_toolbar.addAction(self.zoom_action)
-        top_toolbar.addAction(self.transform_xy_action)
-        top_toolbar.addAction(self.transform_xz_action)
-        top_toolbar.addAction(self.transform_yz_action)
-        top_toolbar.addAction(self.three_d_action)
-        top_toolbar.addAction(self.two_d_action)
-        top_toolbar.addAction(self.screenshot_action)
-        top_toolbar.addAction(self.clip_action)
+        toolbar.addAction(self.mask_action)
+        toolbar.addWidget(self.view_mode_combo)
+        toolbar.addWidget(self.modules_combo)
+        toolbar.addAction(self.grid_action)
+        toolbar.addAction(self.rotation_action)
+        toolbar.addAction(self.pan_action)
+        toolbar.addAction(self.zoom_action)
+        toolbar.addAction(self.transform_xy_action)
+        toolbar.addAction(self.transform_xz_action)
+        toolbar.addAction(self.transform_yz_action)
+        toolbar.addAction(self.three_d_action)
+        toolbar.addAction(self.two_d_action)
+        toolbar.addAction(self.screenshot_action)
+        toolbar.addAction(self.clip_action)
+
+    def create_main_frame(self):
+        self.main_frame = QFrame()
+        main_layout = QVBoxLayout()
+
+        self.create_central_frame()
+
+        command_box = QTextEdit()
+        command_box.setMaximumHeight(100)
+
+        main_layout.addWidget(self.central_frame)
+        main_layout.addWidget(command_box)
+
+        self.main_frame.setLayout(main_layout)
+
+    def create_central_frame(self):
+        self.central_frame = QFrame()
+        central_layout = QHBoxLayout()
+
+        central_layout.setSpacing(20)
+
+        self.vtk_window = VTKWindow()
+        self.control_panel = ControlPanel(self.vtk_window)
+        self.model_tree = BaseModelTree(2)
+        central_layout.addLayout(self.model_tree)
+        central_layout.addLayout(self.control_panel)
+        central_layout.addLayout(self.vtk_window)
+        self.central_frame.setLayout(central_layout)
