@@ -1,14 +1,17 @@
 from tempfile import NamedTemporaryFile
+from typing import Any
 
 import numpy as np
 import pygmsh
 import vtk
+from meshio import CellBlock, Mesh
+from numpy.typing import NDArray
 from PySide6.QtWidgets import QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtk.util import numpy_support
 
 
-def generate_mesh():
+def generate_mesh() -> Mesh:
     with pygmsh.geo.Geometry() as geom:
 
         bit_bottom = geom.add_circle(
@@ -36,24 +39,23 @@ def generate_mesh():
         geom.add_physical(box.volume, "box_volume")
         for i, surface in enumerate(box.surface_loop.surfaces):
             geom.add_physical(surface, f"box_side{i}")
-        mesh = geom.generate_mesh()
 
-    return mesh
+        return geom.generate_mesh()
 
 
-def save_as_vtu(mesh, filename):
+def save_as_vtu(mesh: Mesh, filename: str) -> None:
     mesh2 = mesh.copy()
     mesh2.cell_sets = {}
     mesh2.write(filename)
 
 
 class VTKWindow(QVBoxLayout):
-    def get_point_ids_in_surface(self, name, mesh):
-        triangles = mesh.cells[1]
+    def get_point_ids_in_surface(self, name: str, mesh: Mesh) -> NDArray[Any]:
+        triangles: CellBlock = mesh.cells[1]
         surface_cell_ids = mesh.cell_sets[name][1]
         return triangles.data[surface_cell_ids]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         vtkWidget = QVTKRenderWindowInteractor()

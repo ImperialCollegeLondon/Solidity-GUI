@@ -7,7 +7,7 @@ Setup your environment by installing dependencies from `dev-requirements.txt`.
 Then run the GUI with:
 
 ```python
-python -m solidity-gui
+python -m solidity_gui
 ```
 
 ### Dependencies

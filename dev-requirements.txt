@@ -75,8 +75,12 @@ multidict==6.0.2
     # via
     #   aiohttp
     #   yarl
+mypy==0.982
+    # via SolidityGUI (pyproject.toml)
 mypy-extensions==0.4.3
-    # via black
+    # via
+    #   black
+    #   mypy
 nodeenv==1.7.0
     # via pre-commit
 numpy==1.23.4
@@ -159,8 +163,11 @@ tomli==2.0.1
     #   black
     #   build
     #   coverage
+    #   mypy
     #   pep517
     #   pytest
+typing-extensions==4.4.0
+    # via mypy
 virtualenv==20.16.6
     # via pre-commit
 vtk==9.2.2

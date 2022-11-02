@@ -1,10 +1,14 @@
+from typing import Any
+
 import numpy as np
 from PySide6.QtWidgets import QComboBox
 from vtk.util import numpy_support
 
+from .vtk_window import VTKWindow
+
 
 class ColourSelectWidget(QComboBox):
-    def __init__(self, vtk_window, *args, **kwargs):
+    def __init__(self, vtk_window: VTKWindow, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.vtk_window = vtk_window
@@ -12,7 +16,7 @@ class ColourSelectWidget(QComboBox):
 
         self.currentTextChanged.connect(self._select_handler)
 
-    def _select_handler(self):
+    def _select_handler(self) -> None:
         mesh = self.vtk_window.mesh
         selectedValue = self.currentText()
         surface_point_ids = self.vtk_window.get_point_ids_in_surface(
