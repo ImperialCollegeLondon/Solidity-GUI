@@ -1,8 +1,11 @@
+from typing import Any
+
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QHeaderView, QTreeView, QVBoxLayout
+from PySide6.QtWidgets import QTreeView, QVBoxLayout
+
 
 class BaseModelTree(QVBoxLayout):
-    def __init__(self, num_models=0, *args, **kwargs):
+    def __init__(self, num_models: int, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.tree_view = QTreeView()
@@ -17,7 +20,7 @@ class BaseModelTree(QVBoxLayout):
         self.tree_view.expandAll()
         self.addWidget(self.tree_view)
 
-    def _add_model(self):
+    def _add_model(self) -> None:
         new_model_node = QStandardItem(f"Model #{self.root_node.rowCount()+1}")
 
         new_model_node.appendRow(QStandardItem("Part"))

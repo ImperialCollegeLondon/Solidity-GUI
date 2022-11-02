@@ -1,12 +1,21 @@
-from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QMainWindow, QTextEdit, QToolBar, QVBoxLayout
+import qtawesome as qta
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
-import qtawesome as qta
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QMainWindow,
+    QTextEdit,
+    QToolBar,
+    QVBoxLayout,
+)
 
 from .. import config
+from .base_model_tree import BaseModelTree
 from .control_panel import ControlPanel
 from .vtk_window import VTKWindow
-from .base_model_tree import BaseModelTree
+
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
@@ -22,24 +31,24 @@ class MainWindow(QMainWindow):
 
         self.show()
 
-    def create_menu_bar(self):
+    def create_menu_bar(self) -> None:
         self.menu_bar = self.menuBar()
-    
-        file_menu = self.menu_bar.addMenu("&File")
-        gemoetry_menu = self.menu_bar.addMenu("&Gemoetry")
-        mesh_menu = self.menu_bar.addMenu("&Mesh")
-        materials_menu = self.menu_bar.addMenu("&Materials")
-        assembly_menu = self.menu_bar.addMenu("&Assembly")
-        step_menu = self.menu_bar.addMenu("&Step")
-        conditions_menu = self.menu_bar.addMenu("&Conditions")
-        interaqctions_menu = self.menu_bar.addMenu("&Interaction")
-        job_menu = self.menu_bar.addMenu("&Job")
-        results_menu = self.menu_bar.addMenu("&Results")
-        tools_menu = self.menu_bar.addMenu("&Tools")
-        view_menu = self.menu_bar.addMenu("&View")
-        help_menu = self.menu_bar.addMenu("&Help")
 
-    def create_toolbar(self):
+        self.menu_bar.addMenu("&File")
+        self.menu_bar.addMenu("&Gemoetry")
+        self.menu_bar.addMenu("&Mesh")
+        self.menu_bar.addMenu("&Materials")
+        self.menu_bar.addMenu("&Assembly")
+        self.menu_bar.addMenu("&Step")
+        self.menu_bar.addMenu("&Conditions")
+        self.menu_bar.addMenu("&Interaction")
+        self.menu_bar.addMenu("&Job")
+        self.menu_bar.addMenu("&Results")
+        self.menu_bar.addMenu("&Tools")
+        self.menu_bar.addMenu("&View")
+        self.menu_bar.addMenu("&Help")
+
+    def create_toolbar(self) -> None:
         toolbar = QToolBar("Top toolbar")
         toolbar.setIconSize(QSize(16, 16))
         toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
@@ -51,7 +60,9 @@ class MainWindow(QMainWindow):
         self.modules_combo = QComboBox()
 
         self.grid_action = QAction(qta.icon("mdi.apps"), "", self)
-        self.rotation_action = QAction(qta.icon("mdi.rotate-3d-variant"), "&Rotation", self)
+        self.rotation_action = QAction(
+            qta.icon("mdi.rotate-3d-variant"), "&Rotation", self
+        )
         self.pan_action = QAction(qta.icon("fa5s.arrows-alt"), "&Pan", self)
         self.zoom_action = QAction(qta.icon("ph.magnifying-glass-light"), "&Zoom", self)
         self.transform_xy_action = QAction(qta.icon("mdi6.axis-arrow"), "&X-Y", self)
@@ -77,7 +88,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.screenshot_action)
         toolbar.addAction(self.clip_action)
 
-    def create_main_frame(self):
+    def create_main_frame(self) -> None:
         self.main_frame = QFrame()
         main_layout = QVBoxLayout()
 
@@ -91,7 +102,7 @@ class MainWindow(QMainWindow):
 
         self.main_frame.setLayout(main_layout)
 
-    def create_central_frame(self):
+    def create_central_frame(self) -> None:
         self.central_frame = QFrame()
         central_layout = QHBoxLayout()
 
