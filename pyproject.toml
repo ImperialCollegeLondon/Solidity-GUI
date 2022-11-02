@@ -10,4 +10,11 @@ authors = [
 dependencies = ["pygmsh", "pyside6", "vtk"]
 
 [project.optional-dependencies]
-dev = ["black", "flake8<5", "flake8-docstrings", "isort", "pip-tools", "pre-commit"]
+dev = ["black", "flake8<5", "flake8-docstrings", "isort", "mypy", "pip-tools",
+       "pre-commit", "pytest", "pytest-cov", "pytest-flake8"]
+
+[tool.mypy]
+ignore_missing_imports = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true

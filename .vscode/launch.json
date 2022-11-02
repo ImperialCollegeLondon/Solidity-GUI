@@ -8,7 +8,7 @@
             "name": "Solidity GUI",
             "type": "python",
             "request": "launch",
-            "module": "solidity-gui",
+            "module": "solidity_gui",
             "justMyCode": true
         },
     ]

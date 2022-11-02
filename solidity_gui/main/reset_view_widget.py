@@ -1,7 +1,12 @@
+from typing import Any, Dict
+
 from PySide6.QtWidgets import QPushButton
+from vtk import vtkRenderer
+
+from .vtk_window import VTKWindow
 
 
-def set_orientation(ren, p):
+def set_orientation(ren: vtkRenderer, p: Dict[str, Any]) -> None:
     camera = ren.GetActiveCamera()
     camera.SetPosition(p["position"])
     camera.SetFocalPoint(p["focal point"])
@@ -10,7 +15,7 @@ def set_orientation(ren, p):
     camera.SetClippingRange(p["clipping range"])
 
 
-def get_orientation(ren):
+def get_orientation(ren: vtkRenderer) -> Dict[str, Any]:
     p = dict()
     camera = ren.GetActiveCamera()
     p["position"] = camera.GetPosition()
@@ -23,15 +28,14 @@ def get_orientation(ren):
 
 
 class ResetViewWidget(QPushButton):
-    def __init__(self, vtk_window, *args, **kwargs):
+    def __init__(self, vtk_window: VTKWindow, *args: Any, **kwargs: Any) -> None:
         super().__init__("Reset view", *args, **kwargs)
 
         self.original_orientation = get_orientation(vtk_window.ren)
         self.vtk_window = vtk_window
         self.clicked.connect(self._click_handler)
 
-    def _click_handler(self):
-
+    def _click_handler(self) -> None:
         set_orientation(self.vtk_window.ren, self.original_orientation)
         self.vtk_window.ren.ResetCamera()
         self.vtk_window.iren.ReInitialize()
