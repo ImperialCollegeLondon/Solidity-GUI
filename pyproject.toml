@@ -7,7 +7,7 @@ authors = [
     { name = "Alex Dewar", email = "a.dewar@imperial.ac.uk" },
     { name = "Imperial College London RSE Team", email = "ict-rse-team@imperial.ac.uk" }
 ]
-dependencies = ["pygmsh", "pyside6", "vtk"]
+dependencies = ["pygmsh", "pyside6==6.3.2", "vtk"]
 
 [project.optional-dependencies]
 dev = ["black", "flake8<5", "flake8-docstrings", "isort", "mypy", "pip-tools",

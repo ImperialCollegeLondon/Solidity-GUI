@@ -95,6 +95,7 @@ class MainWindow(QMainWindow):
         self.create_central_frame()
 
         command_box = QTextEdit()
+        command_box.setPlaceholderText("Type command/scripts")
         command_box.setMaximumHeight(100)
 
         main_layout.addWidget(self.central_frame)
