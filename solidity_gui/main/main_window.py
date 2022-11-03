@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
         self.menu_bar = self.menuBar()
 
         self.menu_bar.addMenu("&File")
-        self.menu_bar.addMenu("&Gemoetry")
+        self.menu_bar.addMenu("&Geometry")
         self.menu_bar.addMenu("&Mesh")
         self.menu_bar.addMenu("&Materials")
         self.menu_bar.addMenu("&Assembly")
