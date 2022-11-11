@@ -1,3 +1,4 @@
+"""Code to create a base model tree containing some default items."""
 from typing import Any
 
 from PySide6.QtGui import QStandardItem, QStandardItemModel
@@ -5,7 +6,10 @@ from PySide6.QtWidgets import QTreeView, QVBoxLayout
 
 
 class BaseModelTree(QVBoxLayout):
+    """An expanded QTreeView containing a model populated with some default items."""
+
     def __init__(self, num_models: int, *args: Any, **kwargs: Any) -> None:
+        """Create a new BaseModelTree."""
         super().__init__(*args, **kwargs)
 
         self.tree_view = QTreeView()

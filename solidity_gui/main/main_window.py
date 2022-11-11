@@ -1,3 +1,4 @@
+"""Code for the main window containing all the frames and menus of the GUI."""
 import qtawesome as qta
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
@@ -18,7 +19,10 @@ from .vtk_window import VTKWindow
 
 
 class MainWindow(QMainWindow):
+    """Main window containg all the GUI frames and menus."""
+
     def __init__(self) -> None:
+        """Create new MainWindow."""
         super().__init__()
 
         self.setWindowTitle(config.APP_NAME)
@@ -32,12 +36,13 @@ class MainWindow(QMainWindow):
         self.show()
 
     def create_menu_bar(self) -> None:
+        """Create the menu bar at the top of the main window."""
         self.menu_bar = self.menuBar()
 
         self.menu_bar.addMenu("&File")
         self.menu_bar.addMenu("&Geometry")
         self.menu_bar.addMenu("&Mesh")
-        self.menu_bar.addMenu("&Materials")
+        self.menu_bar.addMenu("Materia&ls")
         self.menu_bar.addMenu("&Assembly")
         self.menu_bar.addMenu("&Step")
         self.menu_bar.addMenu("&Conditions")
@@ -49,6 +54,7 @@ class MainWindow(QMainWindow):
         self.menu_bar.addMenu("&Help")
 
     def create_toolbar(self) -> None:
+        """Create the toolbar beneath the menu bar."""
         toolbar = QToolBar("Top toolbar")
         toolbar.setIconSize(QSize(16, 16))
         toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
@@ -66,7 +72,7 @@ class MainWindow(QMainWindow):
         self.pan_action = QAction(qta.icon("fa5s.arrows-alt"), "&Pan", self)
         self.zoom_action = QAction(qta.icon("ph.magnifying-glass-light"), "&Zoom", self)
         self.transform_xy_action = QAction(qta.icon("mdi6.axis-arrow"), "&X-Y", self)
-        self.transform_xz_action = QAction(qta.icon("mdi6.axis-arrow"), "&X-Z", self)
+        self.transform_xz_action = QAction(qta.icon("mdi6.axis-arrow"), "X-&Z", self)
         self.transform_yz_action = QAction(qta.icon("mdi6.axis-arrow"), "&Y-Z", self)
         self.three_d_action = QAction(qta.icon("mdi.cube-outline"), "&3D", self)
         self.two_d_action = QAction(qta.icon("fa5.square"), "&2D", self)
@@ -89,6 +95,10 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.clip_action)
 
     def create_main_frame(self) -> None:
+        """Create the main frame of the window.
+
+        This contains the central frame, and the text box.
+        """
         self.main_frame = QFrame()
         main_layout = QVBoxLayout()
 
@@ -104,6 +114,12 @@ class MainWindow(QMainWindow):
         self.main_frame.setLayout(main_layout)
 
     def create_central_frame(self) -> None:
+        """Create the central frame.
+
+        This is called and created inside the main frame.
+
+        This contains the side control panel, and the VTK window.
+        """
         self.central_frame = QFrame()
         central_layout = QHBoxLayout()
 
