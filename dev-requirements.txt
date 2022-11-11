@@ -94,6 +94,7 @@ packaging==21.3
     #   build
     #   matplotlib
     #   pytest
+    #   qtpy
 pathspec==0.10.1
     # via black
 pep517==0.13.0
@@ -145,6 +146,10 @@ python-dateutil==2.8.2
     # via matplotlib
 pyyaml==6.0
     # via pre-commit
+qtawesome==1.2.1
+    # via SolidityGUI (pyproject.toml)
+qtpy==2.3.0
+    # via qtawesome
 rich==12.6.0
     # via meshio
 shiboken6==6.3.2
