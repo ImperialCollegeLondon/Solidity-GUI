@@ -1,4 +1,5 @@
 """Code to display a mesh within a VTK window."""
+import os
 from tempfile import NamedTemporaryFile
 from typing import Any
 
@@ -79,12 +80,21 @@ class VTKWindow(QVBoxLayout):
         self.addWidget(vtkWidget)
 
         self.mesh = generate_mesh()
-        with NamedTemporaryFile(suffix=".vtu") as f:
-            save_as_vtu(self.mesh, f.name)
+        with NamedTemporaryFile(suffix=".vtu", delete=False) as f:
+            filename = f.name
+
+        try:
+            # Save the mesh to disk...
+            save_as_vtu(self.mesh, filename)
+
+            # ...and read it back in again
             reader = vtk.vtkXMLUnstructuredGridReader()
-            reader.SetFileName(f.name)
+            reader.SetFileName(filename)
             reader.Update()
             self.ugrid = reader.GetOutput()
+        finally:
+            # Delete the file now that we've finished with it
+            os.unlink(filename)
 
         # Create the LUT for scalars to colors
         self.lut = vtk.vtkLookupTable()
