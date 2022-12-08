@@ -22,6 +22,8 @@ jobs:
   test:
     needs: qa
     runs-on: ${{ matrix.os }}
+    env:
+      DISPLAY: ":99.0"
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +34,19 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Install Dependencies (Linux)
-      run: apt-get install -y '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+      run: |
+        sudo apt-get install -y libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 \
+            x11-utils libegl1 libglu1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-render-util0 libxkbcommon-x11-0
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: Setup XServer and Window Manager (Linux)
+      run: |
+        /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid \
+          --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 \
+          1920x1200x24 -ac +extension GLX +render -noreset
+        sleep 2s
       if: matrix.os == 'ubuntu-latest'
 
     - uses: actions/setup-python@v4
