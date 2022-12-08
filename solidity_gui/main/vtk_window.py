@@ -80,7 +80,7 @@ class VTKWindow(QVBoxLayout):
         self.addWidget(vtkWidget)
 
         self.mesh = generate_mesh()
-        
+
         # Create the temporary file, but don't leave the file handle open
         with NamedTemporaryFile(suffix=".vtu", delete=False) as f:
             filename = f.name
