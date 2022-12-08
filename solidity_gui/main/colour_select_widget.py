@@ -1,3 +1,4 @@
+"""Code for a QComboBox widget to highlight cell_sets in a VTKWindow."""
 from typing import Any
 
 import numpy as np
@@ -8,7 +9,14 @@ from .vtk_window import VTKWindow
 
 
 class ColourSelectWidget(QComboBox):
+    """QComboBox for highlighting a surface, populated from a mesh's cell_sets."""
+
     def __init__(self, vtk_window: VTKWindow, *args: Any, **kwargs: Any) -> None:
+        """Create new ColourSelectWidget.
+
+        Args:
+            vtk_window: The VTKWindow which this widget interacts with.
+        """
         super().__init__(*args, **kwargs)
 
         self.vtk_window = vtk_window

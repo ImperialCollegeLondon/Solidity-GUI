@@ -1,3 +1,4 @@
+"""Code to display a mesh within a VTK window."""
 import os
 from tempfile import NamedTemporaryFile
 from typing import Any
@@ -13,6 +14,7 @@ from vtk.util import numpy_support
 
 
 def generate_mesh() -> Mesh:
+    """Generates a mesh consisting of a cylinder and a cube."""
     with pygmsh.geo.Geometry() as geom:
 
         bit_bottom = geom.add_circle(
@@ -45,18 +47,33 @@ def generate_mesh() -> Mesh:
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
+    """Saves a mesh to a file.
+
+    Args:
+        mesh: The mesh to be saved
+        filename: The name of the file to be saved
+    """
     mesh2 = mesh.copy()
     mesh2.cell_sets = {}
     mesh2.write(filename)
 
 
 class VTKWindow(QVBoxLayout):
+    """A frame containing a VTK window."""
+
     def get_point_ids_in_surface(self, name: str, mesh: Mesh) -> NDArray[Any]:
+        """Gets the points IDs of a mesh surface by name.
+
+        Args:
+            name: Name of the mesh surface
+            mesh: The mesh object containing the surface
+        """
         triangles: CellBlock = mesh.cells[1]
         surface_cell_ids = mesh.cell_sets[name][1]
         return triangles.data[surface_cell_ids]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Create new VTKWindow."""
         super().__init__(*args, **kwargs)
 
         vtkWidget = QVTKRenderWindowInteractor()
