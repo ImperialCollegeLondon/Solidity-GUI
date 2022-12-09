@@ -13,6 +13,9 @@ dependencies = ["pygmsh", "pyside6==6.3.2", "qtawesome", "vtk"]
 dev = ["black", "flake8<5", "flake8-docstrings", "isort", "mypy", "pip-tools",
        "pre-commit", "pytest", "pytest-cov", "pytest-flake8"]
 
+[tool.setuptools]
+packages = ["solidity_gui"]
+
 [tool.mypy]
 ignore_missing_imports = true
 disallow_untyped_calls = true
