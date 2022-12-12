@@ -8,6 +8,7 @@ authors = [
     { name = "Imperial College London RSE Team", email = "ict-rse-team@imperial.ac.uk" }
 ]
 dependencies = ["pygmsh", "pyside6==6.3.2", "qtawesome", "vtk"]
+requires-python = ">=3.10"
 
 [project.optional-dependencies]
 dev = ["black", "flake8<5", "flake8-docstrings", "isort", "mypy", "pip-tools",
