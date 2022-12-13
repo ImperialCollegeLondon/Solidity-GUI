@@ -4,6 +4,8 @@ from typing import Any
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QTreeView, QVBoxLayout
 
+from .. import config
+
 
 class BaseModelTree(QVBoxLayout):
     """An expanded QTreeView containing a model populated with some default items."""
@@ -14,7 +16,7 @@ class BaseModelTree(QVBoxLayout):
 
         self.tree_view = QTreeView()
         self.tree_view.setHeaderHidden(True)
-        self.tree_view.setFixedWidth(200)
+        self.tree_view.setFixedWidth(config.TREE_VIEW_WIDTH)
 
         self.base_model = QStandardItemModel()
         self.root_node = self.base_model.invisibleRootItem()
