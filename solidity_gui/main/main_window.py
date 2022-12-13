@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
     def create_toolbar(self) -> None:
         """Create the toolbar beneath the menu bar."""
         toolbar = QToolBar("Top toolbar")
-        toolbar.setIconSize(QSize(16, 16))
+        toolbar.setIconSize(QSize(*config.TOOLBAR_ICON_SIZE))
         toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.addToolBar(Qt.TopToolBarArea, toolbar)
 
@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
 
         command_box = QTextEdit()
         command_box.setPlaceholderText("Type command/scripts")
-        command_box.setMaximumHeight(100)
+        command_box.setMaximumHeight(config.COMMAND_BOX_MAXIMUM_HEIGHT)
 
         main_layout.addWidget(self.central_frame)
         main_layout.addWidget(command_box)
@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
         self.central_frame = QFrame()
         central_layout = QHBoxLayout()
 
-        central_layout.setSpacing(20)
+        central_layout.setSpacing(config.CENTRAL_LAYOUT_SPACING)
 
         self.vtk_window = VTKWindow()
         self.control_panel = ControlPanel(self.vtk_window)

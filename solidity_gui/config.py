@@ -12,3 +12,12 @@ BACKGROUND_COLOUR = (0.1, 0.2, 0.4)  # a dark blue
 
 """Width of Tree View on left-hand side."""
 TREE_VIEW_WIDTH = 200
+
+"""Size of icons in toolbar (width, height)."""
+TOOLBAR_ICON_SIZE = (16, 16)
+
+"""Spacing between elements in central layout."""
+CENTRAL_LAYOUT_SPACING = 20
+
+"""Maximum height of the command box."""
+COMMAND_BOX_MAXIMUM_HEIGHT = 100
