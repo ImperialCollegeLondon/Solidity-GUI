@@ -55,5 +55,11 @@ jobs:
     - name: Install dependencies
       run: pip install -r dev-requirements.txt
 
-    - name: Run tests
+    - name: Run tests (not windows)
       run: pytest
+      if: matrix.os != 'windows-latest'
+
+    - name: Run tests (windows)
+      # tests involving vtk_window do not work of Windows CI runners
+      run: pytest -k "not test_vtk_window"
+      if: matrix.os == 'windows-latest'
