@@ -72,16 +72,13 @@ class VTKWindow(QVBoxLayout):
         Args:
           mesh: The mesh to render
         """
-        if self.mesh is None:
-            return
-
         # Create the temporary file, but don't leave the file handle open
         with NamedTemporaryFile(suffix=".vtu", delete=False) as f:
             filename = f.name
 
         try:
             # Save the mesh to disk...
-            save_as_vtu(self.mesh, filename)
+            save_as_vtu(mesh, filename)
 
             # ...and read it back in again
             reader = vtk.vtkXMLUnstructuredGridReader()
@@ -105,12 +102,12 @@ class VTKWindow(QVBoxLayout):
         self.mapper.UseLookupTableScalarRangeOn()
         self.mapper.SetLookupTable(self.lut)
 
-        surface_name = list(self.mesh.cell_sets.keys())[0]
-        surface_point_ids = self.get_point_ids_in_surface(surface_name, self.mesh)
+        surface_name = list(mesh.cell_sets.keys())[0]
+        surface_point_ids = self.get_point_ids_in_surface(surface_name, mesh)
         surface_uniq_point_ids = set(surface_point_ids.reshape(surface_point_ids.size))
 
         # colour points in surface
-        point_colours = np.zeros(self.mesh.points.shape[0])
+        point_colours = np.zeros(mesh.points.shape[0])
         point_colours[np.array(list(surface_uniq_point_ids))] = 1.0
         self.mapper.SetScalarModeToUsePointData()
         self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
