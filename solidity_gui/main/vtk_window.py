@@ -49,7 +49,7 @@ class VTKWindow(QVBoxLayout):
         vtkWidget = QVTKRenderWindowInteractor()
         self.addWidget(vtkWidget)
         self.ren = vtk.vtkRenderer()
-        self.ren.SetBackground(0.1, 0.2, 0.4)
+        self.ren.SetBackground(*config.BACKGROUND_COLOUR)
         self.ren.GetActiveCamera().Elevation(110)
         self.ren.ResetCamera()
         self.actor = vtk.vtkActor()

@@ -6,3 +6,6 @@ MESH_COLOUR = (1, 1, 1, 1)  # white
 
 """Colour of selected mesh components (RGBA format)."""
 MESH_SELECTION_COLOUR = (1, 0, 0, 1)  # red
+
+"""Background colour of vtk display window."""
+BACKGROUND_COLOUR = (0.1, 0.2, 0.4)  # a dark blue
