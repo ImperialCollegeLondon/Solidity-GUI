@@ -6,6 +6,7 @@ from typing import Callable, Dict, Iterable, List, Tuple, Type
 import pygmsh
 from meshio import Mesh
 
+# Type[float] indicates the object `float` rather than a float instance e.g. 1.0
 Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
 Arg_List_Type = List[List[float] | float]
 
