@@ -12,7 +12,8 @@ requires-python = ">=3.10"
 
 [project.optional-dependencies]
 dev = ["black", "flake8<5", "flake8-docstrings", "isort", "mypy", "pip-tools",
-       "pre-commit", "pytest", "pytest-cov", "pytest-flake8", "pytest-qt"]
+       "pre-commit", "pyinstaller", "pytest", "pytest-cov", "pytest-flake8",
+       "pytest-qt"]
 
 [tool.setuptools]
 packages = ["solidity_gui"]
