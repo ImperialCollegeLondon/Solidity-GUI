@@ -10,7 +10,7 @@ from .vtk_window import VTKWindow
 
 
 class MainWindow(QMainWindow):
-    """Main window containg all the GUI frames and menus."""
+    """Main window containing all the GUI frames and menus."""
 
     def __init__(self) -> None:
         """Create new MainWindow."""
