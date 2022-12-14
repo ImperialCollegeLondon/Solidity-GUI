@@ -26,8 +26,6 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.main_frame)
 
-        self.show()
-
     def create_menu_bar(self) -> None:
         """Create the menu bar at the top of the main window."""
         self.menu_bar = self.menuBar()
