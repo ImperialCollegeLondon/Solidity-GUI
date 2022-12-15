@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtk.util import numpy_support
 
+from .. import config
 from .geometry import Component, generate_mesh
 
 
@@ -48,8 +49,7 @@ class VTKWindow(QVBoxLayout):
         vtkWidget = QVTKRenderWindowInteractor()
         self.addWidget(vtkWidget)
         self.ren = vtk.vtkRenderer()
-        self.ren.SetBackground(0.1, 0.2, 0.4)
-        self.ren.GetActiveCamera().Elevation(110)
+        self.ren.SetBackground(*config.BACKGROUND_COLOUR)
         self.ren.ResetCamera()
         self.actor = vtk.vtkActor()
         self.ren.AddActor(self.actor)
@@ -90,12 +90,13 @@ class VTKWindow(QVBoxLayout):
             os.unlink(filename)
 
         # Create the LUT for scalars to colors
+        unselected_value, selected_value = 0, 1
         self.lut = vtk.vtkLookupTable()
         self.lut.SetNumberOfTableValues(2)
-        self.lut.SetTableRange(0, 1)
+        self.lut.SetTableRange(unselected_value, selected_value)
         self.lut.Build()
-        self.lut.SetTableValue(0, 1, 1, 1, 1)  # White
-        self.lut.SetTableValue(1, 1, 0, 0, 1)  # Red
+        self.lut.SetTableValue(unselected_value, *config.MESH_COLOUR)
+        self.lut.SetTableValue(selected_value, *config.MESH_SELECTION_COLOUR)
 
         self.mapper = vtk.vtkDataSetMapper()
         self.mapper.SetInputData(self.ugrid)
@@ -107,8 +108,8 @@ class VTKWindow(QVBoxLayout):
         surface_uniq_point_ids = set(surface_point_ids.reshape(surface_point_ids.size))
 
         # colour points in surface
-        point_colours = np.zeros(mesh.points.shape[0])
-        point_colours[np.array(list(surface_uniq_point_ids))] = 1.0
+        point_colours = np.full(mesh.points.shape[0], unselected_value)
+        point_colours[np.array(list(surface_uniq_point_ids))] = selected_value
         self.mapper.SetScalarModeToUsePointData()
         self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
 
