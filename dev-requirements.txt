@@ -125,6 +125,8 @@ pyparsing==3.0.9
     # via
     #   matplotlib
     #   packaging
+pypubsub==4.0.3
+    # via SolidityGUI (pyproject.toml)
 pyside6==6.3.2
     # via SolidityGUI (pyproject.toml)
 pyside6-addons==6.3.2
@@ -138,9 +140,12 @@ pytest==7.2.0
     #   SolidityGUI (pyproject.toml)
     #   pytest-cov
     #   pytest-flake8
+    #   pytest-qt
 pytest-cov==4.0.0
     # via SolidityGUI (pyproject.toml)
 pytest-flake8==1.1.1
+    # via SolidityGUI (pyproject.toml)
+pytest-qt==4.2.0
     # via SolidityGUI (pyproject.toml)
 python-dateutil==2.8.2
     # via matplotlib

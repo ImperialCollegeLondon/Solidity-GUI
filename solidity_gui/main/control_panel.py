@@ -3,6 +3,7 @@ from typing import Any
 
 from PySide6.QtWidgets import QVBoxLayout
 
+from .add_mesh_button import AddMeshButton
 from .colour_select_widget import ColourSelectWidget
 from .reset_view_widget import ResetViewWidget
 from .vtk_window import VTKWindow
@@ -20,3 +21,5 @@ class ControlPanel(QVBoxLayout):
         super().__init__(*args, **kwargs)
         self.addWidget(ResetViewWidget(vtk_window))
         self.addWidget(ColourSelectWidget(vtk_window))
+        self.addWidget(AddMeshButton("ball"))
+        self.addWidget(AddMeshButton("box"))

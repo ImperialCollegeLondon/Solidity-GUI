@@ -2,6 +2,8 @@
 from typing import Any
 
 import numpy as np
+from meshio import Mesh
+from pubsub import pub
 from PySide6.QtWidgets import QComboBox
 from vtk.util import numpy_support
 
@@ -20,13 +22,18 @@ class ColourSelectWidget(QComboBox):
         super().__init__(*args, **kwargs)
 
         self.vtk_window = vtk_window
-        self.addItems(vtk_window.mesh.cell_sets.keys())
 
         self.currentTextChanged.connect(self._select_handler)
+        pub.subscribe(self._set_items, "mesh.updated")
 
     def _select_handler(self) -> None:
         mesh = self.vtk_window.mesh
+        if not mesh:
+            return
+
         selectedValue = self.currentText()
+        if not selectedValue:
+            return
         surface_point_ids = self.vtk_window.get_point_ids_in_surface(
             selectedValue, mesh
         )
@@ -39,6 +46,9 @@ class ColourSelectWidget(QComboBox):
         self.vtk_window.ugrid.GetPointData().SetScalars(
             numpy_support.numpy_to_vtk(point_colours)
         )
-
         self.vtk_window.ren.ResetCamera()
         self.vtk_window.iren.ReInitialize()
+
+    def _set_items(self, mesh: Mesh) -> None:
+        self.clear()
+        self.addItems(mesh.cell_sets.keys())

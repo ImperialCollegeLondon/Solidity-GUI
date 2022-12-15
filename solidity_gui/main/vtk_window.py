@@ -1,49 +1,18 @@
 """Code to display a mesh within a VTK window."""
 import os
 from tempfile import NamedTemporaryFile
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
-import pygmsh
 import vtk
 from meshio import CellBlock, Mesh
 from numpy.typing import NDArray
+from pubsub import pub
 from PySide6.QtWidgets import QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtk.util import numpy_support
 
-
-def generate_mesh() -> Mesh:
-    """Generates a mesh consisting of a cylinder and a cube."""
-    with pygmsh.geo.Geometry() as geom:
-
-        bit_bottom = geom.add_circle(
-            x0=[0.0, 0.0], radius=0.1, mesh_size=0.05, num_sections=3
-        )
-        bit_top, bit_volume, bit_sides = geom.extrude(
-            bit_bottom.plane_surface, translation_axis=[0, 0, 1]
-        )
-
-        geom.add_physical(bit_bottom.plane_surface, "bit_bottom")
-        geom.add_physical(bit_top, "bit_top")
-        geom.add_physical(bit_volume, "bit_volume")
-        for i, surface in enumerate(bit_sides):
-            geom.add_physical(surface, f"bit_side{i}")
-
-        box = geom.add_box(
-            x0=-0.5,
-            x1=0.5,
-            y0=-0.5,
-            y1=0.5,
-            z0=1.3,
-            z1=2.3,
-            mesh_size=0.05,
-        )
-        geom.add_physical(box.volume, "box_volume")
-        for i, surface in enumerate(box.surface_loop.surfaces):
-            geom.add_physical(surface, f"box_side{i}")
-
-        return geom.generate_mesh()
+from .geometry import Component, generate_mesh
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
@@ -78,16 +47,38 @@ class VTKWindow(QVBoxLayout):
 
         vtkWidget = QVTKRenderWindowInteractor()
         self.addWidget(vtkWidget)
+        self.ren = vtk.vtkRenderer()
+        self.ren.SetBackground(0.1, 0.2, 0.4)
+        self.ren.GetActiveCamera().Elevation(110)
+        self.ren.ResetCamera()
+        self.actor = vtk.vtkActor()
+        self.ren.AddActor(self.actor)
 
-        self.mesh = generate_mesh()
+        vtkWidget.GetRenderWindow().AddRenderer(self.ren)
+        self.iren = vtkWidget.GetRenderWindow().GetInteractor()
+        self.iren.Initialize()
+        self.mesh: Optional[Mesh] = None
 
+        pub.subscribe(self._update_mesh, "mesh.update")
+
+    def _update_mesh(self, component: Component) -> None:
+        self.mesh = generate_mesh([component])
+        self.render_mesh(self.mesh)
+        pub.sendMessage("mesh.updated", mesh=self.mesh)
+
+    def render_mesh(self, mesh: Mesh) -> None:
+        """Render a mesh within the VTKWindow.
+
+        Args:
+          mesh: The mesh to render
+        """
         # Create the temporary file, but don't leave the file handle open
         with NamedTemporaryFile(suffix=".vtu", delete=False) as f:
             filename = f.name
 
         try:
             # Save the mesh to disk...
-            save_as_vtu(self.mesh, filename)
+            save_as_vtu(mesh, filename)
 
             # ...and read it back in again
             reader = vtk.vtkXMLUnstructuredGridReader()
@@ -111,25 +102,17 @@ class VTKWindow(QVBoxLayout):
         self.mapper.UseLookupTableScalarRangeOn()
         self.mapper.SetLookupTable(self.lut)
 
-        surface_name = list(self.mesh.cell_sets.keys())[0]
-        surface_point_ids = self.get_point_ids_in_surface(surface_name, self.mesh)
+        surface_name = list(mesh.cell_sets.keys())[0]
+        surface_point_ids = self.get_point_ids_in_surface(surface_name, mesh)
         surface_uniq_point_ids = set(surface_point_ids.reshape(surface_point_ids.size))
 
         # colour points in surface
-        point_colours = np.zeros(self.mesh.points.shape[0])
+        point_colours = np.zeros(mesh.points.shape[0])
         point_colours[np.array(list(surface_uniq_point_ids))] = 1.0
         self.mapper.SetScalarModeToUsePointData()
         self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
 
-        self.actor = vtk.vtkActor()
         self.actor.SetMapper(self.mapper)
 
-        self.ren = vtk.vtkRenderer()
-        self.ren.SetBackground(0.1, 0.2, 0.4)
-        self.ren.AddActor(self.actor)
-        self.ren.GetActiveCamera().Elevation(110)
         self.ren.ResetCamera()
-
-        vtkWidget.GetRenderWindow().AddRenderer(self.ren)
-        self.iren = vtkWidget.GetRenderWindow().GetInteractor()
-        self.iren.Initialize()
+        self.iren.ReInitialize()
