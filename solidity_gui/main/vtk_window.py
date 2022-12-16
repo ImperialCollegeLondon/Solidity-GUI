@@ -31,6 +31,8 @@ def save_as_vtu(mesh: Mesh, filename: str) -> None:
 class VTKWindow(QVBoxLayout):
     """A frame containing a VTK window."""
 
+    unselected_lookup_value, selected_lookup_value = 0, 1
+
     def get_point_ids_in_surface(self, name: str, mesh: Mesh) -> NDArray[Any]:
         """Gets the points IDs of a mesh surface by name.
 
@@ -60,6 +62,7 @@ class VTKWindow(QVBoxLayout):
         self.mesh: Optional[Mesh] = None
 
         pub.subscribe(self._update_mesh, "mesh.update")
+        pub.subscribe(self._colour_mesh_selection, "mesh.select")
 
     def _update_mesh(self, component: Component) -> None:
         self.mesh = generate_mesh([component])
@@ -90,30 +93,34 @@ class VTKWindow(QVBoxLayout):
             os.unlink(filename)
 
         # Create the LUT for scalars to colors
-        unselected_value, selected_value = 0, 1
         self.lut = vtk.vtkLookupTable()
         self.lut.SetNumberOfTableValues(2)
-        self.lut.SetTableRange(unselected_value, selected_value)
+        self.lut.SetTableRange(self.unselected_lookup_value, self.selected_lookup_value)
         self.lut.Build()
-        self.lut.SetTableValue(unselected_value, *config.MESH_COLOUR)
-        self.lut.SetTableValue(selected_value, *config.MESH_SELECTION_COLOUR)
+        self.lut.SetTableValue(self.unselected_lookup_value, *config.MESH_COLOUR)
+        self.lut.SetTableValue(
+            self.selected_lookup_value, *config.MESH_SELECTION_COLOUR
+        )
 
         self.mapper = vtk.vtkDataSetMapper()
         self.mapper.SetInputData(self.ugrid)
         self.mapper.UseLookupTableScalarRangeOn()
         self.mapper.SetLookupTable(self.lut)
 
-        surface_name = list(mesh.cell_sets.keys())[0]
-        surface_point_ids = self.get_point_ids_in_surface(surface_name, mesh)
-        surface_uniq_point_ids = set(surface_point_ids.reshape(surface_point_ids.size))
-
-        # colour points in surface
-        point_colours = np.full(mesh.points.shape[0], unselected_value)
-        point_colours[np.array(list(surface_uniq_point_ids))] = selected_value
-        self.mapper.SetScalarModeToUsePointData()
-        self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
-
         self.actor.SetMapper(self.mapper)
 
         self.ren.ResetCamera()
+        self.iren.ReInitialize()
+
+    def _colour_mesh_selection(self, selection_name: str) -> None:
+        """Update rendered mesh colours based on selected element."""
+        if self.mesh is None:
+            return
+
+        surface_point_ids = np.unique(
+            self.get_point_ids_in_surface(selection_name, self.mesh)
+        )
+        point_colours = np.full(self.mesh.points.shape[0], self.unselected_lookup_value)
+        point_colours[surface_point_ids] = self.selected_lookup_value
+        self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
         self.iren.ReInitialize()
