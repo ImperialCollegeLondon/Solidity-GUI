@@ -20,6 +20,6 @@ class ControlPanel(QVBoxLayout):
         """
         super().__init__(*args, **kwargs)
         self.addWidget(ResetViewWidget(vtk_window))
-        self.addWidget(ColourSelectWidget(vtk_window))
+        self.addWidget(ColourSelectWidget())
         self.addWidget(AddMeshButton("ball"))
         self.addWidget(AddMeshButton("box"))

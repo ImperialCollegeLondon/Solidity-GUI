@@ -30,7 +30,8 @@ def test_vtk_window_init(vtk_window, subscribe_mock):
     assert vtk_window.iren
     assert vtk_window.actor
     assert vtk_window.mesh is None
-    subscribe_mock.assert_called_once_with(vtk_window._update_mesh, "mesh.update")
+    subscribe_mock.assert_any_call(vtk_window._update_mesh, "mesh.update")
+    subscribe_mock.assert_any_call(vtk_window._colour_mesh_selection, "mesh.select")
 
 
 def test_vtk_window_render_mesh(vtk_window):
