@@ -101,7 +101,7 @@ pep517==0.13.0
     # via build
 pillow==9.3.0
     # via matplotlib
-pip-tools==6.9.0
+pip-tools==6.12.1
     # via SolidityGUI (pyproject.toml)
 platformdirs==2.5.2
     # via
