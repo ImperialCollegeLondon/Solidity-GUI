@@ -1,7 +1,7 @@
 """Code to display a mesh within a VTK window."""
 import os
 from tempfile import NamedTemporaryFile
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
 import vtk
@@ -124,3 +124,37 @@ class VTKWindow(QVBoxLayout):
         point_colours[surface_point_ids] = self.selected_lookup_value
         self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
         self.iren.ReInitialize()
+
+    def _set_camera_orientation(
+        self, camera_orientation_settings: Dict[str, Any]
+    ) -> None:
+        """Resets a camera orientation for a vtkRenderer.
+
+        Args:
+            camera_orientation_settings: The Dict containing the camera orientation
+            details
+        """
+        camera = self.ren.GetActiveCamera()
+        camera.SetPosition(camera_orientation_settings["position"])
+        camera.SetFocalPoint(camera_orientation_settings["focal point"])
+        camera.SetViewUp(camera_orientation_settings["view up"])
+        camera.SetDistance(camera_orientation_settings["distance"])
+        camera.SetClippingRange(camera_orientation_settings["clipping range"])
+        self.ren.ResetCamera()
+        self.iren.ReInitialize()
+
+    def _get_camera_orientation(self) -> Dict[str, Any]:
+        """Stores details on a camera orientation in a Dict.
+
+        Args:
+            ren: The vtkRenderer from which to fetch the camera orientation
+        """
+        camera_orientation_settings = dict()
+        camera = self.ren.GetActiveCamera()
+        camera_orientation_settings["position"] = camera.GetPosition()
+        camera_orientation_settings["focal point"] = camera.GetFocalPoint()
+        camera_orientation_settings["view up"] = camera.GetViewUp()
+        camera_orientation_settings["distance"] = camera.GetDistance()
+        camera_orientation_settings["clipping range"] = camera.GetClippingRange()
+        camera_orientation_settings["orientation"] = camera.GetOrientation()
+        return camera_orientation_settings
