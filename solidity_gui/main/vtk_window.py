@@ -1,7 +1,8 @@
 """Code to display a mesh within a VTK window."""
 import os
+from dataclasses import dataclass
 from tempfile import NamedTemporaryFile
-from typing import Any, Dict, Optional
+from typing import Any, Optional, Tuple, Type
 
 import numpy as np
 import vtk
@@ -26,6 +27,31 @@ def save_as_vtu(mesh: Mesh, filename: str) -> None:
     mesh2 = mesh.copy()
     mesh2.cell_sets = {}
     mesh2.write(filename)
+
+
+@dataclass
+class CameraOrientation:
+    """Definition of CameraOrientation.
+
+    Contains details of a vtkCamera's view port and focal point.
+
+    Attributes:
+        position: position of the camera in world coordinates
+        focal_point: focal of the camera in world coordinates
+        view_up: the view up direction for the camera
+        distance: move the focal point so that it is the specified distance from the
+        camera position
+        clipping_range: the location of the near and far clipping planes along the
+        direction of projection
+        orientation: the orientation of the camera
+    """
+
+    position: Tuple[Type[float], Type[float], Type[float]]
+    focal_point: Tuple[Type[float], Type[float], Type[float]]
+    view_up: Tuple[Type[float], Type[float], Type[float]]
+    distance: float
+    clipping_range: Tuple[Type[float], Type[float]]
+    orientation: Tuple[Type[float], Type[float], Type[float]]
 
 
 class VTKWindow(QVBoxLayout):
@@ -125,8 +151,8 @@ class VTKWindow(QVBoxLayout):
         self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
         self.iren.ReInitialize()
 
-    def _set_camera_orientation(
-        self, camera_orientation_settings: Dict[str, Any]
+    def set_camera_orientation(
+        self, camera_orientation_settings: CameraOrientation
     ) -> None:
         """Resets a camera orientation for a vtkRenderer.
 
@@ -135,26 +161,23 @@ class VTKWindow(QVBoxLayout):
             details
         """
         camera = self.ren.GetActiveCamera()
-        camera.SetPosition(camera_orientation_settings["position"])
-        camera.SetFocalPoint(camera_orientation_settings["focal point"])
-        camera.SetViewUp(camera_orientation_settings["view up"])
-        camera.SetDistance(camera_orientation_settings["distance"])
-        camera.SetClippingRange(camera_orientation_settings["clipping range"])
+        camera.SetPosition(camera_orientation_settings.position)
+        camera.SetFocalPoint(camera_orientation_settings.focal_point)
+        camera.SetViewUp(camera_orientation_settings.view_up)
+        camera.SetDistance(camera_orientation_settings.distance)
+        camera.SetClippingRange(camera_orientation_settings.clipping_range)
         self.ren.ResetCamera()
         self.iren.ReInitialize()
 
-    def _get_camera_orientation(self) -> Dict[str, Any]:
-        """Stores details on a camera orientation in a Dict.
-
-        Args:
-            ren: The vtkRenderer from which to fetch the camera orientation
-        """
-        camera_orientation_settings = dict()
+    def get_camera_orientation(self) -> CameraOrientation:
+        """Stores details on a camera orientation in a Dict."""
         camera = self.ren.GetActiveCamera()
-        camera_orientation_settings["position"] = camera.GetPosition()
-        camera_orientation_settings["focal point"] = camera.GetFocalPoint()
-        camera_orientation_settings["view up"] = camera.GetViewUp()
-        camera_orientation_settings["distance"] = camera.GetDistance()
-        camera_orientation_settings["clipping range"] = camera.GetClippingRange()
-        camera_orientation_settings["orientation"] = camera.GetOrientation()
+        camera_orientation_settings = CameraOrientation(
+            position=camera.GetPosition(),
+            focal_point=camera.GetFocalPoint(),
+            view_up=camera.GetViewUp(),
+            distance=camera.GetDistance(),
+            clipping_range=camera.GetClippingRange(),
+            orientation=camera.GetOrientation(),
+        )
         return camera_orientation_settings
