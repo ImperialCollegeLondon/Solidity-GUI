@@ -10,8 +10,10 @@ from meshio import CellBlock, Mesh
 from numpy.typing import NDArray
 from pubsub import pub
 from PySide6.QtWidgets import QVBoxLayout
-from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtk.util import numpy_support
+from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
+from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
 from .geometry import Component, generate_mesh
@@ -27,6 +29,20 @@ def save_as_vtu(mesh: Mesh, filename: str) -> None:
     mesh2 = mesh.copy()
     mesh2.cell_sets = {}
     mesh2.write(filename)
+
+
+def make_axes_actor() -> vtkAxesActor:
+    """Creates an axes actor for use as an orientation marker."""
+    axes = vtkAxesActor()
+    axes.SetShaftTypeToCylinder()
+    axes.SetXAxisLabelText("X")
+    axes.SetYAxisLabelText("Y")
+    axes.SetZAxisLabelText("Z")
+    axes.SetTotalLength(1.0, 1.0, 1.0)
+    axes.SetCylinderRadius(0.5 * axes.GetCylinderRadius())
+    axes.SetConeRadius(1.025 * axes.GetConeRadius())
+    axes.SetSphereRadius(1.5 * axes.GetSphereRadius())
+    return axes
 
 
 @dataclass
@@ -86,6 +102,8 @@ class VTKWindow(QVBoxLayout):
         self.iren = vtkWidget.GetRenderWindow().GetInteractor()
         self.iren.Initialize()
         self.mesh: Optional[Mesh] = None
+
+        self._create_orientation_marker()
 
         pub.subscribe(self._update_mesh, "mesh.update")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
@@ -157,8 +175,7 @@ class VTKWindow(QVBoxLayout):
         """Resets a camera orientation for a vtkRenderer.
 
         Args:
-            camera_orientation_settings: The Dict containing the camera orientation
-            details
+            camera_orientation_settings: The orientation settings to set the camera to.
         """
         camera = self.ren.GetActiveCamera()
         camera.SetPosition(camera_orientation_settings.position)
@@ -181,3 +198,46 @@ class VTKWindow(QVBoxLayout):
             orientation=camera.GetOrientation(),
         )
         return camera_orientation_settings
+
+    def _create_orientation_marker(self) -> None:
+        """Creates an orientation axes and displays it in the VTK window."""
+        self.orientation_axes = make_axes_actor()
+        self.om1 = vtkOrientationMarkerWidget()
+        self.om1.SetOrientationMarker(self.orientation_axes)
+        self.om1.SetInteractor(self.iren)
+        self.om1.EnabledOn()
+        self.om1.InteractiveOn()
+
+    def snap_camera_xy_axis(self) -> None:
+        """Sets the camera position for snapping to the x-y axis."""
+        camera = self.ren.GetActiveCamera()
+        focal_point = camera.GetFocalPoint()
+        distance = camera.GetDistance()
+        camera.SetPosition(
+            *(focal_point[0], focal_point[1], -(distance + focal_point[2]))
+        )
+        camera.SetViewUp(1.0, 0.0, 0.0)
+        self.ren.ResetCamera()
+        self.iren.ReInitialize()
+
+    def snap_camera_xz_axis(self) -> None:
+        """Sets the camera position for snapping to the x-z axis."""
+        camera = self.ren.GetActiveCamera()
+        focal_point = camera.GetFocalPoint()
+        distance = camera.GetDistance()
+        camera.SetPosition(*(focal_point[0], distance + focal_point[1], focal_point[2]))
+        camera.SetViewUp(1.0, 0.0, 0.0)
+        self.ren.ResetCamera()
+        self.iren.ReInitialize()
+
+    def snap_camera_yz_axis(self) -> None:
+        """Sets the camera position for snapping to the y-z axis."""
+        camera = self.ren.GetActiveCamera()
+        focal_point = camera.GetFocalPoint()
+        distance = camera.GetDistance()
+        camera.SetPosition(
+            *(-(distance + focal_point[0]), focal_point[1], focal_point[2])
+        )
+        camera.SetViewUp(0.0, 1.0, 0.0)
+        self.ren.ResetCamera()
+        self.iren.ReInitialize()
