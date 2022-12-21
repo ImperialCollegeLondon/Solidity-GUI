@@ -185,8 +185,6 @@ class VTKWindow(QVBoxLayout):
             camera_orientation_settings: The orientation settings to set the camera to.
         """
         camera = self.ren.GetActiveCamera()
-        print("position", camera_orientation_settings.position)
-        print("view up", camera_orientation_settings.view_up)
         camera.SetPosition(camera_orientation_settings.position)
         camera.SetFocalPoint(camera_orientation_settings.focal_point)
         camera.SetViewUp(camera_orientation_settings.view_up)
