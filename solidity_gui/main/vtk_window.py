@@ -103,14 +103,7 @@ class VTKWindow(QVBoxLayout):
         self.iren.Initialize()
         self.mesh: Optional[Mesh] = None
 
-        self.axes1 = make_axes_actor()
-        self.om1 = vtkOrientationMarkerWidget()
-        self.om1.SetOrientationMarker(self.axes1)
-        # # Position lower left in the viewport.
-        # self.om1.SetViewport(0.5, 0.5, 0.2, 0.2)
-        self.om1.SetInteractor(self.iren)
-        self.om1.EnabledOn()
-        self.om1.InteractiveOn()
+        self._create_orientation_marker()
 
         pub.subscribe(self._update_mesh, "mesh.update")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
@@ -205,6 +198,15 @@ class VTKWindow(QVBoxLayout):
             orientation=camera.GetOrientation(),
         )
         return camera_orientation_settings
+
+    def _create_orientation_marker(self) -> None:
+        """Creates an orientation axes and displays it in the VTK window."""
+        self.orientation_axes = make_axes_actor()
+        self.om1 = vtkOrientationMarkerWidget()
+        self.om1.SetOrientationMarker(self.orientation_axes)
+        self.om1.SetInteractor(self.iren)
+        self.om1.EnabledOn()
+        self.om1.InteractiveOn()
 
     def snap_camera_xy_axis(self) -> None:
         """Sets the camera position for snapping to the x-y axis."""

@@ -1,22 +1,20 @@
 """Code to create the toolbar containing the visualisation controls."""
+from typing import Any
+
 import qtawesome as qta
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (
-    QComboBox,
-    QToolBar,
-)
-from typing import Any
-from .vtk_window import VTKWindow
+from PySide6.QtWidgets import QComboBox, QToolBar
 
 from .. import config
+from .vtk_window import VTKWindow
+
 
 class VisualisationToolbar(QToolBar):
     """A toolbar containing visualisation controls for a given VTKWindow."""
 
     def __init__(self, vtk_window: VTKWindow, *args: Any, **kwargs: Any) -> None:
-        """Create a new VisualisationToolbar.
-        """
+        """Create a new VisualisationToolbar."""
         super().__init__("Visualisation toolbar", *args, **kwargs)
 
         self.vtk_window = vtk_window
@@ -62,7 +60,9 @@ class VisualisationToolbar(QToolBar):
 
     def _xy_click_handler(self) -> None:
         self.vtk_window.snap_camera_xy_axis()
+
     def _xz_click_handler(self) -> None:
         self.vtk_window.snap_camera_xz_axis()
+
     def _yz_click_handler(self) -> None:
         self.vtk_window.snap_camera_yz_axis()
