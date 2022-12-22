@@ -104,6 +104,7 @@ class VTKWindow(QVBoxLayout):
         self.mesh: Optional[Mesh] = None
 
         self._create_orientation_marker()
+        print(self.ren.GetActiveCamera().GetClippingRange())
 
         pub.subscribe(self._update_mesh, "mesh.update")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
@@ -153,6 +154,7 @@ class VTKWindow(QVBoxLayout):
 
         self.actor.SetMapper(self.mapper)
 
+        print(self.ren.GetActiveCamera().GetClippingRange())
         self.ren.ResetCamera()
         self.iren.ReInitialize()
 

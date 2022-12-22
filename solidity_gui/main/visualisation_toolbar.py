@@ -6,6 +6,8 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QComboBox, QToolBar
 
+from .clipping_planes_dialogue import ClippingPlanesDialog
+
 from .. import config
 from .vtk_window import VTKWindow
 
@@ -57,6 +59,7 @@ class VisualisationToolbar(QToolBar):
         self.transform_xy_action.triggered.connect(self._xy_click_handler)
         self.transform_xz_action.triggered.connect(self._xz_click_handler)
         self.transform_yz_action.triggered.connect(self._yz_click_handler)
+        self.clip_action.triggered.connect(self._clip_handler)
 
     def _xy_click_handler(self) -> None:
         self.vtk_window.snap_camera_xy_axis()
@@ -66,3 +69,6 @@ class VisualisationToolbar(QToolBar):
 
     def _yz_click_handler(self) -> None:
         self.vtk_window.snap_camera_yz_axis()
+
+    def _clip_handler(self) -> None:
+        ClippingPlanesDialog().exec_()
