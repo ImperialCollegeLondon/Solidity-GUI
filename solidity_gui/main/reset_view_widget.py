@@ -17,9 +17,8 @@ class ResetViewWidget(QPushButton):
         """
         super().__init__("Reset view", *args, **kwargs)
 
-        self.intitial_camera_orientation = vtk_window.get_camera_orientation()
         self.vtk_window = vtk_window
         self.clicked.connect(self._click_handler)
 
     def _click_handler(self) -> None:
-        self.vtk_window.set_camera_orientation(self.intitial_camera_orientation)
+        self.vtk_window.reset_camera()
