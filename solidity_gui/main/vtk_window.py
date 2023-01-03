@@ -18,6 +18,8 @@ from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 from .. import config
 from .geometry import Component, generate_mesh
 
+Vector = Tuple[float, float, float]
+
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
     """Saves a mesh to a file.
@@ -229,36 +231,17 @@ class VTKWindow(QVBoxLayout):
         self.om1.EnabledOn()
         self.om1.InteractiveOn()
 
-    def snap_camera_xy_axis(self) -> None:
-        """Sets the camera position for snapping to the x-y axis."""
-        camera = self.ren.GetActiveCamera()
-        focal_point = camera.GetFocalPoint()
-        distance = camera.GetDistance()
-        camera.SetPosition(
-            *(focal_point[0], focal_point[1], -(distance + focal_point[2]))
-        )
-        camera.SetViewUp(1.0, 0.0, 0.0)
-        self.ren.ResetCamera()
-        self.iren.ReInitialize()
+    def reorient_camera(self, orientation_vector: Vector, up_vector: Vector) -> None:
+        """Updates camera position to a new orientation whilst preserving focal point.
 
-    def snap_camera_xz_axis(self) -> None:
-        """Sets the camera position for snapping to the x-z axis."""
+        Args:
+            orientation_vector: new orientation w.r.t focal point. Passing a unit vector
+                                will preserve the current distance from the focal point.
+            up_vector: up direction of camera for new orientation.
+        """
         camera = self.ren.GetActiveCamera()
-        focal_point = camera.GetFocalPoint()
+        focal_point = np.array(camera.GetFocalPoint())
         distance = camera.GetDistance()
-        camera.SetPosition(*(focal_point[0], distance + focal_point[1], focal_point[2]))
-        camera.SetViewUp(1.0, 0.0, 0.0)
-        self.ren.ResetCamera()
-        self.iren.ReInitialize()
-
-    def snap_camera_yz_axis(self) -> None:
-        """Sets the camera position for snapping to the y-z axis."""
-        camera = self.ren.GetActiveCamera()
-        focal_point = camera.GetFocalPoint()
-        distance = camera.GetDistance()
-        camera.SetPosition(
-            *(-(distance + focal_point[0]), focal_point[1], focal_point[2])
-        )
-        camera.SetViewUp(0.0, 1.0, 0.0)
-        self.ren.ResetCamera()
+        camera.SetPosition(distance * -np.array(orientation_vector) + focal_point)
+        camera.SetViewUp(up_vector)
         self.iren.ReInitialize()

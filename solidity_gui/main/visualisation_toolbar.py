@@ -59,10 +59,10 @@ class VisualisationToolbar(QToolBar):
         self.transform_yz_action.triggered.connect(self._yz_click_handler)
 
     def _xy_click_handler(self) -> None:
-        self.vtk_window.snap_camera_xy_axis()
+        self.vtk_window.reorient_camera((0, 0, 1), (1, 0, 0))
 
     def _xz_click_handler(self) -> None:
-        self.vtk_window.snap_camera_xz_axis()
+        self.vtk_window.reorient_camera((0, -1, 0), (1, 0, 0))
 
     def _yz_click_handler(self) -> None:
-        self.vtk_window.snap_camera_yz_axis()
+        self.vtk_window.reorient_camera((1, 0, 0), (0, 1, 0))
