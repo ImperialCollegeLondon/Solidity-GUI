@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         self.create_menu_bar()
         self.create_main_frame()
         # create the toolbar containing the various visualisation buttons
-        visualisation_toolbar = VisualisationToolbar(self.vtk_window)
+        visualisation_toolbar = VisualisationToolbar()
         self.addToolBar(Qt.TopToolBarArea, visualisation_toolbar)
 
         self.setCentralWidget(self.main_frame)
@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
         central_layout.setSpacing(config.CENTRAL_LAYOUT_SPACING)
 
         self.vtk_window = VTKWindow()
-        self.control_panel = ControlPanel(self.vtk_window)
+        self.control_panel = ControlPanel()
         self.model_tree = BaseModelTree(2)
         central_layout.addLayout(self.model_tree)
         central_layout.addLayout(self.control_panel)

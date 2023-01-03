@@ -84,6 +84,8 @@ class VTKWindow(QVBoxLayout):
         pub.subscribe(self._add_component_to_geometry, "geometry.update")
         pub.subscribe(self._create_mesh_from_geometry, "mesh.create")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
+        pub.subscribe(self.reorient_camera, "camera.reorient")
+        pub.subscribe(self.reset_camera, "camera.reset")
 
     def _add_component_to_geometry(self, component: Component) -> None:
         """Add a new geometric component and render and display its rough mesh."""
