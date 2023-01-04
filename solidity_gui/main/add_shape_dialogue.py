@@ -85,5 +85,5 @@ class AddShapeDialog(QDialog):
         label = self.label_field_input.text()
         args = _get_args([inp.text() for inp in self.inputs], self.shape.args)
         component = Component(self.shape.name, label, args)
-        pub.sendMessage("mesh.update", component=component)
+        pub.sendMessage("geometry.update", component=component)
         self.close()

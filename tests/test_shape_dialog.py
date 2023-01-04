@@ -78,9 +78,9 @@ def test_dialog_ok(close_mock, send_message_mock, dialog, qtbot, shape):
     qtbot.mouseClick(button, QtCore.Qt.LeftButton)
     close_mock.assert_called_once()
 
-    # check that mesh update signal was called with correct data
+    # check that geometry update signal was called with correct data
     send_message_mock.assert_called_once_with(
-        "mesh.update",
+        "geometry.update",
         component=Component(
             label=label, args=[[1.0, "etete"], 3.0, 4], shape=shape.name
         ),
