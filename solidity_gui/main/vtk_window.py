@@ -119,6 +119,9 @@ class VTKWindow(QVBoxLayout):
 
     def _create_mesh_from_geometry(self) -> None:
         """Generate and display a high quality mesh from the current geometry."""
+        if not self.components:
+            return
+
         self.ugrids = []
         mesh = generate_mesh(self.components, resolution=0.05)
         self.meshes = [mesh]
