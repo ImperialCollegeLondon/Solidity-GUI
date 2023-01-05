@@ -2,7 +2,7 @@
 import os
 from dataclasses import dataclass
 from tempfile import NamedTemporaryFile
-from typing import Any, Optional, Tuple, Type
+from typing import Any, List, Tuple, Type
 
 import numpy as np
 import vtk
@@ -95,23 +95,40 @@ class VTKWindow(QVBoxLayout):
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(*config.BACKGROUND_COLOUR)
         self.ren.ResetCamera()
-        self.actor = vtk.vtkActor()
-        self.ren.AddActor(self.actor)
 
         vtkWidget.GetRenderWindow().AddRenderer(self.ren)
         self.iren = vtkWidget.GetRenderWindow().GetInteractor()
         self.iren.Initialize()
-        self.mesh: Optional[Mesh] = None
+        self.meshes: List[Mesh] = []
+        self.components: List[Component] = []
+        self.ugrids: List[vtk.vtkUnstructuredGrid] = []
 
         self._create_orientation_marker()
 
-        pub.subscribe(self._update_mesh, "mesh.update")
+        pub.subscribe(self._add_component_to_geometry, "geometry.update")
+        pub.subscribe(self._create_mesh_from_geometry, "mesh.create")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
 
-    def _update_mesh(self, component: Component) -> None:
-        self.mesh = generate_mesh([component])
-        self.render_mesh(self.mesh)
-        pub.sendMessage("mesh.updated", mesh=self.mesh)
+    def _add_component_to_geometry(self, component: Component) -> None:
+        """Add a new geometric component and render and display its rough mesh."""
+        self.components.append(component)
+        mesh = generate_mesh([component], resolution=0.2)
+        self.meshes.append(mesh)
+        self.render_mesh(mesh)
+        pub.sendMessage("geometry.updated", mesh=mesh)
+
+    def _create_mesh_from_geometry(self) -> None:
+        """Generate and display a high quality mesh from the current geometry."""
+        if not self.components:
+            return
+
+        self.ugrids = []
+        mesh = generate_mesh(self.components, resolution=0.05)
+        self.meshes = [mesh]
+        for actor in self.ren.GetActors():
+            self.ren.RemoveActor(actor)
+        self.render_mesh(mesh)
+        pub.sendMessage("mesh.updated", mesh=mesh)
 
     def render_mesh(self, mesh: Mesh) -> None:
         """Render a mesh within the VTKWindow.
@@ -131,42 +148,46 @@ class VTKWindow(QVBoxLayout):
             reader = vtk.vtkXMLUnstructuredGridReader()
             reader.SetFileName(filename)
             reader.Update()
-            self.ugrid = reader.GetOutput()
+            ugrid = reader.GetOutput()
         finally:
             # Delete the file now that we've finished with it
             os.unlink(filename)
 
+        self.ugrids.append(ugrid)
         # Create the LUT for scalars to colors
-        self.lut = vtk.vtkLookupTable()
-        self.lut.SetNumberOfTableValues(2)
-        self.lut.SetTableRange(self.unselected_lookup_value, self.selected_lookup_value)
-        self.lut.Build()
-        self.lut.SetTableValue(self.unselected_lookup_value, *config.MESH_COLOUR)
-        self.lut.SetTableValue(
-            self.selected_lookup_value, *config.MESH_SELECTION_COLOUR
-        )
+        lut = vtk.vtkLookupTable()
+        lut.SetNumberOfTableValues(2)
+        lut.SetTableRange(self.unselected_lookup_value, self.selected_lookup_value)
+        lut.Build()
+        lut.SetTableValue(self.unselected_lookup_value, *config.MESH_COLOUR)
+        lut.SetTableValue(self.selected_lookup_value, *config.MESH_SELECTION_COLOUR)
 
-        self.mapper = vtk.vtkDataSetMapper()
-        self.mapper.SetInputData(self.ugrid)
-        self.mapper.UseLookupTableScalarRangeOn()
-        self.mapper.SetLookupTable(self.lut)
+        mapper = vtk.vtkDataSetMapper()
+        mapper.SetInputData(ugrid)
+        mapper.UseLookupTableScalarRangeOn()
+        mapper.SetLookupTable(lut)
 
-        self.actor.SetMapper(self.mapper)
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+        self.ren.AddActor(actor)
 
         self.ren.ResetCamera()
         self.iren.ReInitialize()
 
     def _colour_mesh_selection(self, selection_name: str) -> None:
         """Update rendered mesh colours based on selected element."""
-        if self.mesh is None:
-            return
+        for mesh, ugrid in zip(self.meshes, self.ugrids):
+            point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
+            try:
+                surface_point_ids = np.unique(
+                    self.get_point_ids_in_surface(selection_name, mesh)
+                )
+                point_colours[surface_point_ids] = self.selected_lookup_value
+                self.iren.ReInitialize()
+            except KeyError:
+                pass
 
-        surface_point_ids = np.unique(
-            self.get_point_ids_in_surface(selection_name, self.mesh)
-        )
-        point_colours = np.full(self.mesh.points.shape[0], self.unselected_lookup_value)
-        point_colours[surface_point_ids] = self.selected_lookup_value
-        self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
+            ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
         self.iren.ReInitialize()
 
     def set_camera_orientation(
