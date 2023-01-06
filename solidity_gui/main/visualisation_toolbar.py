@@ -2,22 +2,20 @@
 from typing import Any
 
 import qtawesome as qta
+from pubsub import pub
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QComboBox, QToolBar
 
 from .. import config
-from .vtk_window import VTKWindow
 
 
 class VisualisationToolbar(QToolBar):
     """A toolbar containing visualisation controls for a given VTKWindow."""
 
-    def __init__(self, vtk_window: VTKWindow, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Create a new VisualisationToolbar."""
         super().__init__("Visualisation toolbar", *args, **kwargs)
-
-        self.vtk_window = vtk_window
 
         self.setIconSize(QSize(*config.TOOLBAR_ICON_SIZE))
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
@@ -59,10 +57,16 @@ class VisualisationToolbar(QToolBar):
         self.transform_yz_action.triggered.connect(self._yz_click_handler)
 
     def _xy_click_handler(self) -> None:
-        self.vtk_window.snap_camera_xy_axis()
+        pub.sendMessage(
+            "camera.reorient", orientation_vector=(0, 0, 1), up_vector=(1, 0, 0)
+        )
 
     def _xz_click_handler(self) -> None:
-        self.vtk_window.snap_camera_xz_axis()
+        pub.sendMessage(
+            "camera.reorient", orientation_vector=(0, -1, 0), up_vector=(1, 0, 0)
+        )
 
     def _yz_click_handler(self) -> None:
-        self.vtk_window.snap_camera_yz_axis()
+        pub.sendMessage(
+            "camera.reorient", orientation_vector=(1, 0, 0), up_vector=(0, 1, 0)
+        )

@@ -21,3 +21,9 @@ CENTRAL_LAYOUT_SPACING = 20
 
 """Maximum height of the command box."""
 COMMAND_BOX_MAXIMUM_HEIGHT = 100
+
+"""Default camera orientation."""
+DEFAULT_ORIENTATION_VECTOR = (1, 0, 0)
+
+"""Default up direction for camera."""
+DEFAULT_UP_VECTOR = (0, 1, 0)

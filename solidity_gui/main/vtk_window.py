@@ -1,8 +1,7 @@
 """Code to display a mesh within a VTK window."""
 import os
-from dataclasses import dataclass
 from tempfile import NamedTemporaryFile
-from typing import Any, List, Tuple, Type
+from typing import Any, List, Tuple
 
 import numpy as np
 import vtk
@@ -17,6 +16,8 @@ from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
 from .geometry import Component, generate_mesh
+
+Vector = Tuple[float, float, float]
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
@@ -45,31 +46,6 @@ def make_axes_actor() -> vtkAxesActor:
     return axes
 
 
-@dataclass
-class CameraOrientation:
-    """Definition of CameraOrientation.
-
-    Contains details of a vtkCamera's view port and focal point.
-
-    Attributes:
-        position: position of the camera in world coordinates
-        focal_point: focal of the camera in world coordinates
-        view_up: the view up direction for the camera
-        distance: move the focal point so that it is the specified distance from the
-        camera position
-        clipping_range: the location of the near and far clipping planes along the
-        direction of projection
-        orientation: the orientation of the camera
-    """
-
-    position: Tuple[Type[float], Type[float], Type[float]]
-    focal_point: Tuple[Type[float], Type[float], Type[float]]
-    view_up: Tuple[Type[float], Type[float], Type[float]]
-    distance: float
-    clipping_range: Tuple[Type[float], Type[float]]
-    orientation: Tuple[Type[float], Type[float], Type[float]]
-
-
 class VTKWindow(QVBoxLayout):
     """A frame containing a VTK window."""
 
@@ -94,7 +70,6 @@ class VTKWindow(QVBoxLayout):
         self.addWidget(vtkWidget)
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(*config.BACKGROUND_COLOUR)
-        self.ren.ResetCamera()
 
         vtkWidget.GetRenderWindow().AddRenderer(self.ren)
         self.iren = vtkWidget.GetRenderWindow().GetInteractor()
@@ -102,12 +77,15 @@ class VTKWindow(QVBoxLayout):
         self.meshes: List[Mesh] = []
         self.components: List[Component] = []
         self.ugrids: List[vtk.vtkUnstructuredGrid] = []
+        self.reset_camera()
 
         self._create_orientation_marker()
 
         pub.subscribe(self._add_component_to_geometry, "geometry.update")
         pub.subscribe(self._create_mesh_from_geometry, "mesh.create")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
+        pub.subscribe(self.reorient_camera, "camera.reorient")
+        pub.subscribe(self.reset_camera, "camera.reset")
 
     def _add_component_to_geometry(self, component: Component) -> None:
         """Add a new geometric component and render and display its rough mesh."""
@@ -190,35 +168,12 @@ class VTKWindow(QVBoxLayout):
             ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
         self.iren.ReInitialize()
 
-    def set_camera_orientation(
-        self, camera_orientation_settings: CameraOrientation
-    ) -> None:
-        """Resets a camera orientation for a vtkRenderer.
-
-        Args:
-            camera_orientation_settings: The orientation settings to set the camera to.
-        """
-        camera = self.ren.GetActiveCamera()
-        camera.SetPosition(camera_orientation_settings.position)
-        camera.SetFocalPoint(camera_orientation_settings.focal_point)
-        camera.SetViewUp(camera_orientation_settings.view_up)
-        camera.SetDistance(camera_orientation_settings.distance)
-        camera.SetClippingRange(camera_orientation_settings.clipping_range)
+    def reset_camera(self) -> None:
+        """Apply default settings to camera."""
         self.ren.ResetCamera()
-        self.iren.ReInitialize()
-
-    def get_camera_orientation(self) -> CameraOrientation:
-        """Stores details on a camera orientation in a Dict."""
-        camera = self.ren.GetActiveCamera()
-        camera_orientation_settings = CameraOrientation(
-            position=camera.GetPosition(),
-            focal_point=camera.GetFocalPoint(),
-            view_up=camera.GetViewUp(),
-            distance=camera.GetDistance(),
-            clipping_range=camera.GetClippingRange(),
-            orientation=camera.GetOrientation(),
+        self.reorient_camera(
+            config.DEFAULT_ORIENTATION_VECTOR, config.DEFAULT_UP_VECTOR
         )
-        return camera_orientation_settings
 
     def _create_orientation_marker(self) -> None:
         """Creates an orientation axes and displays it in the VTK window."""
@@ -229,36 +184,17 @@ class VTKWindow(QVBoxLayout):
         self.om1.EnabledOn()
         self.om1.InteractiveOn()
 
-    def snap_camera_xy_axis(self) -> None:
-        """Sets the camera position for snapping to the x-y axis."""
-        camera = self.ren.GetActiveCamera()
-        focal_point = camera.GetFocalPoint()
-        distance = camera.GetDistance()
-        camera.SetPosition(
-            *(focal_point[0], focal_point[1], -(distance + focal_point[2]))
-        )
-        camera.SetViewUp(1.0, 0.0, 0.0)
-        self.ren.ResetCamera()
-        self.iren.ReInitialize()
+    def reorient_camera(self, orientation_vector: Vector, up_vector: Vector) -> None:
+        """Updates camera position to a new orientation whilst preserving focal point.
 
-    def snap_camera_xz_axis(self) -> None:
-        """Sets the camera position for snapping to the x-z axis."""
+        Args:
+            orientation_vector: new orientation w.r.t focal point. Passing a unit vector
+                                will preserve the current distance from the focal point.
+            up_vector: up direction of camera for new orientation.
+        """
         camera = self.ren.GetActiveCamera()
-        focal_point = camera.GetFocalPoint()
+        focal_point = np.array(camera.GetFocalPoint())
         distance = camera.GetDistance()
-        camera.SetPosition(*(focal_point[0], distance + focal_point[1], focal_point[2]))
-        camera.SetViewUp(1.0, 0.0, 0.0)
-        self.ren.ResetCamera()
-        self.iren.ReInitialize()
-
-    def snap_camera_yz_axis(self) -> None:
-        """Sets the camera position for snapping to the y-z axis."""
-        camera = self.ren.GetActiveCamera()
-        focal_point = camera.GetFocalPoint()
-        distance = camera.GetDistance()
-        camera.SetPosition(
-            *(-(distance + focal_point[0]), focal_point[1], focal_point[2])
-        )
-        camera.SetViewUp(0.0, 1.0, 0.0)
-        self.ren.ResetCamera()
+        camera.SetPosition(distance * -np.array(orientation_vector) + focal_point)
+        camera.SetViewUp(up_vector)
         self.iren.ReInitialize()
