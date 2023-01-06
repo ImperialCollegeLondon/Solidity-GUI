@@ -10,7 +10,7 @@ from .vtk_window import VTKWindow
 
 
 class MainWindow(QMainWindow):
-    """Main window containg all the GUI frames and menus."""
+    """Main window containing all the GUI frames and menus."""
 
     def __init__(self) -> None:
         """Create new MainWindow."""
@@ -25,8 +25,6 @@ class MainWindow(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, visualisation_toolbar)
 
         self.setCentralWidget(self.main_frame)
-
-        self.show()
 
     def create_menu_bar(self) -> None:
         """Create the menu bar at the top of the main window."""
