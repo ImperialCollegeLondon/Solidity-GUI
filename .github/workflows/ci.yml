@@ -63,3 +63,7 @@ jobs:
       # tests involving vtk_window do not work of Windows CI runners
       run: pytest -k "not test_vtk_window"
       if: matrix.os == 'windows-latest'
+
+    - name: Check for documentation errors with MkDocs
+      run: |
+        mkdocs build -s
