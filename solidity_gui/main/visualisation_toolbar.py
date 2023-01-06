@@ -71,4 +71,4 @@ class VisualisationToolbar(QToolBar):
         self.vtk_window.snap_camera_yz_axis()
 
     def _clip_handler(self) -> None:
-        ClippingPlanesDialog().exec_()
+        ClippingPlanesDialog(self.vtk_window).exec_()

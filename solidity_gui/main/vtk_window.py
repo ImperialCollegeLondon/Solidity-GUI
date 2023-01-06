@@ -109,6 +109,9 @@ class VTKWindow(QVBoxLayout):
         pub.subscribe(self._update_mesh, "mesh.update")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
 
+        pub.subscribe(self._change_near_clipping_plane, "near_clipping_plane_value_changed")
+        pub.subscribe(self._change_far_clipping_plane, "far_clipping_plane_value_changed")
+
     def _update_mesh(self, component: Component) -> None:
         self.mesh = generate_mesh([component])
         self.render_mesh(self.mesh)
@@ -243,3 +246,15 @@ class VTKWindow(QVBoxLayout):
         camera.SetViewUp(0.0, 1.0, 0.0)
         self.ren.ResetCamera()
         self.iren.ReInitialize()
+
+    def _change_near_clipping_plane(self, value) -> None:
+        current_clipping_range = self.ren.GetActiveCamera().GetClippingRange()
+        print("current clipping range: ", current_clipping_range)
+        self.ren.GetActiveCamera().SetClippingRange(value, current_clipping_range[1])
+        print("near clipping plane value change: ", value)
+
+    def _change_far_clipping_plane(self, value) -> None:
+        current_clipping_range = self.ren.GetActiveCamera().GetClippingRange()
+        print("current clipping range: ", current_clipping_range)
+        self.ren.GetActiveCamera().SetClippingRange(current_clipping_range[0], value)
+        print("far clipping plane value change: ", value)
