@@ -29,6 +29,15 @@ a = Analysis(
     noarchive=False,
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+splash = Splash(
+    ".\\splash.png",
+    binaries=a.binaries,
+    datas=a.datas,
+    text_pos=None,
+    text_size=12,
+    minify_script=True,
+    always_on_top=True,
+)
 
 exe = EXE(
     pyz,
@@ -36,6 +45,8 @@ exe = EXE(
     a.binaries,
     a.zipfiles,
     a.datas,
+    splash,
+    splash.binaries,
     [],
     name="Solidity-GUI",
     debug=False,
@@ -44,7 +55,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
