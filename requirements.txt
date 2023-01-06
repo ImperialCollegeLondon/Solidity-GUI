@@ -78,7 +78,7 @@ qtpy==2.3.0
     # via qtawesome
 rich==12.6.0
     # via meshio
-shiboken6==6.3.2
+shiboken6==6.4.1
     # via
     #   pyside6
     #   pyside6-addons
