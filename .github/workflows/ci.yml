@@ -60,6 +60,15 @@ jobs:
       if: matrix.os != 'windows-latest'
 
     - name: Run tests (windows)
-      # tests involving vtk_window do not work of Windows CI runners
+      # tests involving vtk_window do not work on Windows CI runners
       run: pytest -k "not test_vtk_window"
       if: matrix.os == 'windows-latest'
+
+    - name: Build executable
+      run: pyinstaller Solidity-GUI.spec
+
+    - uses: actions/upload-artifact@v2
+      if: success()
+      with:
+        name: Solidity-GUI-${{ matrix.os }}
+        path: dist/*
