@@ -67,7 +67,6 @@ class ShapeFactory:
 
         Args:
           geom: the geometry to add shapes too
-          shapes:
         """
         self.geom = geom
         self.function_map = {name: shape.method for name, shape in SHAPES.items()}

@@ -56,9 +56,9 @@ class CameraOrientation:
         focal_point: focal of the camera in world coordinates
         view_up: the view up direction for the camera
         distance: move the focal point so that it is the specified distance from the
-        camera position
+                  camera position
         clipping_range: the location of the near and far clipping planes along the
-        direction of projection
+                        direction of projection
         orientation: the orientation of the camera
     """
 
