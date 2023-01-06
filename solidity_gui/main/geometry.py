@@ -72,26 +72,30 @@ class ShapeFactory:
         self.geom = geom
         self.function_map = {name: shape.method for name, shape in SHAPES.items()}
 
-    def add_component(self, component: Component) -> None:
+    def add_component(self, component: Component, resolution: float) -> None:
         """Add a component to the system geometry.
 
         Args:
           component: definition of the shape to add to the system geometry
+          resolution: resolution to use for mesh
         """
-        shape = self.function_map[component.shape](self.geom, *component.args)
+        shape = self.function_map[component.shape](
+            self.geom, *component.args, mesh_size=resolution
+        )
         self.geom.add_physical(shape.volume, f"{component.label}_volume")
         for i, surface in enumerate(shape.surface_loop.surfaces):
             self.geom.add_physical(surface, f"{component.label}_surface_{i}")
 
 
-def generate_mesh(components: Iterable[Component]) -> Mesh:
+def generate_mesh(components: Iterable[Component], resolution: float) -> Mesh:
     """Generate a meshio.Mesh from simple geometric components.
 
     Args:
       components: to include in the system geometry
+      resolution: resolution to use for mesh
     """
     with pygmsh.geo.Geometry() as geom:
         factory = ShapeFactory(geom)
         for component in components:
-            factory.add_component(component)
+            factory.add_component(component, resolution=resolution)
         return geom.generate_mesh()

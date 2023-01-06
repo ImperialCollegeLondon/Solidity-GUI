@@ -35,3 +35,18 @@ When dependencies are upgraded, both `requirements.txt` and `dev-requirements.tx
 should be regenerated so that they are in sync.
 
 [`pip-tools`]: https://github.com/jazzband/pip-tools
+
+### Bundling Solidity GUI as an executable
+
+Solidity GUI can be bundled as an executable using [`pyinstaller`].
+
+To do this, you first have to install the dependencies in `dev-requirements.txt`, as
+described above. Next you need to run:
+
+```sh
+pyinstaller Solidity-GUI.spec
+```
+
+This should create a single executable file in the `dist/` folder.
+
+[`pyinstaller`]: https://pyinstaller.org
