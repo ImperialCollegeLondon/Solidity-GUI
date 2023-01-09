@@ -12,7 +12,7 @@ altgraph==0.17.3
     # via pyinstaller
 async-timeout==4.0.2
     # via aiohttp
-attrs==22.1.0
+attrs==22.2.0
     # via
     #   aiohttp
     #   pytest
