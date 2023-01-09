@@ -30,13 +30,13 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 splash = Splash(
-    ".\\splash.png",
+    "splash_mountain.png",
     binaries=a.binaries,
     datas=a.datas,
-    text_pos=None,
-    text_size=12,
+    text_pos=(10, 50),
+    text_size=10,
     minify_script=True,
-    always_on_top=True,
+    always_on_top=False,
 )
 
 exe = EXE(
