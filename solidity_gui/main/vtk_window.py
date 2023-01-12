@@ -15,7 +15,7 @@ from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
-from .geometry import Component, generate_mesh
+from .geometry import Component, MeshGenerator
 
 Vector = Tuple[float, float, float]
 
@@ -81,27 +81,39 @@ class VTKWindow(QVBoxLayout):
 
         self._create_orientation_marker()
 
-        pub.subscribe(self._add_component_to_geometry, "geometry.update")
-        pub.subscribe(self._create_mesh_from_geometry, "mesh.create")
+        self.mesh_generator = MeshGenerator()
+
+        pub.subscribe(self._add_component_to_geometry_begin, "geometry.update")
+        pub.subscribe(self._add_component_to_geometry_end, "geometry.meshing.end")
+        pub.subscribe(self._create_mesh_from_geometry_begin, "mesh.create")
+        pub.subscribe(self._create_mesh_from_geometry_end, "mesh.meshing.end")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
         pub.subscribe(self.reorient_camera, "camera.reorient")
         pub.subscribe(self.reset_camera, "camera.reset")
 
-    def _add_component_to_geometry(self, component: Component) -> None:
+    def _add_component_to_geometry_begin(self, component: Component) -> None:
         """Add a new geometric component and render and display its rough mesh."""
         self.components.append(component)
-        mesh = generate_mesh([component], resolution=0.2)
+        self.mesh_generator.start_mesh_generation(
+            "geometry", [component], resolution=0.2
+        )
+
+    def _add_component_to_geometry_end(self, mesh: Mesh) -> None:
         self.meshes.append(mesh)
         self.render_mesh(mesh)
         pub.sendMessage("geometry.updated", mesh=mesh)
 
-    def _create_mesh_from_geometry(self) -> None:
+    def _create_mesh_from_geometry_begin(self) -> None:
         """Generate and display a high quality mesh from the current geometry."""
         if not self.components:
             return
 
         self.ugrids = []
-        mesh = generate_mesh(self.components, resolution=0.05)
+        self.mesh_generator.start_mesh_generation(
+            "mesh", self.components, resolution=0.05
+        )
+
+    def _create_mesh_from_geometry_end(self, mesh: Mesh) -> None:
         self.meshes = [mesh]
         for actor in self.ren.GetActors():
             self.ren.RemoveActor(actor)

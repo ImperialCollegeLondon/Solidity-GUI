@@ -1,10 +1,13 @@
 """Creation and manipulation of system geometries."""
 
 from dataclasses import dataclass
+from multiprocessing import Process, Queue
+from threading import Thread
 from typing import Callable, Dict, Iterable, List, Tuple, Type
 
 import pygmsh
 from meshio import Mesh
+from pubsub import pub
 
 # Type[float] indicates the object `float` rather than a float instance e.g. 1.0
 Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
@@ -98,3 +101,56 @@ def generate_mesh(components: Iterable[Component], resolution: float) -> Mesh:
         for component in components:
             factory.add_component(component, resolution=resolution)
         return geom.generate_mesh()
+
+
+class MeshGenerator:
+    """A class for communicating with gmsh on a separate process.
+
+    Using the gmsh module seemingly only works on the main thread of the Python process,
+    so in order to be able to run gmsh operations in the background, it is necessary to
+    spin up a separate process for this.
+    """
+
+    def __init__(self) -> None:
+        """Create a new MeshGenerator."""
+        self._in_queue: Queue = Queue()
+        """Queue containing the parameters for components to be meshed."""
+        self._out_queue: Queue = Queue()
+        """Queue containing the generated meshes."""
+
+        self._process = Process(target=self._run_mesh_generation, daemon=True)
+        """Background process for running gmsh."""
+        self._process.start()
+
+        self._thread = Thread(target=self._run_receive_mesh, daemon=True)
+        """Thread which signals when generated meshes have been received."""
+        self._thread.start()
+
+    def _generate_mesh(self) -> None:
+        topic, components, resolution = self._in_queue.get()
+        self._out_queue.put((topic, generate_mesh(components, resolution)))
+
+    def _run_mesh_generation(self) -> None:
+        while True:
+            self._generate_mesh()
+
+    def _receive_mesh(self) -> None:
+        item: Tuple[str, Mesh] = self._out_queue.get()
+        pub.sendMessage(f"{item[0]}.meshing.end", mesh=item[1])
+
+    def _run_receive_mesh(self) -> None:
+        while True:
+            self._receive_mesh()
+
+    def start_mesh_generation(
+        self, topic: str, components: Iterable[Component], resolution: float
+    ) -> Mesh:
+        """Generate a meshio.Mesh from simple geometric components.
+
+        Args:
+            topic: the top-level topic name to send messages on
+            components: to include in the system geometry
+            resolution: resolution to use for mesh
+        """
+        pub.sendMessage(f"{topic}.meshing.begin")
+        self._in_queue.put((topic, components, resolution))

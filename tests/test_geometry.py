@@ -1,8 +1,53 @@
 """Tests for geometry module."""
 
-from solidity_gui.main.geometry import Component, generate_mesh
+from unittest.mock import MagicMock, patch
+
+import pytest
+from pubsub import pub
+
+from solidity_gui.main.geometry import Component, MeshGenerator, generate_mesh
 
 RESOLUTION = 0.2
+
+
+@pytest.fixture()
+def mesh_generator():
+    """Create a MeshGenerator with Process and Thread monkeypatched."""
+    with patch("solidity_gui.main.geometry.Process", new_callable=MagicMock):
+        with patch("solidity_gui.main.geometry.Thread", new_callable=MagicMock):
+            yield MeshGenerator()
+
+
+@pytest.fixture()
+def send_message_mock(monkeypatch):
+    """Magic Mock patched over pubsub.pub.sendMessage."""
+    mock = MagicMock()
+    monkeypatch.setattr(pub, "sendMessage", mock)
+    return mock
+
+
+def component_factory(shape="ball", label="sphere", args=[[0.0, 0.0, 0.0], 0.2]):
+    """Generate a component with overridable defaults."""
+    return Component(shape=shape, label=label, args=args)
+
+
+def test_mesh_generator(mesh_generator: MeshGenerator, send_message_mock):
+    """Test the basic functionality of MeshGenerator."""
+    assert mesh_generator._in_queue.qsize() == 0
+    assert mesh_generator._out_queue.qsize() == 0
+
+    mesh_generator.start_mesh_generation("hello", [component_factory()], RESOLUTION)
+    send_message_mock.assert_called_once_with("hello.meshing.begin")
+    assert mesh_generator._in_queue.qsize() == 1
+    assert mesh_generator._out_queue.qsize() == 0
+
+    mesh_generator._generate_mesh()
+    assert mesh_generator._in_queue.qsize() == 0
+    assert mesh_generator._out_queue.qsize() == 1
+
+    mesh_generator._receive_mesh()
+    assert mesh_generator._in_queue.qsize() == 0
+    assert mesh_generator._out_queue.qsize() == 0
 
 
 def test_ball():
