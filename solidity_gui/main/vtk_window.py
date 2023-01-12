@@ -8,7 +8,8 @@ import vtk
 from meshio import CellBlock, Mesh
 from numpy.typing import NDArray
 from pubsub import pub
-from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QVBoxLayout
 from vtk.util import numpy_support
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
@@ -44,6 +45,14 @@ def make_axes_actor() -> vtkAxesActor:
     axes.SetConeRadius(1.025 * axes.GetConeRadius())
     axes.SetSphereRadius(1.5 * axes.GetSphereRadius())
     return axes
+
+
+def _set_cursor_to_busy() -> None:
+    QApplication.setOverrideCursor(Qt.WaitCursor)
+
+
+def _restore_cursor(mesh: Mesh = None) -> None:
+    QApplication.restoreOverrideCursor()
 
 
 class VTKWindow(QVBoxLayout):
@@ -90,6 +99,12 @@ class VTKWindow(QVBoxLayout):
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
         pub.subscribe(self.reorient_camera, "camera.reorient")
         pub.subscribe(self.reset_camera, "camera.reset")
+
+        # Set the mouse cursor to busy during meshing
+        pub.subscribe(_set_cursor_to_busy, "mesh.meshing.begin")
+        pub.subscribe(_set_cursor_to_busy, "geometry.meshing.begin")
+        pub.subscribe(_restore_cursor, "mesh.meshing.end")
+        pub.subscribe(_restore_cursor, "geometry.meshing.end")
 
     def _add_component_to_geometry_begin(self, component: Component) -> None:
         """Add a new geometric component and render and display its rough mesh."""
