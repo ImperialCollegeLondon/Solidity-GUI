@@ -3,8 +3,10 @@
 from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Tuple, Type
 
+import gmsh
 import pygmsh
 from meshio import Mesh
+from pygmsh.common.dummy import Dummy
 
 # Type[float] indicates the object `float` rather than a float instance e.g. 1.0
 Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
@@ -31,7 +33,7 @@ class Shape:
     """Definition of a shape.
 
     Contains the information required by ShapeFactory to build a shape using the
-    pygmsh.geo.Geometry class.
+    pygmsh.occ.Geometry class.
 
     Attributes:
       name: name of the shape e.g. "box"
@@ -47,12 +49,12 @@ class Shape:
 SHAPES = dict(
     box=Shape(
         name="box",
-        method=pygmsh.geo.Geometry.add_box,
-        args=dict(x0=float, x1=float, y0=float, y1=float, z0=float, z1=float),
+        method=pygmsh.occ.geometry.Geometry.add_box,
+        args=dict(x0=(float, float, float), extents=(float, float, float)),
     ),
     ball=Shape(
         name="ball",
-        method=pygmsh.geo.Geometry.add_ball,
+        method=pygmsh.occ.Geometry.add_ball,
         args=dict(x0=(float, float, float), radius=float),
     ),
 )
@@ -60,9 +62,9 @@ SHAPES = dict(
 
 
 class ShapeFactory:
-    """An adapter to pygmsh.geo.Geometry for creation of simple geometries."""
+    """An adapter to pygmsh.occ.Geometry for creation of simple geometries."""
 
-    def __init__(self, geom: pygmsh.geo.Geometry):
+    def __init__(self, geom: pygmsh.occ.Geometry):
         """Initialise a new ShapeFactory.
 
         Args:
@@ -82,9 +84,16 @@ class ShapeFactory:
         shape = self.function_map[component.shape](
             self.geom, *component.args, mesh_size=resolution
         )
-        self.geom.add_physical(shape.volume, f"{component.label}_volume")
-        for i, surface in enumerate(shape.surface_loop.surfaces):
-            self.geom.add_physical(surface, f"{component.label}_surface_{i}")
+
+        # unfortunately when using the OCC geometry kernel there doesn't seem to be a
+        # way to directly get the ids of the surfaces for a shape, instead we have to
+        # get these directly from the gmsh module
+        _, surface_tags = gmsh.model.occ.get_surface_loops(shape._id)
+
+        self.geom.add_physical(shape, f"{component.label}_volume")
+        for i, tag in enumerate(surface_tags[0]):
+            self.geom.add_physical(Dummy(2, int(tag)), f"{component.label}_surface_{i}")
+        return shape
 
 
 def generate_mesh(components: Iterable[Component], resolution: float) -> Mesh:
@@ -94,7 +103,7 @@ def generate_mesh(components: Iterable[Component], resolution: float) -> Mesh:
       components: to include in the system geometry
       resolution: resolution to use for mesh
     """
-    with pygmsh.geo.Geometry() as geom:
+    with pygmsh.occ.geometry.Geometry() as geom:
         factory = ShapeFactory(geom)
         for component in components:
             factory.add_component(component, resolution=resolution)

@@ -11,17 +11,16 @@ def test_ball():
     mesh = generate_mesh(
         [Component(shape="ball", args=[(0, 0, 0), 1], label=label)], RESOLUTION
     )
-    assert len(mesh.cell_sets.keys()) == 9
+    assert len(mesh.cell_sets.keys()) == 2
     assert mesh.cell_sets[f"{label}_volume"][2] is not None
-    for i in range(8):
-        assert mesh.cell_sets[f"{label}_surface_{i}"][1] is not None
+    assert mesh.cell_sets[f"{label}_surface_0"][1] is not None
 
 
 def test_box():
     """Test creation of a box."""
     label = "cube"
     mesh = generate_mesh(
-        [Component(shape="box", args=[0, 1, 0, 1, 0, 1], label=label)], RESOLUTION
+        [Component(shape="box", args=[(0, 0, 0), (1, 1, 1)], label=label)], RESOLUTION
     )
     assert len(mesh.cell_sets.keys()) == 7
     assert mesh.cell_sets[f"{label}_volume"][2] is not None
@@ -35,9 +34,9 @@ def test_both():
     ball_label = "globe"
     mesh = generate_mesh(
         [
-            Component(shape="box", args=[0, 1, 0, 1, 0, 1], label=box_label),
+            Component(shape="box", args=[(0, 0, 0), (1, 1, 1)], label=box_label),
             Component(shape="ball", args=[(0, 0, 0), 1], label=ball_label),
         ],
         RESOLUTION,
     )
-    assert len(mesh.cell_sets.keys()) == 16
+    assert len(mesh.cell_sets.keys()) == 9
