@@ -57,6 +57,16 @@ SHAPES = dict(
         method=pygmsh.occ.Geometry.add_ball,
         args=dict(x0=(float, float, float), radius=float),
     ),
+    cone=Shape(
+        name="cone",
+        method=pygmsh.occ.Geometry.add_cone,
+        args=dict(
+            x0=(float, float, float),
+            axis=(float, float, float),
+            radius0=float,
+            radius1=float,
+        ),
+    ),
 )
 """Library of supported shapes."""
 

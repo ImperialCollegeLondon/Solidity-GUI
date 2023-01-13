@@ -28,8 +28,21 @@ def test_box():
         assert mesh.cell_sets[f"{label}_surface_{i}"][1] is not None
 
 
-def test_both():
-    """Test creating both a box and a ball."""
+def test_cone():
+    """Test creation of a cone."""
+    label = "conical"
+    mesh = generate_mesh(
+        [Component(shape="cone", args=[(0, 0, 0), (1, 1, 1), 1, 0], label=label)],
+        RESOLUTION,
+    )
+    assert len(mesh.cell_sets.keys()) == 3
+    assert mesh.cell_sets[f"{label}_volume"][2] is not None
+    for i in range(2):
+        assert mesh.cell_sets[f"{label}_surface_{i}"][1] is not None
+
+
+def test_multiple():
+    """Test creating both a box and a ball at the same time."""
     box_label = "cube"
     ball_label = "globe"
     mesh = generate_mesh(
