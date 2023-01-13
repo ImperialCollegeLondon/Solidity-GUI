@@ -67,6 +67,11 @@ SHAPES = dict(
             radius1=float,
         ),
     ),
+    cylinder=Shape(
+        name="cylinder",
+        method=pygmsh.occ.Geometry.add_cylinder,
+        args=dict(x0=(float, float, float), axis=(float, float, float), radius=float),
+    ),
 )
 """Library of supported shapes."""
 

@@ -28,4 +28,5 @@ class ControlPanel(QVBoxLayout):
         self.addWidget(AddShapeButton("ball"))
         self.addWidget(AddShapeButton("box"))
         self.addWidget(AddShapeButton("cone"))
+        self.addWidget(AddShapeButton("cylinder"))
         self.addWidget(CreateMeshButton())
