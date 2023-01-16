@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Tuple, Type
 
 import gmsh
+import numpy as np
 import pygmsh
 from meshio import Mesh
 from pygmsh.common.dummy import Dummy
@@ -11,6 +12,7 @@ from pygmsh.common.dummy import Dummy
 # Type[float] indicates the object `float` rather than a float instance e.g. 1.0
 Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
 Arg_List_Type = List[List[float] | float]
+Vector = Tuple[float, float, float]
 
 
 @dataclass
@@ -26,6 +28,62 @@ class Component:
     shape: str
     label: str
     args: Arg_List_Type
+
+
+def add_dome(
+    geom: pygmsh.occ.Geometry,
+    x0: Vector,
+    axis: Vector,
+    radius: float,
+    mesh_size: float = 0.2,
+) -> Dummy:
+    """Add curved dome shape to a geometry.
+
+    Args:
+      geom: the geometry to modify
+      x0: the centre of the circular base of the dome
+      axis: the central axis of the dome
+      radius: radius of the base of the dome
+      mesh_size: resolution of the mesh
+    """
+    x0_array = np.array(x0)
+    axis_array = np.array(axis)
+    p0 = geom.add_point(x0, mesh_size=mesh_size)
+
+    # generate an arbitrary unit vector perpendicular to axis
+    perp_vector = np.random.rand(3)
+    perp_vector -= (
+        perp_vector.dot(axis_array) * axis_array / np.linalg.norm(axis_array) ** 2
+    )
+    perp_vector /= np.linalg.norm(perp_vector)
+
+    xs = np.linspace(-radius, 0, 10)
+
+    def _curve(x: float) -> float:
+        """Simple quadratic function giving the shape of the curved surface."""
+        return -(x**2) + 1
+
+    curve_points = [
+        geom.add_point(x0_array + perp_vector * x + _curve(x / radius) * axis_array)
+        for x in xs
+    ]
+
+    lines = [
+        geom.add_line(p0, curve_points[0]),
+        geom.add_bspline(curve_points),
+        geom.add_line(curve_points[-1], p0),
+    ]
+    cv = geom.add_curve_loop(lines)
+    surface = geom.add_surface(cv)
+    _, dome_volume, _ = geom.revolve(surface, axis_array, x0_array, -2 * np.pi)
+
+    # remove unneeded parts of the geometry
+    geom.remove(surface)
+    for cp in curve_points:
+        geom.remove(cp)
+    for line in lines:
+        geom.remove(line)
+    return dome_volume
 
 
 @dataclass
@@ -70,6 +128,11 @@ SHAPES = dict(
     cylinder=Shape(
         name="cylinder",
         method=pygmsh.occ.Geometry.add_cylinder,
+        args=dict(x0=(float, float, float), axis=(float, float, float), radius=float),
+    ),
+    dome=Shape(
+        name="dome",
+        method=add_dome,
         args=dict(x0=(float, float, float), axis=(float, float, float), radius=float),
     ),
 )

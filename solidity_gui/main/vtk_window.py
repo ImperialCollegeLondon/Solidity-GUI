@@ -1,7 +1,7 @@
 """Code to display a mesh within a VTK window."""
 import os
 from tempfile import NamedTemporaryFile
-from typing import Any, List, Tuple
+from typing import Any, List
 
 import numpy as np
 import vtk
@@ -15,9 +15,7 @@ from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
-from .geometry import Component, generate_mesh
-
-Vector = Tuple[float, float, float]
+from .geometry import Component, Vector, generate_mesh
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
