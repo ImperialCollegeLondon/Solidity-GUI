@@ -1,7 +1,7 @@
 """Creation and manipulation of system geometries."""
 
 from dataclasses import dataclass
-from typing import Callable, Dict, Iterable, List, Tuple, Type
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type
 
 import gmsh
 import numpy as np
@@ -13,6 +13,45 @@ from pygmsh.common.dummy import Dummy
 Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
 Arg_List_Type = List[List[float] | float]
 Vector = Tuple[float, float, float]
+
+
+class Surface(pygmsh.common.surface.Surface):
+    """Generates a Surface from CurveLoop.
+
+    This class includes a necessary bug fix when working with the OCC geometry kernel.
+    Raised with pygmsh project - https://github.com/meshpro/pygmsh/issues/567. If this
+    issue is resolved this class can be removed.
+    """
+
+    def __init__(
+        self,
+        env: gmsh.model.geo | gmsh.model.occ,
+        curve_loop: pygmsh.common.curve_loop.CurveLoop,
+    ):
+        """Create a new Surface instance.
+
+        Args:
+          env: gmsh interface to either the built-in or OCC geometry kernel
+          curve_loop: contains all the Line objects for the loop construction
+        """
+        assert isinstance(curve_loop, pygmsh.common.curve_loop.CurveLoop)
+        self.curve_loop = curve_loop
+        self.num_edges = len(curve_loop)
+        self._id = env.addSurfaceFilling(self.curve_loop._id)  # fixed line
+        self.dim_tag = (2, self._id)
+        self.dim_tags = [self.dim_tag]
+
+
+class Geometry(pygmsh.occ.Geometry):
+    """Interface to gmsh geometry functionality.
+
+    This version of the Geometry interface updates the `add_surface` method to use a
+    custom Surface class in order circumvent issue #567 of meshpro/pymsh.
+    """
+
+    def add_surface(self, *args: Any, **kwargs: Any) -> Surface:
+        """Add a new surface to the geometry."""
+        return Surface(self.env, *args, **kwargs)
 
 
 @dataclass
@@ -181,7 +220,7 @@ def generate_mesh(components: Iterable[Component], resolution: float) -> Mesh:
       components: to include in the system geometry
       resolution: resolution to use for mesh
     """
-    with pygmsh.occ.geometry.Geometry() as geom:
+    with Geometry() as geom:
         factory = ShapeFactory(geom)
         for component in components:
             factory.add_component(component, resolution=resolution)
