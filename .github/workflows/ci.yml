@@ -35,6 +35,7 @@ jobs:
 
     - name: Install Dependencies (Linux)
       run: |
+        sudo apt update
         sudo apt-get install -y libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 \
             x11-utils libegl1 libglu1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
@@ -60,9 +61,18 @@ jobs:
       if: matrix.os != 'windows-latest'
 
     - name: Run tests (windows)
-      # tests involving vtk_window do not work of Windows CI runners
+      # tests involving vtk_window do not work on Windows CI runners
       run: pytest -k "not test_vtk_window"
       if: matrix.os == 'windows-latest'
+
+    - name: Build executable
+      run: pyinstaller Solidity-GUI.spec
+
+    - uses: actions/upload-artifact@v2
+      if: success()
+      with:
+        name: Solidity-GUI-${{ matrix.os }}
+        path: dist/*
 
     - name: Check for documentation errors with MkDocs
       run: |
