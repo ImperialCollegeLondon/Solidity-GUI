@@ -14,11 +14,7 @@ class ControlPanel(QVBoxLayout):
     """A control panel for selecting surface colour and reset view orientation."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Create a ControlPanel.
-
-        Args:
-            vtk_window: The VTKWindow which the widgets will control
-        """
+        """Create a ControlPanel."""
         super().__init__(*args, **kwargs)
         reset_button = QPushButton("Reset view")
         reset_button.clicked.connect(partial(pub.sendMessage, "camera.reset"))
