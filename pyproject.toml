@@ -14,7 +14,8 @@ requires-python = ">=3.10"
 dev = ["black", "flake8<5", "flake8-docstrings", "isort", "mkdocs", "mkdocstrings",
        "mkdocstrings-python", "mkdocs-material", "mkdocs-gen-files",
        "mkdocs-literate-nav", "mkdocs-section-index", "mypy", "pip-tools", "pre-commit",
-       "pyinstaller", "pytest", "pytest-cov", "pytest-flake8", "pytest-qt"]
+       "pyinstaller", "pytest", "pytest-cov", "pytest-flake8", "pytest-timeout",
+       "pytest-qt"]
 
 [tool.setuptools]
 packages = ["solidity_gui"]
