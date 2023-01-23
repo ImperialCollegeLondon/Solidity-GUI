@@ -2,12 +2,12 @@
 
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
-from threading import Thread
-from typing import Callable, Dict, Iterable, List, Tuple, Type
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import pygmsh
 from meshio import Mesh
 from pubsub import pub
+from PySide6.QtCore import QThread, Signal
 
 # Type[float] indicates the object `float` rather than a float instance e.g. 1.0
 Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
@@ -60,6 +60,43 @@ SHAPES = dict(
     ),
 )
 """Library of supported shapes."""
+
+
+class GmshListener(QThread):
+    """A class to listen for generated meshes produced in the separate gmsh process.
+
+    We use a separate thread so that the main thread isn't blocked waiting for meshes to
+    be received. Qt's signal/slot mechanism is used to pass this mesh back to the main
+    thread, which invokes PyPubsub's sendMessage() function. This needs to be run on the
+    main thread in case listeners want to modify the GUI (all GUI operations have to be
+    on the main thread).
+    """
+
+    mesh_received = Signal(str, Mesh)
+    """Signal for when a new mesh has been generated."""
+
+    def __init__(self, queue: Queue) -> None:
+        """Create a new GmshListener."""
+        super().__init__()
+        self._queue = queue
+
+    def _receive_mesh(self) -> bool:
+        """Read a new mesh from the queue.
+
+        Returns:
+            False if thread is being stopped, True if item was retrieved successfully
+        """
+        item: Optional[Tuple[str, Mesh]] = self._queue.get()
+        if not item:
+            return False
+
+        self.mesh_received.emit(*item)
+        return True
+
+    def run(self) -> None:
+        """Read received meshes forever and broadcast via a signal."""
+        while self._receive_mesh():
+            pass
 
 
 class ShapeFactory:
@@ -122,9 +159,16 @@ class MeshGenerator:
         """Background process for running gmsh."""
         self._process.start()
 
-        self._thread = Thread(target=self._run_receive_mesh, daemon=True)
-        """Thread which signals when generated meshes have been received."""
-        self._thread.start()
+        self._listener = GmshListener(self._out_queue)
+        """Receives generated meshes and raises a signal when they arrive."""
+        self._listener.mesh_received.connect(self._send_meshing_end)
+        self._listener.start()
+
+    def __del__(self) -> None:
+        """Stop background QThread."""
+        # None is used as a sentinel value to signal that the thread should stop
+        self._out_queue.put(None)
+        self._listener.wait()
 
     def _generate_mesh(self) -> None:
         topic, components, resolution = self._in_queue.get()
@@ -134,13 +178,8 @@ class MeshGenerator:
         while True:
             self._generate_mesh()
 
-    def _receive_mesh(self) -> None:
-        item: Tuple[str, Mesh] = self._out_queue.get()
-        pub.sendMessage(f"{item[0]}.meshing.end", mesh=item[1])
-
-    def _run_receive_mesh(self) -> None:
-        while True:
-            self._receive_mesh()
+    def _send_meshing_end(self, name: str, mesh: Mesh) -> None:
+        pub.sendMessage(f"{name}.meshing.end", mesh=mesh)
 
     def start_mesh_generation(
         self, topic: str, components: Iterable[Component], resolution: float

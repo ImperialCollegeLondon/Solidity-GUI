@@ -11,11 +11,13 @@ RESOLUTION = 0.2
 
 
 @pytest.fixture()
-def mesh_generator():
-    """Create a MeshGenerator with Process and Thread monkeypatched."""
-    with patch("solidity_gui.main.geometry.Process", new_callable=MagicMock):
-        with patch("solidity_gui.main.geometry.Thread", new_callable=MagicMock):
-            yield MeshGenerator()
+@patch("solidity_gui.main.geometry.Process")
+@patch("solidity_gui.main.geometry.GmshListener.start")
+def mesh_generator(mock1, mock2):
+    """Create a MeshGenerator with Process and QThread monkeypatched."""
+    mesh_gen = MeshGenerator()
+    mock2.assert_called_once()
+    return mesh_gen
 
 
 @pytest.fixture()
@@ -45,7 +47,7 @@ def test_mesh_generator(mesh_generator: MeshGenerator, send_message_mock):
     assert mesh_generator._in_queue.qsize() == 0
     assert mesh_generator._out_queue.qsize() == 1
 
-    mesh_generator._receive_mesh()
+    mesh_generator._listener._receive_mesh()
     assert mesh_generator._in_queue.qsize() == 0
     assert mesh_generator._out_queue.qsize() == 0
 
