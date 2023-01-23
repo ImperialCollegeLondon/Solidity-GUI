@@ -1,5 +1,6 @@
 """Tests for geometry module."""
 
+from sys import platform
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -33,6 +34,9 @@ def component_factory(shape="ball", label="sphere", args=[[0.0, 0.0, 0.0], 0.2])
     return Component(shape=shape, label=label, args=args)
 
 
+@pytest.mark.skipif(
+    platform == "darwin", reason="Queue.qsize() is not implemented on macOS"
+)
 def test_mesh_generator(mesh_generator: MeshGenerator, send_message_mock):
     """Test the basic functionality of MeshGenerator."""
     assert mesh_generator._in_queue.qsize() == 0
