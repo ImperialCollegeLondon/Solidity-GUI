@@ -26,7 +26,7 @@ class AddShapeButton(QPushButton):
         self.shape_name = shape_name
         self.clicked.connect(self._click_handler)
 
-        pub.subscribe(self._disable, "mesh.updated")
+        pub.subscribe(self._disable, "mesh.meshing.begin")
 
     def _click_handler(self) -> None:
         """Create dialog on click."""
