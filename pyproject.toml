@@ -11,8 +11,10 @@ dependencies = ["pygmsh", "pypubsub", "pyside6==6.3.2", "qtawesome", "vtk"]
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
-dev = ["black", "flake8<5", "flake8-docstrings", "isort", "mypy", "pip-tools",
-       "pre-commit", "pyinstaller", "pytest", "pytest-cov", "pytest-flake8",
+dev = ["black", "flake8<5", "flake8-docstrings", "isort", "mkdocs", "mkdocstrings",
+       "mkdocstrings-python", "mkdocs-material", "mkdocs-gen-files",
+       "mkdocs-literate-nav", "mkdocs-section-index", "mypy", "pip-tools", "pre-commit",
+       "pyinstaller", "pytest", "pytest-cov", "pytest-flake8", "pytest-timeout",
        "pytest-qt", "scikit-learn"]
 
 [tool.setuptools]

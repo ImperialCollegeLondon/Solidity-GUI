@@ -1,5 +1,9 @@
 # Solidity GUI
 
+## Documentation
+
+API documentation is available [on GitHub pages](https://ImperialCollegeLondon.github.io/Solidity-GUI/).
+
 ## Development
 
 Setup your environment by installing dependencies from `dev-requirements.txt`.

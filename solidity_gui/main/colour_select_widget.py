@@ -10,11 +10,7 @@ class ColourSelectWidget(QComboBox):
     """QComboBox for highlighting a surface, populated from a mesh's cell_sets."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Create new ColourSelectWidget.
-
-        Args:
-            vtk_window: The VTKWindow which this widget interacts with.
-        """
+        """Create new ColourSelectWidget."""
         super().__init__(*args, **kwargs)
 
         self.currentTextChanged.connect(self._select_handler)

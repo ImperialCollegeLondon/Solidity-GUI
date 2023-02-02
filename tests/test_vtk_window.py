@@ -29,6 +29,7 @@ def send_message_mock(monkeypatch):
 def vtk_window(qtbot, subscribe_mock):
     """An AddShapeDialog instance initialised with the shape fixture."""
     window = VTKWindow()
+    window.mesh_generator = MagicMock()
     return window
 
 
@@ -44,9 +45,11 @@ def test_vtk_window_init(vtk_window, subscribe_mock):
     assert vtk_window.meshes == []
 
     subscribe_mock.assert_any_call(
-        vtk_window._add_component_to_geometry, "geometry.update"
+        vtk_window._add_component_to_geometry_begin, "geometry.update"
     )
-    subscribe_mock.assert_any_call(vtk_window._create_mesh_from_geometry, "mesh.create")
+    subscribe_mock.assert_any_call(
+        vtk_window._create_mesh_from_geometry_begin, "mesh.create"
+    )
     subscribe_mock.assert_any_call(vtk_window._colour_mesh_selection, "mesh.select")
 
 
@@ -65,11 +68,20 @@ def test_vtk_window_render_mesh(vtk_window):
     )
 
 
-def test_add_component_to_geometry(vtk_window, send_message_mock):
-    """Test _add_component_to_geometry method of VTKWindow."""
+def test_add_component_to_geometry_begin(vtk_window):
+    """Test _add_component_to_geometry_begin method of VTKWindow."""
     component = component_factory()
-    vtk_window._add_component_to_geometry(component)
+    vtk_window._add_component_to_geometry_begin(component)
     assert vtk_window.components == [component]
+    vtk_window.mesh_generator.start_mesh_generation.assert_called_once_with(
+        "geometry", [component], resolution=0.2
+    )
+
+
+def test_add_component_to_geometry_end(vtk_window, send_message_mock):
+    """Test _add_component_to_geometry_end method of VTKWindow."""
+    mesh = MagicMock()
+    vtk_window._add_component_to_geometry_end(mesh)
     assert len(vtk_window.meshes) == 1
     assert len(vtk_window.ugrids) == 1
     send_message_mock.assert_called_once_with(
@@ -77,15 +89,26 @@ def test_add_component_to_geometry(vtk_window, send_message_mock):
     )
 
 
-def test_create_mesh_from_geometry(vtk_window, send_message_mock):
-    """Test _create_mesh_from_geometry method of VTKWindow."""
+def test_create_mesh_from_geometry_begin(vtk_window):
+    """Test _create_mesh_from_geometry_begin method of VTKWindow."""
     # create 2 component meshes so we can check we end up with one
-    vtk_window._add_component_to_geometry(component_factory())
-    vtk_window._add_component_to_geometry(component_factory(label="sphere2"))
+    vtk_window._add_component_to_geometry_begin(component_factory())
+    vtk_window._add_component_to_geometry_end(MagicMock())
+    vtk_window._add_component_to_geometry_begin(component_factory(label="sphere2"))
+    vtk_window._add_component_to_geometry_end(MagicMock())
     assert len(vtk_window.meshes) == 2
-    send_message_mock.reset_mock()
+    vtk_window.mesh_generator.reset_mock()
 
-    vtk_window._create_mesh_from_geometry()
+    vtk_window._create_mesh_from_geometry_begin()
+    assert len(vtk_window.ugrids) == 0
+    vtk_window.mesh_generator.start_mesh_generation.assert_called_once_with(
+        "mesh", vtk_window.components, resolution=0.05
+    )
+
+
+def test_create_mesh_from_geometry_end(vtk_window, send_message_mock):
+    """Test _create_mesh_from_geometry_end method of VTKWindow."""
+    vtk_window._create_mesh_from_geometry_end(MagicMock())
 
     assert len(list(vtk_window.ren.GetActors())) == 1
     assert len(vtk_window.meshes) == 1
