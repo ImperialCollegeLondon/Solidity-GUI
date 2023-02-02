@@ -170,7 +170,7 @@ pillow==9.3.0
     # via matplotlib
 pip-tools==6.12.1
     # via SolidityGUI (pyproject.toml)
-platformdirs==2.5.2
+platformdirs==2.6.2
     # via
     #   black
     #   virtualenv
