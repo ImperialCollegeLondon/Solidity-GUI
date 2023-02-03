@@ -33,7 +33,9 @@ def vtk_window(qtbot, subscribe_mock):
     return window
 
 
-def component_factory(shape="ball", label="sphere", args=[[0.0, 0.0, 0.0], 0.2]):
+def component_factory(
+    shape="ball", label="sphere", args=dict(center=[0.0, 0.0, 0.0], radius=0.2)
+):
     """Generate a component with overridable defaults."""
     return Component(shape=shape, label=label, args=args)
 

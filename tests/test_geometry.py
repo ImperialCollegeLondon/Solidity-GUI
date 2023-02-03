@@ -32,7 +32,9 @@ def send_message_mock(monkeypatch):
     return mock
 
 
-def component_factory(shape="ball", label="sphere", args=[[0.0, 0.0, 0.0], 0.2]):
+def component_factory(
+    shape="ball", label="sphere", args=dict(center=[0.0, 0.0, 0.0], radius=0.2)
+):
     """Generate a component with overridable defaults."""
     return Component(shape=shape, label=label, args=args)
 
@@ -71,7 +73,8 @@ def test_ball():
     """Test creation of a ball."""
     label = "globe"
     mesh = generate_mesh(
-        [Component(shape="ball", args=[(0, 0, 0), 1], label=label)], RESOLUTION
+        [Component(shape="ball", args=dict(center=(0, 0, 0), radius=1), label=label)],
+        RESOLUTION,
     )
     check_mesh_cell_sets(mesh, 1, label)
 
@@ -80,7 +83,12 @@ def test_box():
     """Test creation of a box."""
     label = "cube"
     mesh = generate_mesh(
-        [Component(shape="box", args=[(0, 0, 0), (1, 1, 1)], label=label)], RESOLUTION
+        [
+            Component(
+                shape="box", args=dict(x0=(0, 0, 0), extents=(1, 1, 1)), label=label
+            )
+        ],
+        RESOLUTION,
     )
     check_mesh_cell_sets(mesh, 6, label)
 
@@ -89,7 +97,13 @@ def test_cone():
     """Test creation of a cone."""
     label = "conical"
     mesh = generate_mesh(
-        [Component(shape="cone", args=[(0, 0, 0), (1, 1, 1), 1, 0], label=label)],
+        [
+            Component(
+                shape="cone",
+                args=dict(center=(0, 0, 0), axis=(1, 1, 1), radius0=1, radius1=0),
+                label=label,
+            )
+        ],
         RESOLUTION,
     )
     check_mesh_cell_sets(mesh, 2, label)
@@ -99,7 +113,13 @@ def test_cylinder():
     """Test creation of a cylinder."""
     label = "cylindrical"
     mesh = generate_mesh(
-        [Component(shape="cylinder", args=[(0, 0, 0), (1, 1, 1), 1], label=label)],
+        [
+            Component(
+                shape="cylinder",
+                args=dict(x0=(0, 0, 0), axis=(1, 1, 1), radius=1),
+                label=label,
+            )
+        ],
         RESOLUTION,
     )
     check_mesh_cell_sets(mesh, 3, label)
@@ -135,7 +155,13 @@ def test_dome():
     ]
 
     mesh = generate_mesh(
-        [Component(shape="dome", args=[(0, 0, 0), axis, base_radius], label=label)],
+        [
+            Component(
+                shape="dome",
+                args=dict(x0=(0, 0, 0), axis=axis, radius=base_radius),
+                label=label,
+            )
+        ],
         RESOLUTION,
     )
 
@@ -155,8 +181,12 @@ def test_multiple():
     ball_label = "globe"
     mesh = generate_mesh(
         [
-            Component(shape="box", args=[(0, 0, 0), (1, 1, 1)], label=box_label),
-            Component(shape="ball", args=[(0, 0, 0), 1], label=ball_label),
+            Component(
+                shape="box", args=dict(x0=(0, 0, 0), extents=(1, 1, 1)), label=box_label
+            ),
+            Component(
+                shape="ball", args=dict(center=(0, 0, 0), radius=1), label=ball_label
+            ),
         ],
         RESOLUTION,
     )
