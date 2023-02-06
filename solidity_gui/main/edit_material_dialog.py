@@ -1,12 +1,19 @@
+"""Dialog for adding simple geometric shapes."""
+
+from typing import Dict
+
 from pubsub import pub
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QDialog, QHBoxLayout, QPushButton, QTreeView, QVBoxLayout
 
 from .material import Material
 
+
 class PropertiesTree(QTreeView):
+    """Implementation of a tree view for enabling/disabling properties."""
+
     def __init__(self, material: Material, enabled_properties: bool):
-        """Initialise a new PropertiesTree"""
+        """Initialise a new PropertiesTree."""
         super().__init__()
 
         self.setHeaderHidden(True)
@@ -14,12 +21,14 @@ class PropertiesTree(QTreeView):
         self.base_model = QStandardItemModel()
         self.root_node = self.base_model.invisibleRootItem()
 
-        self.categories = dict()
+        self.categories: Dict[str, QStandardItem]
         for property_name, property_settings in material.properties.items():
             if property_settings.enabled is enabled_properties:
                 property_node = QStandardItem(property_name)
                 property_node.setEditable(False)
-                self.categories.setdefault(property_settings.category, {}).setdefault(property_name, property_node)
+                self.categories.setdefault(property_settings.category, {}).setdefault(
+                    property_name, property_node
+                )
 
         self.category_nodes = dict()
         for category, properties_dict in self.categories.items():
@@ -27,11 +36,15 @@ class PropertiesTree(QTreeView):
             category_node.setSelectable(False)
             category_node.setEditable(False)
             self.category_nodes[category] = QStandardItem(category)
-            [category_node.appendRow(property_node) for property_node in properties_dict.values()]
+            [
+                category_node.appendRow(property_node)
+                for property_node in properties_dict.values()
+            ]
             self.root_node.appendRow(category_node)
 
         self.setModel(self.base_model)
         self.expandAll()
+
 
 class EditMaterialDialog(QDialog):
     """Dialog for editing a material."""
@@ -60,8 +73,10 @@ class EditMaterialDialog(QDialog):
         self.enabled_properties_tree = PropertiesTree(material, True)
         layout.addWidget(self.enabled_properties_tree)
 
-        self.properties_trees = {"enabled": self.enabled_properties_tree,
-                                "disabled": self.disabled_properties_tree}
+        self.properties_trees = {
+            "enabled": self.enabled_properties_tree,
+            "disabled": self.disabled_properties_tree,
+        }
 
     def _add_clicked(self):
         self._toggle_property(move_from="disabled", move_to="enabled")
@@ -73,22 +88,27 @@ class EditMaterialDialog(QDialog):
         from_tree = self.properties_trees[move_from]
         to_tree = self.properties_trees[move_to]
         selected_property_index = from_tree.selectedIndexes()[0]
-        selected_property_text = from_tree.base_model.itemFromIndex(selected_property_index).text()
+        selected_property_text = from_tree.base_model.itemFromIndex(
+            selected_property_index
+        ).text()
         category = self.material.properties[selected_property_text].category
         category_item = from_tree.base_model.itemFromIndex(
             selected_property_index.parent()
         )
-        selected_property_item = category_item.takeRow(
-            selected_property_index.row()
-        )[0]
+        selected_property_item = category_item.takeRow(selected_property_index.row())[0]
 
-        pub.sendMessage("property.toggle_enabled", material=self.material.name, property=selected_property_text)
+        pub.sendMessage(
+            "property.toggle_enabled",
+            material=self.material.name,
+            property=selected_property_text,
+        )
         if category in to_tree.category_nodes:
-            # Give ownership of the property QStandardItem to the "to" tree
+            # give ownership of the property QStandardItem to the "to" tree
             to_tree.base_model.findItems(category)[0].appendRow(selected_property_item)
 
         else:
-            # If the category does not exist in the "to" tree, we create it and add it to both the model and the category_nodes dict
+            # if the category does not exist in the "to" tree, we create it and add it
+            # to both the model and the category_nodes dict
             category_node = QStandardItem(category)
             category_node.setSelectable(False)
             category_node.setEditable(False)
@@ -99,7 +119,5 @@ class EditMaterialDialog(QDialog):
 
         # Remove the category from the "from" tree if it no longer has any children
         if not category_item.hasChildren():
-            from_tree.root_node.removeRow(
-                category_item.row()
-            )
+            from_tree.root_node.removeRow(category_item.row())
             from_tree.category_nodes.pop(category)

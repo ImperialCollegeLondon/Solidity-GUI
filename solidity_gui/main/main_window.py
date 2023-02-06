@@ -5,8 +5,8 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QTextEdit, QVBox
 from .. import config
 from .base_model_tree import BaseModelTree
 from .control_panel import ControlPanel
-from .visualisation_toolbar import VisualisationToolbar
 from .menu_bar import MenuBar
+from .visualisation_toolbar import VisualisationToolbar
 from .vtk_window import VTKWindow
 
 

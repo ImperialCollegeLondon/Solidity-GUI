@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QMenuBar
 
 from .materials_manager_dialog import MaterialsManagerDialog
 
+
 class MenuBar(QMenuBar):
     """A menu bar containing menu items for the Solidity GUI."""
 
@@ -14,7 +15,9 @@ class MenuBar(QMenuBar):
         super().__init__(*args, **kwargs)
 
         materials_manager_action = QAction("&Manager", self)
-        materials_manager_action.triggered.connect(self._materials_manager_click_handler)
+        materials_manager_action.triggered.connect(
+            self._materials_manager_click_handler
+        )
 
         self.addMenu("&File")
         self.addMenu("&Geometry")
@@ -30,7 +33,7 @@ class MenuBar(QMenuBar):
         self.addMenu("&View")
         self.addMenu("&Help")
 
-        self.materials_menu.addAction(materials_manager_action)     
+        self.materials_menu.addAction(materials_manager_action)
 
         self.materials_manager_dialog = MaterialsManagerDialog()
 
