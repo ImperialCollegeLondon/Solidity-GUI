@@ -1,23 +1,22 @@
 """Code to display a mesh within a VTK window."""
 import os
 from tempfile import NamedTemporaryFile
-from typing import Any, List, Tuple
+from typing import Any, List
 
 import numpy as np
 import vtk
 from meshio import CellBlock, Mesh
 from numpy.typing import NDArray
 from pubsub import pub
-from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QVBoxLayout
 from vtk.util import numpy_support
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
-from .geometry import Component, generate_mesh
-
-Vector = Tuple[float, float, float]
+from .geometry import Component, MeshGenerator, Vector
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
@@ -44,6 +43,14 @@ def make_axes_actor() -> vtkAxesActor:
     axes.SetConeRadius(1.025 * axes.GetConeRadius())
     axes.SetSphereRadius(1.5 * axes.GetSphereRadius())
     return axes
+
+
+def _set_cursor_to_busy() -> None:
+    QApplication.setOverrideCursor(Qt.WaitCursor)
+
+
+def _restore_cursor(mesh: Mesh = None) -> None:
+    QApplication.restoreOverrideCursor()
 
 
 class VTKWindow(QVBoxLayout):
@@ -81,27 +88,45 @@ class VTKWindow(QVBoxLayout):
 
         self._create_orientation_marker()
 
-        pub.subscribe(self._add_component_to_geometry, "geometry.update")
-        pub.subscribe(self._create_mesh_from_geometry, "mesh.create")
+        self.mesh_generator = MeshGenerator()
+
+        pub.subscribe(self._add_component_to_geometry_begin, "geometry.update")
+        pub.subscribe(self._add_component_to_geometry_end, "geometry.meshing.end")
+        pub.subscribe(self._create_mesh_from_geometry_begin, "mesh.create")
+        pub.subscribe(self._create_mesh_from_geometry_end, "mesh.meshing.end")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
         pub.subscribe(self.reorient_camera, "camera.reorient")
         pub.subscribe(self.reset_camera, "camera.reset")
 
-    def _add_component_to_geometry(self, component: Component) -> None:
+        # Set the mouse cursor to busy during meshing
+        pub.subscribe(_set_cursor_to_busy, "mesh.meshing.begin")
+        pub.subscribe(_set_cursor_to_busy, "geometry.meshing.begin")
+        pub.subscribe(_restore_cursor, "mesh.meshing.end")
+        pub.subscribe(_restore_cursor, "geometry.meshing.end")
+
+    def _add_component_to_geometry_begin(self, component: Component) -> None:
         """Add a new geometric component and render and display its rough mesh."""
         self.components.append(component)
-        mesh = generate_mesh([component], resolution=0.2)
+        self.mesh_generator.start_mesh_generation(
+            "geometry", [component], resolution=0.2
+        )
+
+    def _add_component_to_geometry_end(self, mesh: Mesh) -> None:
         self.meshes.append(mesh)
         self.render_mesh(mesh)
         pub.sendMessage("geometry.updated", mesh=mesh)
 
-    def _create_mesh_from_geometry(self) -> None:
+    def _create_mesh_from_geometry_begin(self) -> None:
         """Generate and display a high quality mesh from the current geometry."""
         if not self.components:
             return
 
         self.ugrids = []
-        mesh = generate_mesh(self.components, resolution=0.05)
+        self.mesh_generator.start_mesh_generation(
+            "mesh", self.components, resolution=0.05
+        )
+
+    def _create_mesh_from_geometry_end(self, mesh: Mesh) -> None:
         self.meshes = [mesh]
         for actor in self.ren.GetActors():
             self.ren.RemoveActor(actor)
