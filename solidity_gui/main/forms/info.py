@@ -5,7 +5,7 @@ render a form within the GUI and to pass data back to Form classes for processin
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, cast
+from typing import Dict, List, Optional
 
 from PySide6.QtWidgets import QWidget
 
@@ -14,12 +14,9 @@ from PySide6.QtWidgets import QWidget
 class FieldInfo:
     """Required data to render a form field within the GUI."""
 
-    input: QWidget | List[QWidget]
+    input: List[QWidget]
     header: Optional[str] = None
-    # below cast is needed to workaround https://github.com/python/mypy/issues/11923
-    errors: List[str] | Dict[int, List[str]] = cast(
-        List[str], field(default_factory=list)
-    )
+    errors: Dict[int, List[str]] = field(default_factory=dict)
     description: Optional[str] = None
 
 

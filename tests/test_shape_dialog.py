@@ -73,9 +73,9 @@ def test_dialog_ok(close_mock, send_message_mock, dialog, qtbot, shape):
     form_fields = dialog.form_info.fields
     for input_, value in zip(form_fields["a"].input, data["a"]):
         input_.setValue(value)
-    form_fields["b"].input.setValue(data["b"])
-    form_fields["c"].input.setValue(data["c"])
-    form_fields["label"].input.setText(label)
+    form_fields["b"].input[0].setValue(data["b"])
+    form_fields["c"].input[0].setValue(data["c"])
+    form_fields["label"].input[0].setText(label)
 
     layout = dialog.layout()
     button_box = layout.itemAt(layout.count() - 1).widget()

@@ -8,11 +8,31 @@ from itertools import chain
 from typing import Any, Callable, Dict, List, Tuple, cast
 
 from marshmallow import Schema
+from marshmallow import ValidationError as MarshmallowValidationError
 from marshmallow import fields as marshmallow_fields
 from marshmallow import validates_schema
 
-from .fields import BaseField, Field
+from .fields import BaseField, CompositeField, SingleField
 from .info import FormInfo
+
+
+class ValidationError(Exception):
+    """Custom class for by validation failures.
+
+    This class is used in preference to marshmallow.ValidationError as it provides more
+    precise types.
+    """
+
+    def __init__(
+        self,
+        field_errors: Dict[str, Dict[int, List[str]]],
+        schema_errors: List[str],
+        form_data: Dict[str, Any],
+    ):
+        """Initialise a new ValidationError."""
+        self.field_errors = field_errors
+        self.schema_errors = schema_errors
+        self.form_data = form_data
 
 
 class FormMeta(type):
@@ -74,26 +94,23 @@ class Form(metaclass=FormMeta):
     as a schema level validator for the Marshmallow Schema of the form.
     """
 
-    fields: Dict[str, Field]
+    fields: Dict[str, SingleField | CompositeField]
     _marshmallow_class: type
 
     def form_info(
         self,
         data: Dict[str, Any] = {},
-        errors: Dict[str, List[str] | Dict[int, List[str]]] = {},
+        errors: Dict[str, Dict[int, List[str]]] = {},
+        schema_errors: List[str] = [],
     ) -> FormInfo:
         """Return a FormInfo object for this Form."""
         fields = {
             name: field.field_info(
-                name, data.get(name, None), errors=errors.get(name, field.error_default)
+                name, data.get(name, None), errors=errors.get(name, dict())
             )
             for name, field in self.fields.items()
         }
-        # cast used to convey that schema level errors are always a list of strings
-        return FormInfo(
-            fields=fields,
-            schema_errors=cast(List[str], errors.get("_schema", [])),
-        )
+        return FormInfo(fields=fields, schema_errors=schema_errors)
 
     def process(self, form_info: FormInfo) -> Dict[str, Any]:
         """Extract form data from the provided FormInfo object.
@@ -101,9 +118,25 @@ class Form(metaclass=FormMeta):
         Args:
           form_info: FormInfo object containing form data
         """
-        return self._marshmallow_class().load(
-            {
-                name: field.process(form_info.fields[name].input)
-                for name, field in (self.fields.items())
-            }
-        )
+        try:
+            return self._marshmallow_class().load(
+                {
+                    name: field.process(form_info.fields[name].input)
+                    for name, field in (self.fields.items())
+                }
+            )
+        except MarshmallowValidationError as e:
+            # casts below are used to narrow expected return types as many=True is not
+            # used by the underlying Marshmallow schema
+            errors = cast(Dict[str, List[str] | Dict[int, List[str]]], e.messages)
+            data = cast(Dict[str, Any], e.data)
+            schema_errors = cast(List[str], errors.pop("_schema", []))
+            field_errors = {}
+            for key, value in errors.items():
+                if isinstance(value, list):
+                    field_errors[key] = {0: value}
+                elif isinstance(value, dict):
+                    field_errors[key] = value
+                else:
+                    ValueError("Unexpected data in Marshmallow errors")
+            raise ValidationError(field_errors, schema_errors, data)

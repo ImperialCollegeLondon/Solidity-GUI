@@ -46,11 +46,11 @@ def test_field_subclass(qtbot, field_class, data, qwidget_class):
     assert marshmallow_field.validators == validators
 
     input_ = field.input(data)
-    assert field.process(input_) == data
+    assert field.process([input_]) == data
 
     errors = ["error text"]
     field_info = field.field_info("field", data, errors=errors)
-    assert isinstance(field_info.input, qwidget_class)
+    assert isinstance(field_info.input[0], qwidget_class)
     field_info.header = display_name
     field_info.description = description
     field_info.errors = errors
@@ -63,7 +63,7 @@ def test_vector_field():
 
     marshmallow_field = field.marshmallow()
     assert isinstance(marshmallow_field, fields.List)
-    assert marshmallow_field.validators == field.vector_validators
+    assert marshmallow_field.validators == field.field_validators
 
     assert isinstance(marshmallow_field.inner, fields.Float)
     assert marshmallow_field.inner.validators == validators
@@ -312,18 +312,18 @@ def _check_label(layout, pos, text):
         dict(header="header"),
         dict(description="description"),
         dict(header="header", description="description"),
-        dict(errors=["error text 1"]),
-        dict(errors=["error text 1", "error text 2"]),
+        dict(errors={0: ["error text 1"]}),
+        dict(errors={0: ["error text 1", "error text 2"]}),
         dict(
             header="header",
             description="description",
-            errors=["error text 1", "error text 2"],
+            errors={0: ["error text 1", "error text 2"]},
         ),
     ),
 )
 def test_default_form_renderer_field(qtbot, kwargs):
     """Check default_form_renderer function when passed a single field."""
-    form_info = FormInfo(fields=dict(a=FieldInfo(input=QSpinBox(), **kwargs)))
+    form_info = FormInfo(fields=dict(a=FieldInfo(input=[QSpinBox()], **kwargs)))
     layout = default_form_renderer(form_info)
     pos = 0
     if header := kwargs.get("header"):
@@ -331,7 +331,7 @@ def test_default_form_renderer_field(qtbot, kwargs):
     if description := kwargs.get("description"):
         pos = _check_label(layout, pos, description)
     if errors := kwargs.get("errors"):
-        for error in errors:
+        for error in errors[0]:
             pos = _check_label(layout, pos, error)
     input_ = layout.itemAt(pos).widget()
     assert isinstance(input_, QSpinBox)
@@ -353,7 +353,7 @@ def test_default_form_renderer_field(qtbot, kwargs):
         ),
     ),
 )
-def test_default_form_renderer_composite_field(qtbot, kwargs):
+def test_default_form_renderer_multiple_inputs(qtbot, kwargs):
     """Check default_form_renderer function when passed a single composite field."""
     if "errors" not in kwargs:
         kwargs["errors"] = {}
@@ -378,7 +378,7 @@ def test_default_form_renderer_composite_field(qtbot, kwargs):
 def test_default_form_renderer_schema_error(qtbot):
     """Check rendering of schema level errors by default_form_renderer."""
     form_info = FormInfo(
-        fields=dict(a=FieldInfo(input=QSpinBox())), schema_errors=["error1", "error2"]
+        fields=dict(a=FieldInfo(input=[QSpinBox()])), schema_errors=["error1", "error2"]
     )
     layout = default_form_renderer(form_info)
     _check_label(layout, 1, form_info.schema_errors[0])
@@ -398,7 +398,7 @@ def handler_mocks(monkeypatch):
 def test_simple_form_dialog(qtbot, handler_mocks):
     """Test SimpleFormDialog class."""
     dialog = SimpleFormDialog(TestForm)
-    form_info = FormInfo(fields=dict(a=FieldInfo(input=QSpinBox())))
+    form_info = FormInfo(fields=dict(a=FieldInfo(input=[QSpinBox()])))
 
     dialog_layout = dialog._create_contents(form_info)
     form_layout = default_form_renderer(form_info)
@@ -425,7 +425,7 @@ def test_simple_form_dialog_ok_clicked(qtbot):
 
     data = dict(a=5, b=6)
     for name, value in data.items():
-        dialog.form_info.fields[name].input.setValue(value)
+        dialog.form_info.fields[name].input[0].setValue(value)
 
     processed_data = dialog._ok_clicked()
     assert data == processed_data
@@ -440,7 +440,7 @@ def test_simple_form_dialog_ok_clicked_bad_data(qtbot):
 
     data = dict(a=6, b=5)  # violates schema level validation
     for name, value in data.items():
-        dialog.form_info.fields[name].input.setValue(value)
+        dialog.form_info.fields[name].input[0].setValue(value)
 
     assert dialog._ok_clicked() is None
     assert dialog.form_info.schema_errors

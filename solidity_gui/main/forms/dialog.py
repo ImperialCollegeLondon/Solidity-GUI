@@ -1,8 +1,7 @@
 """Support for rendering Form objects as individual dialog boxes."""
 
-from typing import Any, Callable, Dict, List, Optional, Type, cast
+from typing import Any, Callable, Dict, Optional, Type
 
-from marshmallow import ValidationError
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -12,7 +11,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .forms import Form
+from .forms import Form, ValidationError
 from .info import FormInfo
 
 
@@ -44,25 +43,15 @@ def default_form_renderer(form_info: FormInfo) -> QLayout:
             )
         if field_info.description:
             layout.addWidget(_create_named_label(field_info.description, "description"))
-
-        # casts below are required as the data structure provided for errors by
-        # marshmallow is tied to the number of input fields
-        if isinstance(field_info.input, list):
-            for i, input_ in enumerate(field_info.input):
-                if isinstance(field_info.errors, dict):
-                    if errors := field_info.errors.get(i, None):
-                        for error in errors:
-                            layout.addWidget(_create_named_label(error, "error"))
-                layout.addWidget(input_)
-            if isinstance(field_info.errors, list):
-                for error in field_info.errors:
-                    layout.addWidget(_create_named_label(error, "error"))
-        else:
-            for error in cast(List[str], field_info.errors):
-                error_label = QLabel(error)
-                error_label.setObjectName("error")
-                layout.addWidget(error_label)
-            layout.addWidget(field_info.input)
+        for i, input_ in enumerate(field_info.input):
+            if isinstance(field_info.errors, dict):
+                if errors := field_info.errors.get(i, None):
+                    for error in errors:
+                        layout.addWidget(_create_named_label(error, "error"))
+            layout.addWidget(input_)
+        if isinstance(field_info.errors, list):
+            for error in field_info.errors:
+                layout.addWidget(_create_named_label(error, "error"))
 
     for error in form_info.schema_errors:
         layout.addWidget(_create_named_label(error, "error"))
@@ -144,14 +133,11 @@ class SimpleFormDialog(QDialog):
         In case of form data passing validation, returns the data. In case of validation
         failure, updates dialog contents and returns None.
         """
-        # casts below are used to narrow expected return types as many=True is not used
-        # by the underlying Marshmallow schema
         try:
             data = self.form_class().process(self.form_info)
         except ValidationError as e:
             self.form_info = self.form_class().form_info(
-                data=cast(Dict[str, Any], e.data),
-                errors=cast(Dict[str, List[str] | Dict[int, List[str]]], e.messages),
+                data=e.form_data, errors=e.field_errors, schema_errors=e.schema_errors
             )
             # below hackery is required to update the layout of the dialog
             # QT won't let us set a new layout when one already exists so we reparent
