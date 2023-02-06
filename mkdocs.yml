@@ -36,5 +36,6 @@ plugins:
 
 nav:
 - Solidity-GUI documentation: index.md
+- Developer Documentation: developer.md
 # defer to gen-files + literate-nav
 - Code Reference: reference/
