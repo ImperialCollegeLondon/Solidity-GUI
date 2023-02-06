@@ -1,35 +1,45 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict, Tuple, Type
 
 Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
 
 @dataclass
 class Property:
+    category: str
     name: str
+    enabled: bool
     args: Arg_Dict_Type
+
+Properties_Dict_Type = dict[str, Property]
+def PROPERTIES():
+    return {
+        "density": Property(
+            category="General",
+            name="Density",
+            enabled=False,
+            args=dict(density=float),
+        ),
+        "mohr_coulomb": Property(
+            category="Mechanical",
+            name="Mohr-Coulomb",
+            enabled=False,
+            args=dict(specify_tension_cutoff=bool),
+        ),
+        "example_property_1": Property(
+            category="General",
+            name="Example Property 1",
+            enabled=False,
+            args=dict(example_setting=bool),
+        ),
+        "example_property_2": Property(
+            category="General",
+            name="Example Property 2",
+            enabled=False,
+            args=dict(example_setting=bool),
+        ),
+    }
 
 @dataclass
 class Material:
-    """Definition of a material.
-
-    Attributes:
-      name: name of the shape e.g. "box"
-      method: method that is called to create a shape instance
-      args: mapping of method arguments to expected types
-    """
-
     name: str
-    method: Callable
-    args: Arg_Dict_Type
-
-
-PROPERTIES = dict(
-    density=Property(
-        name="Density",
-        args=dict(x0=float, x1=float, y0=float, y1=float, z0=float, z1=float),
-    ),
-    ball=Shape(
-        name="ball",
-        method=pygmsh.geo.Geometry.add_ball,
-        args=dict(x0=(float, float, float), radius=float),
-    ),
-)
+    properties: Properties_Dict_Type = field(default_factory=PROPERTIES)

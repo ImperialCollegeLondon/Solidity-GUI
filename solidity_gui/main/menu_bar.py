@@ -35,4 +35,4 @@ class MenuBar(QMenuBar):
         self.materials_manager_dialog = MaterialsManagerDialog()
 
     def _materials_manager_click_handler(self) -> None:
-        self.materials_manager_dialog.show()
+        self.materials_manager_dialog.open()
