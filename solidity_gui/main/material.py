@@ -38,25 +38,25 @@ def PROPERTIES() -> Properties_Dict_Type:
             category="General",
             name="Density",
             enabled=False,
-            args=dict(density=float),
+            attributes=dict(density=float),
         ),
         "mohr_coulomb": Property(
             category="Mechanical",
             name="Mohr-Coulomb",
             enabled=False,
-            args=dict(specify_tension_cutoff=bool),
+            attributes=dict(specify_tension_cutoff=bool),
         ),
         "example_property_1": Property(
             category="General",
             name="Example Property 1",
             enabled=False,
-            args=dict(example_setting=bool),
+            attributes=dict(example_setting=bool),
         ),
         "example_property_2": Property(
             category="General",
             name="Example Property 2",
             enabled=False,
-            args=dict(example_setting=bool),
+            attributes=dict(example_setting=bool),
         ),
     }
 

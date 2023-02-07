@@ -21,7 +21,7 @@ class PropertiesTree(QTreeView):
         self.base_model = QStandardItemModel()
         self.root_node = self.base_model.invisibleRootItem()
 
-        self.categories: Dict[str, QStandardItem]
+        self.categories: Dict[str, QStandardItem] = {}
         for property_name, property_settings in material.properties.items():
             if property_settings.enabled is enabled_properties:
                 property_node = QStandardItem(property_name)
@@ -78,13 +78,13 @@ class EditMaterialDialog(QDialog):
             "disabled": self.disabled_properties_tree,
         }
 
-    def _add_clicked(self):
+    def _add_clicked(self) -> None:
         self._toggle_property(move_from="disabled", move_to="enabled")
 
-    def _remove_clicked(self):
+    def _remove_clicked(self) -> None:
         self._toggle_property(move_from="enabled", move_to="disabled")
 
-    def _toggle_property(self, move_from: str, move_to: str):
+    def _toggle_property(self, move_from: str, move_to: str) -> None:
         from_tree = self.properties_trees[move_from]
         to_tree = self.properties_trees[move_to]
         selected_property_index = from_tree.selectedIndexes()[0]

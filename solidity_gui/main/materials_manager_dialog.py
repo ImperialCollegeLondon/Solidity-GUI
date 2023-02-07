@@ -1,4 +1,5 @@
 """Module for the MaterialsManagerDialog class."""
+from typing import Dict
 
 from pubsub import pub
 from PySide6.QtWidgets import (
@@ -22,14 +23,14 @@ class MaterialsManagerDialog(QDialog):
     Created Materials will be shown in the tree view in this dialog.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise a new dialog."""
         super().__init__()
         self.setWindowTitle("Materials Manager")
         layout = QHBoxLayout()
         self.setLayout(layout)
 
-        self.materials = dict()
+        self.materials: Dict[str, Material] = {}
 
         self.materials_table = QTableWidget()
         self.materials_table.setColumnCount(2)
@@ -64,16 +65,16 @@ class MaterialsManagerDialog(QDialog):
         pub.subscribe(self._add_material, "materials.add")
         pub.subscribe(self._toggle_property, "property.toggle_enabled")
 
-    def _create_click_handler(self):
+    def _create_click_handler(self) -> None:
         CreateMaterialDialog().exec()
 
-    def _edit_click_handler(self):
+    def _edit_click_handler(self) -> None:
         selected_material = self.materials_table.item(
             self.materials_table.currentRow(), 0
         ).text()
         EditMaterialDialog(self.materials[selected_material]).exec()
 
-    def _add_material(self, material: str):
+    def _add_material(self, material: str) -> None:
         self.materials[material] = Material(name=material)
         materials_count = len(self.materials)
         self.materials_table.insertRow(materials_count - 1)
@@ -83,5 +84,5 @@ class MaterialsManagerDialog(QDialog):
         )
         self.materials_table.resizeColumnsToContents()
 
-    def _toggle_property(self, material: str, property: str):
+    def _toggle_property(self, material: str, property: str) -> None:
         self.materials[material].properties[property].enabled ^= True
