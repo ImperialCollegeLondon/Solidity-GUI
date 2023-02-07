@@ -55,20 +55,20 @@ class FormMeta(type):
         marshmallow_attrs: Dict[str, marshmallow_fields.Field | Callable] = {}
         attrs["fields"] = {}
 
-        for name, attr in chain(attrs.items()):
+        for name_, attr in chain(attrs.items()):
             if isinstance(attr, BaseField):
-                marshmallow_attrs[name] = attr.marshmallow()
-                attrs["fields"][name] = attr
+                marshmallow_attrs[name_] = attr.marshmallow()
+                attrs["fields"][name_] = attr
 
         for base in bases:
-            for name in dir(base):
-                if name in marshmallow_attrs:
+            for name_ in dir(base):
+                if name_ in marshmallow_attrs:
                     # don't overwrite an existing attribute with the base class
                     continue
-                attr = getattr(base, name)
+                attr = getattr(base, name_)
                 if isinstance(attr, BaseField):
-                    marshmallow_attrs[name] = attr.marshmallow()
-                    attrs["fields"][name] = attr
+                    marshmallow_attrs[name_] = attr.marshmallow()
+                    attrs["fields"][name_] = attr
 
         schema_validator = attrs.get("validate", None)
         if not schema_validator:
