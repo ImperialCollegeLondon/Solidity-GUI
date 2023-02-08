@@ -5,7 +5,7 @@ data. This is entirely analogous to fields used in libraries such as Marshmallow
 WTForms or Django Forms. Fields are intended only to be used as attributes of Form
 classes.
 
-For our purposes, a Field class, ties together a Marshmallow field class and a Widget
+For our purposes, a Field class ties together a Marshmallow field class and a Widget
 class with additional data for display to the user. The Marshmallow class of a Field
 effectively defines the underlying datatype and is used by a Form instance to construct
 a Marshmallow Schema for data validation. Validator functions may also be provided to a
