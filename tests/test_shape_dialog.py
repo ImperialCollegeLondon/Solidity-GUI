@@ -86,7 +86,7 @@ def test_dialog_ok(close_mock, send_message_mock, dialog, qtbot, shape):
     # check that geometry update signal was called with correct data
     send_message_mock.assert_called_once_with(
         "geometry.update",
-        component=Component(label=label, args=data, shape=shape.name),
+        component=Component(label=label, kwargs=data, shape=shape.name),
     )
 
 

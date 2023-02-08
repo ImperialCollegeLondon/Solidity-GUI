@@ -65,12 +65,12 @@ class Component:
     Attributes:
       shape: name of the shape to use for this component
       label: unique label to apply to this component
-      args: function arguments to pass to the shape constructor
+      kwargs: function arguments to pass to the shape constructor
     """
 
     shape: str
     label: str
-    args: Dict[str, float | List[float]]
+    kwargs: Dict[str, float | List[float]]
 
 
 def add_dome(
@@ -284,7 +284,7 @@ class ShapeFactory:
           resolution: resolution to use for mesh
         """
         shape = self.function_map[component.shape](
-            self.geom, **component.args, mesh_size=resolution
+            self.geom, **component.kwargs, mesh_size=resolution
         )
 
         # unfortunately when using the OCC geometry kernel there doesn't seem to be a

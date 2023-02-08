@@ -33,10 +33,10 @@ def send_message_mock(monkeypatch):
 
 
 def component_factory(
-    shape="ball", label="sphere", args=dict(center=[0.0, 0.0, 0.0], radius=0.2)
+    shape="ball", label="sphere", kwargs=dict(center=[0.0, 0.0, 0.0], radius=0.2)
 ):
     """Generate a component with overridable defaults."""
-    return Component(shape=shape, label=label, args=args)
+    return Component(shape=shape, label=label, kwargs=kwargs)
 
 
 @pytest.mark.skipif(
@@ -73,7 +73,7 @@ def test_ball():
     """Test creation of a ball."""
     label = "globe"
     mesh = generate_mesh(
-        [Component(shape="ball", args=dict(center=(0, 0, 0), radius=1), label=label)],
+        [Component(shape="ball", kwargs=dict(center=(0, 0, 0), radius=1), label=label)],
         RESOLUTION,
     )
     check_mesh_cell_sets(mesh, 1, label)
@@ -85,7 +85,7 @@ def test_box():
     mesh = generate_mesh(
         [
             Component(
-                shape="box", args=dict(x0=(0, 0, 0), extents=(1, 1, 1)), label=label
+                shape="box", kwargs=dict(x0=(0, 0, 0), extents=(1, 1, 1)), label=label
             )
         ],
         RESOLUTION,
@@ -100,7 +100,7 @@ def test_cone():
         [
             Component(
                 shape="cone",
-                args=dict(center=(0, 0, 0), axis=(1, 1, 1), radius0=1, radius1=0),
+                kwargs=dict(center=(0, 0, 0), axis=(1, 1, 1), radius0=1, radius1=0),
                 label=label,
             )
         ],
@@ -116,7 +116,7 @@ def test_cylinder():
         [
             Component(
                 shape="cylinder",
-                args=dict(x0=(0, 0, 0), axis=(1, 1, 1), radius=1),
+                kwargs=dict(x0=(0, 0, 0), axis=(1, 1, 1), radius=1),
                 label=label,
             )
         ],
@@ -158,7 +158,7 @@ def test_dome():
         [
             Component(
                 shape="dome",
-                args=dict(x0=(0, 0, 0), axis=axis, radius=base_radius),
+                kwargs=dict(x0=(0, 0, 0), axis=axis, radius=base_radius),
                 label=label,
             )
         ],
@@ -182,10 +182,12 @@ def test_multiple():
     mesh = generate_mesh(
         [
             Component(
-                shape="box", args=dict(x0=(0, 0, 0), extents=(1, 1, 1)), label=box_label
+                shape="box",
+                kwargs=dict(x0=(0, 0, 0), extents=(1, 1, 1)),
+                label=box_label,
             ),
             Component(
-                shape="ball", args=dict(center=(0, 0, 0), radius=1), label=ball_label
+                shape="ball", kwargs=dict(center=(0, 0, 0), radius=1), label=ball_label
             ),
         ],
         RESOLUTION,
