@@ -15,9 +15,9 @@ usage.
 [Forms module]: ../reference/solidity_gui/main/forms/
 
 The Forms module is still in an early stage of development so it's expected that it will
-have be extended to suit future use-cases. Please note that if the Forms module does not
-currently address your use-case you are strongly recommended to consider extending it
-rather than implementing custom code for an individual form. In particular, the
+have to be extended to suit future use-cases. Please note that if the Forms module does
+not currently address your use-case you are strongly recommended to consider extending
+it rather than implementing custom code for an individual form. In particular, the
 following current limitations are noted:
 
 - Limited range of fields and widgets available.
