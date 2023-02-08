@@ -134,7 +134,7 @@ class SimpleFormDialog(QDialog):
         failure, updates dialog contents and returns None.
         """
         try:
-            data = self.form_class().process(self.form_info)
+            return self.form_class().process(self.form_info)
         except ValidationError as e:
             self.form_info = self.form_class().form_info(
                 data=e.form_data, errors=e.field_errors, schema_errors=e.schema_errors
@@ -147,4 +147,3 @@ class SimpleFormDialog(QDialog):
             contents = self._create_contents(self.form_info)
             self.setLayout(contents)
             return None
-        return data
