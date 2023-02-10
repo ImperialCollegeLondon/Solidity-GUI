@@ -74,7 +74,13 @@ class BaseField(Generic[DataType]):
         data: Optional[DataType | List[DataType]],
         errors: Dict[int, List[str]] = {},
     ) -> FieldInfo:
-        """Return a FieldInfo object for this Field."""
+        """Return a FieldInfo object for this Field.
+
+        Args:
+          name: the name of the field
+          data: data for pre-population of inputs
+          errors: error messages for individual inputs
+        """
         header = self.display_name if self.display_name else name
         if data:
             if isinstance(data, list):
@@ -127,7 +133,14 @@ class SingleField(BaseField, Generic[DataType]):
         validators: Iterable[Callable] = [],
         widget_class: Optional[Widget] = None,
     ):
-        """Initialise a new SingleField instance."""
+        """Initialise a new SingleField instance.
+
+        Args:
+          display_name: human friendly name
+          description: human friendly description of the field's purpose
+          validators: marshmallow compatible functions to validate individual values
+          widget_class: the GUI widget displayed to the user
+        """
         super().__init__(
             length=1,
             display_name=display_name,
