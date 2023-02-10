@@ -56,7 +56,7 @@ class Widget(ABC, Generic[WidgetType, DataType]):
         pass
 
     @abstractmethod
-    def input(
+    def create(
         self, data: Optional[DataType], validators: Iterable[Callable]
     ) -> WidgetType:
         """Return a WidgetType instance."""
@@ -72,7 +72,7 @@ class SpinBoxBase(Widget, Generic[SpinBoxType, DataType]):
     _default_min = -10000
     _default_max = 10000
 
-    def input(
+    def create(
         self, data: Optional[DataType], validators: Iterable[Callable]
     ) -> SpinBoxType:
         """Return a SpinBoxType instance.
@@ -125,7 +125,7 @@ class DoubleSpinBoxWidget(SpinBoxBase[QDoubleSpinBox, float]):
         """
         self.decimals = decimals
 
-    def input(
+    def create(
         self, data: Optional[float], validators: Iterable[Callable]
     ) -> QDoubleSpinBox:
         """Return a QDoubleSpinBox instance.
@@ -134,7 +134,7 @@ class DoubleSpinBoxWidget(SpinBoxBase[QDoubleSpinBox, float]):
           data: value to populate into the DoubleSpinBox
           validators: marshmallow validators (passed by associated Field)
         """
-        qt_input = super().input(data, validators)
+        qt_input = super().create(data, validators)
         qt_input.setDecimals(self.decimals)
         return qt_input
 
@@ -144,7 +144,7 @@ class LineEditWidget(Widget[QLineEdit, str]):
 
     qt_input_class = QLineEdit
 
-    def input(self, data: Optional[str], validators: Iterable[Callable]) -> QLineEdit:
+    def create(self, data: Optional[str], validators: Iterable[Callable]) -> QLineEdit:
         """Return a QLineEdit instance.
 
         Args:

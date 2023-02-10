@@ -230,7 +230,7 @@ def test_form_validate_sub_class_multiple_inheritance():
 @pytest.mark.parametrize("widget_class", (SpinBoxWidget, DoubleSpinBoxWidget))
 def test_spin_box_widget(qtbot, widget_class):
     """Test SpinBoxBase sub-classes."""
-    input_ = widget_class().input(None, [])
+    input_ = widget_class().create(None, [])
     assert isinstance(input_, widget_class.qt_input_class)
 
     assert input_.minimum() == widget_class._default_min
@@ -242,7 +242,7 @@ def test_spin_box_widget(qtbot, widget_class):
 def test_spin_box_widget_data(qtbot, widget_class):
     """Test SpinBoxBase sub-classes input method with data."""
     data = 5
-    input_ = widget_class().input(data, [])
+    input_ = widget_class().create(data, [])
     assert input_.value() == data
 
 
@@ -250,7 +250,7 @@ def test_spin_box_widget_data(qtbot, widget_class):
 def test_spin_box_widget_range(qtbot, widget_class):
     """Test QWidget attributes when range validator is passed."""
     min_, max_ = -5, 5
-    input_ = widget_class().input(
+    input_ = widget_class().create(
         None,
         [
             validate.OneOf([0]),  # decoy validator that doesn't affect widget
@@ -274,20 +274,20 @@ def test_double_spin_box_decimals(qtbot):
     """Test settings of decimals attribute by DoubleSpinBoxWidget class."""
     decimals = 5
     widget = DoubleSpinBoxWidget(decimals=decimals)
-    input_ = widget.input(None, [])
+    input_ = widget.create(None, [])
     assert input_.decimals() == decimals
 
 
 def test_line_edit_widget(qtbot):
     """Test LineEditWidget class."""
-    input_ = LineEditWidget().input(None, [])
+    input_ = LineEditWidget().create(None, [])
     assert input_.text() == ""
 
 
 def test_line_edit_widget_data(qtbot):
     """Test LineEditWidget class sets QLineEdit data."""
     data = "aaa"
-    input_ = LineEditWidget().input(data, [])
+    input_ = LineEditWidget().create(data, [])
     assert input_.text() == data
 
 

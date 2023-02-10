@@ -67,7 +67,7 @@ class BaseField(ABC, Generic[DataType]):
         Args:
           data: value to pre-populate into the widget
         """
-        return self.widget.input(data, self.validators)
+        return self.widget.create(data, self.validators)
 
     def field_info(
         self,
