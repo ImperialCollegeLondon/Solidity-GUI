@@ -16,6 +16,7 @@ be presented to the user. All usable Field classes provide a default Widget clas
 however the Widget class may also be provided at initialisation time.
 """
 
+from abc import ABC, abstractmethod
 from typing import Callable, Dict, Generic, Iterable, List, Optional, Type, TypeVar
 
 from marshmallow import fields as marshmallow_fields
@@ -28,7 +29,7 @@ from .widgets import DoubleSpinBoxWidget, LineEditWidget, SpinBoxWidget, Widget
 DataType = TypeVar("DataType")
 
 
-class BaseField(Generic[DataType]):
+class BaseField(ABC, Generic[DataType]):
     """Base class for all Fields."""
 
     _marshmallow_field: Type[marshmallow_fields.Field]
@@ -103,12 +104,10 @@ class BaseField(Generic[DataType]):
             description=self.description,
         )
 
+    @abstractmethod
     def marshmallow(self) -> marshmallow_fields.Field:
         """Generates a corresponding Marshmallow Field for use in a Schema."""
-        return marshmallow_fields.List(
-            marshmallow_fields.Float(validate=self.validators),
-            validate=self.field_validators,
-        )
+        pass
 
 
 class CompositeField(BaseField, Generic[DataType]):
@@ -121,6 +120,13 @@ class CompositeField(BaseField, Generic[DataType]):
           inputs: the gui widget instances
         """
         return [self.widget_class.process(input_) for input_ in inputs]
+
+    def marshmallow(self) -> marshmallow_fields.Field:
+        """Generates a corresponding Marshmallow Field for use in a Schema."""
+        return marshmallow_fields.List(
+            self._marshmallow_field(validate=self.validators),
+            validate=self.field_validators,
+        )
 
 
 class SingleField(BaseField, Generic[DataType]):
