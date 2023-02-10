@@ -20,8 +20,13 @@ from typing_extensions import Protocol
 DataType = TypeVar("DataType")
 
 
-class SpinBoxProtocol(Protocol, Generic[DataType]):
-    """Generic Protocol for type checking of QAbstractSpinBox subclasses."""
+class _SpinBoxProtocol(Protocol, Generic[DataType]):
+    """Generic Protocol for type checking of QAbstractSpinBox subclasses.
+
+    This protocol is needed to provide a generic type for different QAbstractSpinBox
+    subclasses. This allows a base class containing the common logic for all spin boxes
+    with the types concretised for different spin box subclasses.
+    """
 
     def value(self) -> DataType:  # noqa: D102
         pass
@@ -58,7 +63,7 @@ class Widget(ABC, Generic[WidgetType, DataType]):
         pass
 
 
-SpinBoxType = TypeVar("SpinBoxType", bound=SpinBoxProtocol)
+SpinBoxType = TypeVar("SpinBoxType", bound=_SpinBoxProtocol)
 
 
 class SpinBoxBase(Widget, Generic[SpinBoxType, DataType]):
