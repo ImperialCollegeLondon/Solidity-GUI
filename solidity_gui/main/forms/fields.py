@@ -33,7 +33,7 @@ class BaseField(ABC, Generic[DataType]):
     """Base class for all Fields."""
 
     _marshmallow_field: Type[marshmallow_fields.Field]
-    _default_widget_class: Widget
+    _default_widget: Widget
 
     def __init__(
         self,
@@ -41,7 +41,7 @@ class BaseField(ABC, Generic[DataType]):
         display_name: Optional[str] = None,
         description: Optional[str] = None,
         validators: Iterable[Callable] = [],
-        widget_class: Optional[Widget] = None,
+        widget: Optional[Widget] = None,
         field_validators: List[Callable] = [],
     ):
         """Initialise a new instance.
@@ -51,13 +51,13 @@ class BaseField(ABC, Generic[DataType]):
           display_name: human friendly name
           description: human friendly description of the field's purpose
           validators: marshmallow compatible functions to validate individual values
-          widget_class: the GUI widget displayed to the user
+          widget: the GUI widget displayed to the user
           field_validators: marshmallow compatible functions to validate the full field
         """
         self.display_name = display_name
         self.description = description
         self.validators = validators
-        self.widget_class = widget_class if widget_class else self._default_widget_class
+        self.widget = widget if widget else self._default_widget
         self.length = length
         self.field_validators = field_validators
 
@@ -67,7 +67,7 @@ class BaseField(ABC, Generic[DataType]):
         Args:
           data: value to pre-populate into the widget
         """
-        return self.widget_class.input(data, self.validators)
+        return self.widget.input(data, self.validators)
 
     def field_info(
         self,
@@ -111,7 +111,7 @@ class BaseField(ABC, Generic[DataType]):
 
 
 class CompositeField(BaseField, Generic[DataType]):
-    """Base class class for all Fields that collect multiple values."""
+    """Base class for all Fields that collect multiple values."""
 
     def process(self, inputs: List[QWidget]) -> List[DataType]:
         """Return data for the field.
@@ -119,7 +119,7 @@ class CompositeField(BaseField, Generic[DataType]):
         Args:
           inputs: the gui widget instances
         """
-        return [self.widget_class.process(input_) for input_ in inputs]
+        return [self.widget.process(input_) for input_ in inputs]
 
     def marshmallow(self) -> marshmallow_fields.Field:
         """Generates a corresponding Marshmallow Field for use in a Schema."""
@@ -137,7 +137,7 @@ class SingleField(BaseField, Generic[DataType]):
         display_name: Optional[str] = None,
         description: Optional[str] = None,
         validators: Iterable[Callable] = [],
-        widget_class: Optional[Widget] = None,
+        widget: Optional[Widget] = None,
     ):
         """Initialise a new SingleField instance.
 
@@ -145,14 +145,14 @@ class SingleField(BaseField, Generic[DataType]):
           display_name: human friendly name
           description: human friendly description of the field's purpose
           validators: marshmallow compatible functions to validate individual values
-          widget_class: the GUI widget displayed to the user
+          widget: the GUI widget displayed to the user
         """
         super().__init__(
             length=1,
             display_name=display_name,
             description=description,
             validators=validators,
-            widget_class=widget_class,
+            widget=widget,
             field_validators=[],
         )
 
@@ -166,35 +166,35 @@ class SingleField(BaseField, Generic[DataType]):
         Args:
           inputs: the gui widget instances
         """
-        return self.widget_class.process(inputs[0])
+        return self.widget.process(inputs[0])
 
 
 class StrField(SingleField[str]):
     """A field for string data."""
 
     _marshmallow_field = marshmallow_fields.Str
-    _default_widget_class = LineEditWidget()
+    _default_widget = LineEditWidget()
 
 
 class IntField(SingleField[int]):
     """A field for integer data."""
 
     _marshmallow_field = marshmallow_fields.Int
-    _default_widget_class = SpinBoxWidget()
+    _default_widget = SpinBoxWidget()
 
 
 class FloatField(SingleField[float]):
     """A field for float data."""
 
     _marshmallow_field = marshmallow_fields.Float
-    _default_widget_class = DoubleSpinBoxWidget()
+    _default_widget = DoubleSpinBoxWidget()
 
 
 class VectorField(CompositeField[Iterable[float]]):
     """A field for multiple float values treated as a vector."""
 
     _marshmallow_field = marshmallow_fields.Float
-    _default_widget_class = DoubleSpinBoxWidget()
+    _default_widget = DoubleSpinBoxWidget()
 
     def __init__(
         self,
@@ -202,7 +202,7 @@ class VectorField(CompositeField[Iterable[float]]):
         display_name: Optional[str] = None,
         description: Optional[str] = None,
         validators: Iterable[Callable] = [],
-        widget_class: Optional[Widget] = None,
+        widget: Optional[Widget] = None,
         vector_validators: List[Callable] = [],
     ):
         """Initialise a new VectorField instance."""
@@ -211,6 +211,6 @@ class VectorField(CompositeField[Iterable[float]]):
             display_name,
             description,
             validators,
-            widget_class,
+            widget,
             field_validators=[validate.Length(equal=length)] + vector_validators,
         )

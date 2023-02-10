@@ -60,9 +60,9 @@ def test_dialog_form_info(qtbot, shape):
         input_ = form_info.fields[name].input
         if isinstance(input_, list):
             for i in input_:
-                assert isinstance(i, field.widget_class.qt_input_class)
+                assert isinstance(i, field.widget.qt_input_class)
         else:
-            assert isinstance(input_, field.widget_class.qt_input_class)
+            assert isinstance(input_, field.widget.qt_input_class)
 
 
 def test_dialog_ok(close_mock, send_message_mock, dialog, qtbot, shape):
