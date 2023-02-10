@@ -147,7 +147,7 @@ class SingleField(BaseField, Generic[DataType]):
         Args:
           inputs: the gui widget instances
         """
-        return [self.widget_class.process(input_) for input_ in inputs][0]
+        return self.widget_class.process(inputs[0])
 
 
 class StrField(SingleField[str]):
