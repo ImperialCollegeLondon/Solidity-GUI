@@ -16,7 +16,7 @@ class MenuBar(QMenuBar):
 
         materials_manager_action = QAction("&Manager", self)
         materials_manager_action.triggered.connect(
-            self._materials_manager_click_handler
+            self.materials_manager_dialog.open()
         )
 
         self.addMenu("&File")
@@ -36,6 +36,3 @@ class MenuBar(QMenuBar):
         self.materials_menu.addAction(materials_manager_action)
 
         self.materials_manager_dialog = MaterialsManagerDialog()
-
-    def _materials_manager_click_handler(self) -> None:
-        self.materials_manager_dialog.open()
