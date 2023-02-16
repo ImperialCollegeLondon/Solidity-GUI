@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QTextEdit, QVBox
 from .. import config
 from .base_model_tree import BaseModelTree
 from .control_panel import ControlPanel
+from .uncaught_exceptions import set_uncaught_exception_handler
 from .visualisation_toolbar import VisualisationToolbar
 from .vtk_window import VTKWindow
 
@@ -15,6 +16,8 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         """Create new MainWindow."""
         super().__init__()
+
+        set_uncaught_exception_handler(self)
 
         self.setWindowTitle(config.APP_NAME)
 
