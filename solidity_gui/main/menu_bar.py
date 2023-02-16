@@ -14,11 +14,6 @@ class MenuBar(QMenuBar):
         """Create a new VisualisationToolbar."""
         super().__init__(*args, **kwargs)
 
-        materials_manager_action = QAction("&Manager", self)
-        materials_manager_action.triggered.connect(
-            self.materials_manager_dialog.open()
-        )
-
         self.addMenu("&File")
         self.addMenu("&Geometry")
         self.addMenu("&Mesh")
@@ -33,6 +28,9 @@ class MenuBar(QMenuBar):
         self.addMenu("&View")
         self.addMenu("&Help")
 
-        self.materials_menu.addAction(materials_manager_action)
-
         self.materials_manager_dialog = MaterialsManagerDialog()
+        materials_manager_action = QAction("&Manager", self)
+        materials_manager_action.triggered.connect(
+            self.materials_manager_dialog.open
+        )
+        self.materials_menu.addAction(materials_manager_action)
