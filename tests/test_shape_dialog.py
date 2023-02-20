@@ -6,6 +6,7 @@ import pytest
 from pubsub import pub
 from qtpy import QtCore
 
+from solidity_gui.main import signals
 from solidity_gui.main.add_shape_dialogue import AddShapeDialog, _get_args
 from solidity_gui.main.geometry import Component, Shape
 
@@ -73,18 +74,19 @@ def test_dialog_ok(close_mock, send_message_mock, dialog, qtbot, shape):
     label = "labeltext"
     dialog.label_field_input.setText(label)
 
-    button = dialog.button_box.buttons()[0]
-    assert button.text() == "OK"
-    qtbot.mouseClick(button, QtCore.Qt.LeftButton)
-    close_mock.assert_called_once()
-
-    # check that geometry update signal was called with correct data
-    send_message_mock.assert_called_once_with(
-        "geometry.update",
-        component=Component(
+    def check_signal_args(component: Component):
+        """Check that geometry update signal was called with correct data."""
+        return component == Component(
             label=label, args=[[1.0, "etete"], 3.0, 4], shape=shape.name
-        ),
-    )
+        )
+
+    with qtbot.waitSignal(
+        signals.geometry.start_update, check_params_cb=check_signal_args
+    ):
+        button = dialog.button_box.buttons()[0]
+        assert button.text() == "OK"
+        qtbot.mouseClick(button, QtCore.Qt.LeftButton)
+        close_mock.assert_called_once()
 
 
 def test_dialog_cancel(close_mock, dialog, qtbot):

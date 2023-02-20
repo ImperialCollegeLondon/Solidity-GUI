@@ -3,7 +3,10 @@ from typing import Any
 
 from meshio import Mesh
 from pubsub import pub
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QComboBox
+
+from . import signals
 
 
 class ColourSelectWidget(QComboBox):
@@ -14,7 +17,7 @@ class ColourSelectWidget(QComboBox):
         super().__init__(*args, **kwargs)
 
         self.currentTextChanged.connect(self._select_handler)
-        pub.subscribe(self._set_items, "geometry.updated")
+        signals.geometry.updated.connect(self._set_items)
         pub.subscribe(self._select_handler, "mesh.updated")
 
     def _select_handler(self, mesh: Mesh = None) -> None:
@@ -24,5 +27,6 @@ class ColourSelectWidget(QComboBox):
 
         pub.sendMessage("mesh.select", selection_name=selectedValue)
 
+    @Slot()
     def _set_items(self, mesh: Mesh) -> None:
         self.addItems(mesh.cell_sets.keys())

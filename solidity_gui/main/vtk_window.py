@@ -8,7 +8,7 @@ import vtk
 from meshio import CellBlock, Mesh
 from numpy.typing import NDArray
 from pubsub import pub
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QApplication, QVBoxLayout
 from vtk.util import numpy_support
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -16,6 +16,7 @@ from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
+from . import signals
 from .geometry import Component, MeshGenerator, Vector
 
 
@@ -90,7 +91,7 @@ class VTKWindow(QVBoxLayout):
 
         self.mesh_generator = MeshGenerator()
 
-        pub.subscribe(self._add_component_to_geometry_begin, "geometry.update")
+        signals.geometry.start_update.connect(self._add_component_to_geometry_begin)
         pub.subscribe(self._add_component_to_geometry_end, "geometry.meshing.end")
         pub.subscribe(self._create_mesh_from_geometry_begin, "mesh.create")
         pub.subscribe(self._create_mesh_from_geometry_end, "mesh.meshing.end")
@@ -104,6 +105,7 @@ class VTKWindow(QVBoxLayout):
         pub.subscribe(_restore_cursor, "mesh.meshing.end")
         pub.subscribe(_restore_cursor, "geometry.meshing.end")
 
+    @Slot()
     def _add_component_to_geometry_begin(self, component: Component) -> None:
         """Add a new geometric component and render and display its rough mesh."""
         self.components.append(component)
@@ -114,7 +116,7 @@ class VTKWindow(QVBoxLayout):
     def _add_component_to_geometry_end(self, mesh: Mesh) -> None:
         self.meshes.append(mesh)
         self.render_mesh(mesh)
-        pub.sendMessage("geometry.updated", mesh=mesh)
+        signals.geometry.updated.emit(mesh)
 
     def _create_mesh_from_geometry_begin(self) -> None:
         """Generate and display a high quality mesh from the current geometry."""

@@ -7,7 +7,10 @@ from typing import Any
 
 from meshio import Mesh
 from pubsub import pub
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QPushButton
+
+from . import signals
 
 
 class CreateMeshButton(QPushButton):
@@ -19,7 +22,7 @@ class CreateMeshButton(QPushButton):
         self.clicked.connect(self._click_handler)
         self.setDisabled(True)
         pub.subscribe(self._disable, "mesh.meshing.begin")
-        pub.subscribe(self._enable, "geometry.updated")
+        signals.geometry.updated.connect(self._enable)
 
     def _click_handler(self) -> None:
         """Send 'mesh.create' signal via pubsub."""
@@ -28,5 +31,6 @@ class CreateMeshButton(QPushButton):
     def _disable(self, mesh: Mesh = None) -> None:
         self.setDisabled(True)
 
+    @Slot()
     def _enable(self, mesh: Mesh = None) -> None:
         self.setDisabled(False)

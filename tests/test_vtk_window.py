@@ -1,10 +1,11 @@
 """Tests for VTKWindow GUI component."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pubsub import pub
 
+from solidity_gui.main import signals
 from solidity_gui.main.geometry import Component, generate_mesh
 from solidity_gui.main.vtk_window import VTKWindow
 
@@ -38,19 +39,22 @@ def component_factory(shape="ball", label="sphere", args=[[0.0, 0.0, 0.0], 0.2])
     return Component(shape=shape, label=label, args=args)
 
 
-def test_vtk_window_init(vtk_window, subscribe_mock):
+@patch("solidity_gui.main.vtk_window.signals")
+def test_vtk_window_init(signals_mock, subscribe_mock):
     """Test VTKWindow is initialised correctly."""
-    assert vtk_window.ren
-    assert vtk_window.iren
-    assert vtk_window.meshes == []
+    window = VTKWindow()
+    window.mesh_generator = MagicMock()
+    assert window.ren
+    assert window.iren
+    assert window.meshes == []
 
-    subscribe_mock.assert_any_call(
-        vtk_window._add_component_to_geometry_begin, "geometry.update"
+    signals_mock.geometry.start_update.connect.assert_called_once_with(
+        window._add_component_to_geometry_begin
     )
     subscribe_mock.assert_any_call(
-        vtk_window._create_mesh_from_geometry_begin, "mesh.create"
+        window._create_mesh_from_geometry_begin, "mesh.create"
     )
-    subscribe_mock.assert_any_call(vtk_window._colour_mesh_selection, "mesh.select")
+    subscribe_mock.assert_any_call(window._colour_mesh_selection, "mesh.select")
 
 
 def test_vtk_window_render_mesh(vtk_window):
@@ -78,15 +82,17 @@ def test_add_component_to_geometry_begin(vtk_window):
     )
 
 
-def test_add_component_to_geometry_end(vtk_window, send_message_mock):
+def test_add_component_to_geometry_end(vtk_window, send_message_mock, qtbot):
     """Test _add_component_to_geometry_end method of VTKWindow."""
     mesh = MagicMock()
-    vtk_window._add_component_to_geometry_end(mesh)
-    assert len(vtk_window.meshes) == 1
-    assert len(vtk_window.ugrids) == 1
-    send_message_mock.assert_called_once_with(
-        "geometry.updated", mesh=vtk_window.meshes[0]
-    )
+
+    with qtbot.waitSignal(
+        signals.geometry.updated,
+        check_params_cb=lambda mesh: mesh is vtk_window.meshes[0],
+    ):
+        vtk_window._add_component_to_geometry_end(mesh)
+        assert len(vtk_window.meshes) == 1
+        assert len(vtk_window.ugrids) == 1
 
 
 def test_create_mesh_from_geometry_begin(vtk_window):

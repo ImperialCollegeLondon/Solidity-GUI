@@ -2,9 +2,9 @@
 
 from typing import List
 
-from pubsub import pub
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
 
+from . import signals
 from .geometry import Arg_Dict_Type, Arg_List_Type, Component, Shape
 
 
@@ -85,5 +85,5 @@ class AddShapeDialog(QDialog):
         label = self.label_field_input.text()
         args = _get_args([inp.text() for inp in self.inputs], self.shape.args)
         component = Component(self.shape.name, label, args)
-        pub.sendMessage("geometry.update", component=component)
+        signals.geometry.start_update.emit(component)
         self.close()
