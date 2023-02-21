@@ -9,6 +9,7 @@ import pytest
 from pubsub import pub
 from sklearn.decomposition import PCA
 
+from solidity_gui.main import signals
 from solidity_gui.main.geometry import Component, MeshGenerator, generate_mesh
 
 RESOLUTION = 0.2
@@ -40,13 +41,14 @@ def component_factory(shape="ball", label="sphere", args=[[0.0, 0.0, 0.0], 0.2])
 @pytest.mark.skipif(
     platform == "darwin", reason="Queue.qsize() is not implemented on macOS"
 )
-def test_mesh_generator(mesh_generator: MeshGenerator, send_message_mock):
+def test_mesh_generator(mesh_generator: MeshGenerator, qtbot):
     """Test the basic functionality of MeshGenerator."""
     assert mesh_generator._in_queue.qsize() == 0
     assert mesh_generator._out_queue.qsize() == 0
 
-    mesh_generator.start_mesh_generation("hello", [component_factory()], RESOLUTION)
-    send_message_mock.assert_called_once_with("hello.meshing.begin")
+    meshing = signals.MeshingSignals()
+    with qtbot.waitSignal(meshing.begin):
+        mesh_generator.start_mesh_generation(meshing, [component_factory()], RESOLUTION)
     assert mesh_generator._in_queue.qsize() == 1
     assert mesh_generator._out_queue.qsize() == 0
 

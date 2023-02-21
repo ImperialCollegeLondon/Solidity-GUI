@@ -2,7 +2,8 @@
 from meshio import Mesh
 from PySide6.QtCore import QObject, Signal
 
-from .geometry import Component
+from ..geometry import Component
+from .meshing import MeshingSignals
 
 
 class _CameraSignals(QObject):
@@ -16,12 +17,17 @@ class _CameraSignals(QObject):
     reset = Signal()
 
 
-camera = _CameraSignals()
-
-
-class _GeometrySignals(QObject):
+class _GeometrySignals(MeshingSignals):
     start_update = Signal(Component)
     updated = Signal(Mesh)
 
 
+class _MeshSignals(MeshingSignals):
+    create = Signal()
+    select = Signal(str)
+    updated = Signal(Mesh)
+
+
+camera = _CameraSignals()
 geometry = _GeometrySignals()
+mesh = _MeshSignals()

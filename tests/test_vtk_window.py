@@ -40,7 +40,7 @@ def component_factory(shape="ball", label="sphere", args=[[0.0, 0.0, 0.0], 0.2])
 
 
 @patch("solidity_gui.main.vtk_window.signals")
-def test_vtk_window_init(signals_mock, subscribe_mock):
+def test_vtk_window_init(signals_mock):
     """Test VTKWindow is initialised correctly."""
     window = VTKWindow()
     window.mesh_generator = MagicMock()
@@ -51,10 +51,10 @@ def test_vtk_window_init(signals_mock, subscribe_mock):
     signals_mock.geometry.start_update.connect.assert_called_once_with(
         window._add_component_to_geometry_begin
     )
-    subscribe_mock.assert_any_call(
-        window._create_mesh_from_geometry_begin, "mesh.create"
+    signals_mock.mesh.create.connect.assert_any_call(
+        window._create_mesh_from_geometry_begin
     )
-    subscribe_mock.assert_any_call(window._colour_mesh_selection, "mesh.select")
+    signals_mock.mesh.select.connect.assert_any_call(window._colour_mesh_selection)
 
 
 def test_vtk_window_render_mesh(vtk_window):
@@ -112,11 +112,13 @@ def test_create_mesh_from_geometry_begin(vtk_window):
     )
 
 
-def test_create_mesh_from_geometry_end(vtk_window, send_message_mock):
+def test_create_mesh_from_geometry_end(vtk_window, qtbot):
     """Test _create_mesh_from_geometry_end method of VTKWindow."""
-    vtk_window._create_mesh_from_geometry_end(MagicMock())
+    with qtbot.waitSignal(
+        signals.mesh.updated, check_cb_params=lambda mesh: mesh == vtk_window.meshes[0]
+    ):
+        vtk_window._create_mesh_from_geometry_end(MagicMock())
 
     assert len(list(vtk_window.ren.GetActors())) == 1
     assert len(vtk_window.meshes) == 1
     assert len(vtk_window.ugrids) == 1
-    send_message_mock.assert_called_with("mesh.updated", mesh=vtk_window.meshes[0])

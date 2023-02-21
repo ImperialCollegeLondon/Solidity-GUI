@@ -7,7 +7,6 @@ import numpy as np
 import vtk
 from meshio import CellBlock, Mesh
 from numpy.typing import NDArray
-from pubsub import pub
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QApplication, QVBoxLayout
 from vtk.util import numpy_support
@@ -92,18 +91,18 @@ class VTKWindow(QVBoxLayout):
         self.mesh_generator = MeshGenerator()
 
         signals.geometry.start_update.connect(self._add_component_to_geometry_begin)
-        pub.subscribe(self._add_component_to_geometry_end, "geometry.meshing.end")
-        pub.subscribe(self._create_mesh_from_geometry_begin, "mesh.create")
-        pub.subscribe(self._create_mesh_from_geometry_end, "mesh.meshing.end")
-        pub.subscribe(self._colour_mesh_selection, "mesh.select")
+        signals.geometry.end_meshing.connect(self._add_component_to_geometry_end)
+        signals.mesh.create.connect(self._create_mesh_from_geometry_begin)
+        signals.mesh.end_meshing.connect(self._create_mesh_from_geometry_end)
+        signals.mesh.select.connect(self._colour_mesh_selection)
         signals.camera.reorient.connect(self.reorient_camera)
         signals.camera.reset.connect(self.reset_camera)
 
         # Set the mouse cursor to busy during meshing
-        pub.subscribe(_set_cursor_to_busy, "mesh.meshing.begin")
-        pub.subscribe(_set_cursor_to_busy, "geometry.meshing.begin")
-        pub.subscribe(_restore_cursor, "mesh.meshing.end")
-        pub.subscribe(_restore_cursor, "geometry.meshing.end")
+        signals.mesh.begin_meshing.connect(_set_cursor_to_busy)
+        signals.geometry.begin_meshing.connect(_set_cursor_to_busy)
+        signals.mesh.end_meshing.connect(_restore_cursor)
+        signals.geometry.end_meshing.connect(_restore_cursor)
 
     @Slot()
     def _add_component_to_geometry_begin(self, component: Component) -> None:
@@ -133,7 +132,7 @@ class VTKWindow(QVBoxLayout):
         for actor in self.ren.GetActors():
             self.ren.RemoveActor(actor)
         self.render_mesh(mesh)
-        pub.sendMessage("mesh.updated", mesh=mesh)
+        signals.mesh.updated.emit(mesh)
 
     def render_mesh(self, mesh: Mesh) -> None:
         """Render a mesh within the VTKWindow.

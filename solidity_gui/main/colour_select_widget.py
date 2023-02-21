@@ -2,7 +2,6 @@
 from typing import Any
 
 from meshio import Mesh
-from pubsub import pub
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QComboBox
 
@@ -18,14 +17,11 @@ class ColourSelectWidget(QComboBox):
 
         self.currentTextChanged.connect(self._select_handler)
         signals.geometry.updated.connect(self._set_items)
-        pub.subscribe(self._select_handler, "mesh.updated")
+        signals.mesh.updated.connect(self._select_handler)
 
     def _select_handler(self, mesh: Mesh = None) -> None:
-        selectedValue = self.currentText()
-        if not selectedValue:
-            return
-
-        pub.sendMessage("mesh.select", selection_name=selectedValue)
+        if selection_name := self.currentText():
+            signals.mesh.emit(selection_name)
 
     @Slot()
     def _set_items(self, mesh: Mesh) -> None:

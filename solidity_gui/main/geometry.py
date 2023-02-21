@@ -8,9 +8,10 @@ import gmsh
 import numpy as np
 import pygmsh
 from meshio import Mesh
-from pubsub import pub
 from pygmsh.common.dummy import Dummy
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import SIGNAL, QObject, QThread
+
+from . import signals
 
 # Type[float] indicates the object `float` rather than a float instance e.g. 1.0
 Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
@@ -189,10 +190,9 @@ class GmshListener(QThread):
     thread, which invokes PyPubsub's sendMessage() function. This needs to be run on the
     main thread in case listeners want to modify the GUI (all GUI operations have to be
     on the main thread).
-    """
 
-    mesh_received = Signal(str, Mesh)
-    """Signal for when a new mesh has been generated."""
+    TODO: Update this docstring
+    """
 
     def __init__(self, queue: Queue) -> None:
         """Create a new GmshListener."""
@@ -209,7 +209,8 @@ class GmshListener(QThread):
         if not item:
             return False
 
-        self.mesh_received.emit(*item)
+        print("EMITTING")
+        QObject.emit(getattr(signals, item[0]), SIGNAL("end_meshing()"), item[1])
         return True
 
     def run(self) -> None:
@@ -287,7 +288,6 @@ class MeshGenerator:
 
         self._listener = GmshListener(self._out_queue)
         """Receives generated meshes and raises a signal when they arrive."""
-        self._listener.mesh_received.connect(self._send_meshing_end)
         self._listener.start()
 
     def __del__(self) -> None:
@@ -297,25 +297,25 @@ class MeshGenerator:
         self._listener.wait()
 
     def _generate_mesh(self) -> None:
-        topic, components, resolution = self._in_queue.get()
-        self._out_queue.put((topic, generate_mesh(components, resolution)))
+        signal_name, components, resolution = self._in_queue.get()
+        self._out_queue.put((signal_name, generate_mesh(components, resolution)))
 
     def _run_mesh_generation(self) -> None:
         while True:
             self._generate_mesh()
 
-    def _send_meshing_end(self, name: str, mesh: Mesh) -> None:
-        pub.sendMessage(f"{name}.meshing.end", mesh=mesh)
-
     def start_mesh_generation(
-        self, topic: str, components: Iterable[Component], resolution: float
+        self,
+        signal_name: str,
+        components: Iterable[Component],
+        resolution: float,
     ) -> Mesh:
         """Generate a meshio.Mesh from simple geometric components.
 
         Args:
-            topic: the top-level topic name to send messages on
+            signal_name: the signals for meshing begin/end
             components: to include in the system geometry
             resolution: resolution to use for mesh
         """
-        pub.sendMessage(f"{topic}.meshing.begin")
-        self._in_queue.put((topic, components, resolution))
+        getattr(signals, signal_name).begin_meshing.emit()
+        self._in_queue.put((signal_name, components, resolution))
