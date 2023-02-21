@@ -2,12 +2,12 @@
 from typing import Any
 
 import qtawesome as qta
-from pubsub import pub
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QComboBox, QToolBar
 
 from .. import config
+from . import signals
 
 
 class VisualisationToolbar(QToolBar):
@@ -57,16 +57,10 @@ class VisualisationToolbar(QToolBar):
         self.transform_yz_action.triggered.connect(self._yz_click_handler)
 
     def _xy_click_handler(self) -> None:
-        pub.sendMessage(
-            "camera.reorient", orientation_vector=(0, 0, 1), up_vector=(1, 0, 0)
-        )
+        signals.camera.reorient.emit((0, 0, 1), (1, 0, 0))
 
     def _xz_click_handler(self) -> None:
-        pub.sendMessage(
-            "camera.reorient", orientation_vector=(0, -1, 0), up_vector=(1, 0, 0)
-        )
+        signals.camera.reorient.emit((0, -1, 0), (1, 0, 0))
 
     def _yz_click_handler(self) -> None:
-        pub.sendMessage(
-            "camera.reorient", orientation_vector=(1, 0, 0), up_vector=(0, 1, 0)
-        )
+        signals.camera.reorient.emit((1, 0, 0), (0, 1, 0))

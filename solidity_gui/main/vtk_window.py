@@ -96,8 +96,8 @@ class VTKWindow(QVBoxLayout):
         pub.subscribe(self._create_mesh_from_geometry_begin, "mesh.create")
         pub.subscribe(self._create_mesh_from_geometry_end, "mesh.meshing.end")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
-        pub.subscribe(self.reorient_camera, "camera.reorient")
-        pub.subscribe(self.reset_camera, "camera.reset")
+        signals.camera.reorient.connect(self.reorient_camera)
+        signals.camera.reset.connect(self.reset_camera)
 
         # Set the mouse cursor to busy during meshing
         pub.subscribe(_set_cursor_to_busy, "mesh.meshing.begin")

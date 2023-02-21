@@ -1,10 +1,9 @@
 """Code for a control panel to select surface colour and to reset view orientation."""
-from functools import partial
 from typing import Any
 
-from pubsub import pub
 from PySide6.QtWidgets import QPushButton, QVBoxLayout
 
+from . import signals
 from .add_shape_button import AddShapeButton
 from .colour_select_widget import ColourSelectWidget
 from .create_mesh_button import CreateMeshButton
@@ -17,7 +16,7 @@ class ControlPanel(QVBoxLayout):
         """Create a ControlPanel."""
         super().__init__(*args, **kwargs)
         reset_button = QPushButton("Reset view")
-        reset_button.clicked.connect(partial(pub.sendMessage, "camera.reset"))
+        reset_button.clicked.connect(signals.camera.reset.emit)
 
         self.addWidget(reset_button)
         self.addWidget(ColourSelectWidget())
