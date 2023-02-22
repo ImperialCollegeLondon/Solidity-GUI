@@ -9,6 +9,7 @@ Run the software with: python -m solidity_gui.
 
 def run() -> None:
     """Main entry point to program."""
+    import multiprocessing
     import sys
 
     if sys.platform == "linux":
@@ -17,6 +18,10 @@ def run() -> None:
         # Force Qt to use X11 backend, even if we're running on Wayland, as VTK requires
         # it
         os.environ["QT_QPA_PLATFORM"] = "xcb"
+
+    # Needed if you're using multiprocessing within a pyinstaller-built exe on Windows,
+    # otherwise your main window will repeatedly open
+    multiprocessing.freeze_support()
 
     from PySide6.QtWidgets import QApplication
 
