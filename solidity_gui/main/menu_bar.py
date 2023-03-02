@@ -29,8 +29,6 @@ class MenuBar(QMenuBar):
         self.addMenu("&Help")
 
         self.materials_manager_dialog = MaterialsManagerDialog()
-        materials_manager_action = QAction("&Manager", self)
-        materials_manager_action.triggered.connect(
-            self.materials_manager_dialog.open
-        )
+        materials_manager_action = QAction("&Create and edit &materials", self)
+        materials_manager_action.triggered.connect(self.materials_manager_dialog.open)
         self.materials_menu.addAction(materials_manager_action)
