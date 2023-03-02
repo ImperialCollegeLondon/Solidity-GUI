@@ -67,8 +67,10 @@ class Material:
 
     Attributes:
         name: name of this material
+        id: unique id for this material
         properties: dictionary containing all properties for this Material
     """
 
     name: str
+    id: int
     properties: Properties_Dict_Type = field(default_factory=PROPERTIES)

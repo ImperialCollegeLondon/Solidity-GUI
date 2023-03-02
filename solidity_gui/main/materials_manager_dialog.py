@@ -67,7 +67,11 @@ class MaterialsManagerDialog(QDialog):
 
         self.create_button.clicked.connect(self._create_click_handler)
         self.edit_button.clicked.connect(self._edit_click_handler)
-        self.delete_button.clicked.connect(self._delete_material)
+        self.rename_button.clicked.connect(self._rename_click_handler)
+        self.copy_button.clicked.connect(self._copy_click_handler)
+        self.delete_button.clicked.connect(self._delete_click_handler)
+
+        self.materials_table.cellChanged.connect(self._material_renamed)
 
         pub.subscribe(self._add_material, "materials.add")
         pub.subscribe(self._toggle_property, "property.toggle_enabled")
@@ -76,22 +80,63 @@ class MaterialsManagerDialog(QDialog):
         CreateMaterialDialog().exec()
 
     def _edit_click_handler(self) -> None:
-        selected_material = self.materials_table.item(
-            self.materials_table.currentRow(), 0
-        ).text()
-        EditMaterialDialog(self.materials[selected_material]).exec()
+        if self.materials_table.selectedIndexes():
+            selected_material = self.materials_table.item(
+                self.materials_table.currentRow(), 0
+            ).text()
+            print(selected_material)
+            EditMaterialDialog(self.materials[selected_material]).exec()
+
+    def _rename_click_handler(self) -> None:
+        if self.materials_table.selectedIndexes():
+            self.materials_table.editItem(
+                self.materials_table.item(self.materials_table.currentRow(), 0)
+            )
+
+    def _material_renamed(self, row: int, column: int) -> None:
+        material_id = self.materials_table.item(row, 1).text()
+        new_name = self.materials_table.item(row, column).text()
+
+        for name, material in self.materials.items():
+            if material.id == int(material_id):
+                old_name = name
+                break
+
+        if old_name != new_name:
+            self.materials[new_name] = self.materials[old_name]
+            self.materials[new_name].name = new_name
+            del self.materials[old_name]
 
     def _add_material(self, material: str) -> None:
-        self.materials[material] = Material(name=material)
+        material_unique_id = (
+            max([material.id for material in self.materials.values()], default=0) + 1
+        )
+        self.materials[material] = Material(name=material, id=material_unique_id)
         materials_count = len(self.materials)
+        # we want to use the cellChanged signal for when a material is renamed but,
+        # using insertRow emits that signal, so we can temporarily block signals whilst
+        # we're doing this
+        self.materials_table.blockSignals(True)
         self.materials_table.insertRow(materials_count - 1)
         self.materials_table.setItem(materials_count - 1, 0, QTableWidgetItem(material))
         self.materials_table.setItem(
-            materials_count - 1, 1, QTableWidgetItem(str(materials_count))
+            materials_count - 1, 1, QTableWidgetItem(str(material_unique_id))
         )
         self.materials_table.resizeColumnsToContents()
+        self.materials_table.blockSignals(False)
 
-    def _delete_material(self):
+    def _copy_click_handler(self) -> None:
+        if self.materials_table.selectedIndexes():
+            selected_material = self.materials_table.item(
+                self.materials_table.currentRow(), 0
+            ).text()
+
+            self._add_material(selected_material + "_copy")
+            self.materials[selected_material + "_copy"].properties = self.materials[
+                selected_material
+            ].properties
+
+    def _delete_click_handler(self) -> None:
         if self.materials_table.selectedIndexes():
             selected_material = self.materials_table.item(
                 self.materials_table.currentRow(), 0
