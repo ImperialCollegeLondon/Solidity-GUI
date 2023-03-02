@@ -1,13 +1,24 @@
 """Simple form for creating a new material."""
 
+from typing import Dict
+
 from pubsub import pub
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QVBoxLayout,
+)
+
+from .material import Material
 
 
 class CreateMaterialDialog(QDialog):
     """Dialog for creating a material."""
 
-    def __init__(self) -> None:
+    def __init__(self, materials: Dict[str, Material]) -> None:
         """Initialise a new dialog."""
         super().__init__()
         self.setWindowTitle("Create new material")
@@ -21,6 +32,8 @@ class CreateMaterialDialog(QDialog):
         layout.addWidget(name_label)
         layout.addWidget(self.name_input)
 
+        self.materials = materials
+
         # add ok and close buttons
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel
@@ -31,5 +44,22 @@ class CreateMaterialDialog(QDialog):
         layout.addWidget(self.button_box)
 
     def _ok_clicked(self) -> None:
+        # validate material name
+        if not self.name_input.text().isalnum():
+            QMessageBox.warning(
+                self, "Invalid input", "Input must contain only letters and numbers."
+            )
+            return
+
+        if not self.name_input.text():
+            QMessageBox.warning(self, "Invalid input", "Name cannot be empty.")
+            return
+
+        if self.name_input.text().strip().lower() in [
+            name.strip().lower() for name in self.materials.keys()
+        ]:
+            QMessageBox.warning(self, "Invalid input", "Name already exists!")
+            return
+
         pub.sendMessage("materials.add", material=self.name_input.text())
         self.close()

@@ -80,14 +80,13 @@ class MaterialsManagerDialog(QDialog):
         pub.subscribe(self._toggle_property, "property.toggle_enabled")
 
     def _create_click_handler(self) -> None:
-        CreateMaterialDialog().exec()
+        CreateMaterialDialog(self.materials).exec()
 
     def _edit_click_handler(self) -> None:
         if self.materials_table.selectedIndexes():
             selected_material = self.materials_table.item(
                 self.materials_table.currentRow(), 0
             ).text()
-            print(selected_material)
             EditMaterialDialog(self.materials[selected_material]).exec()
 
     def _rename_click_handler(self) -> None:
