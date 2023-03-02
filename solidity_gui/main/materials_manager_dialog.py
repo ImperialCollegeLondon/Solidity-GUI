@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QHBoxLayout,
+    QHeaderView,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -46,7 +47,9 @@ class MaterialsManagerDialog(QDialog):
         self.materials_table.verticalHeader().setVisible(False)
         # distribute the available space according to the
         # space requirement of each column
-        self.materials_table.resizeColumnsToContents()
+        header = self.materials_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
 
         layout.addWidget(self.materials_table)
 
@@ -122,7 +125,6 @@ class MaterialsManagerDialog(QDialog):
         self.materials_table.setItem(
             materials_count - 1, 1, QTableWidgetItem(str(material_unique_id))
         )
-        self.materials_table.resizeColumnsToContents()
         self.materials_table.blockSignals(False)
 
     def _copy_click_handler(self) -> None:
