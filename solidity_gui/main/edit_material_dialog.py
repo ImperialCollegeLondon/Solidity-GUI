@@ -64,7 +64,7 @@ class EditMaterialDialog(QDialog):
         buttons_layout = QVBoxLayout()
         add_button = QPushButton("&Add >>")
         add_button.clicked.connect(self._add_clicked)
-        remove_button = QPushButton("&<< Remove")
+        remove_button = QPushButton("<< &Remove")
         remove_button.clicked.connect(self._remove_clicked)
         buttons_layout.addWidget(add_button)
         buttons_layout.addWidget(remove_button)
