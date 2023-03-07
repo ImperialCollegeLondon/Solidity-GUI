@@ -50,8 +50,9 @@ class Widget(ABC, Generic[WidgetType, DataType]):
     qt_input_class: Type[WidgetType]
     """QWidget class."""
 
+    @staticmethod
     @abstractmethod
-    def process(self, input_: WidgetType) -> DataType:
+    def process(input_: WidgetType) -> DataType:
         """Extract form data from an instance of WidgetType."""
         pass
 
@@ -97,7 +98,8 @@ class SpinBoxBase(Widget, Generic[SpinBoxType, DataType]):
             qt_input.setValue(data)
         return qt_input
 
-    def process(self, input_: SpinBoxType) -> DataType:
+    @staticmethod
+    def process(input_: SpinBoxType) -> DataType:
         """Extract form data from an instance of SpinBoxType.
 
         Args:
@@ -156,7 +158,8 @@ class LineEditWidget(Widget[QLineEdit, str]):
             qt_input.setText(data)
         return qt_input
 
-    def process(self, input_: QLineEdit) -> str:
+    @staticmethod
+    def process(input_: QLineEdit) -> str:
         """Extract form data from an instance of QLineEdit.
 
         Args:
