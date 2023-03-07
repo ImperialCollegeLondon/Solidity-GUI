@@ -26,7 +26,7 @@ class AddShapeDialog(SimpleFormDialog):
             type(
                 "ExtendForm",
                 (shape.form,),
-                dict(label=StrField(validators=[Length(min=1)])),
+                dict(label=StrField(validators=[Length(min=1)]), field_order=["label"]),
             ),  # add label field to form class
             **kwargs,
         )
