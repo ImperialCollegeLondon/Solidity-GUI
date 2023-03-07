@@ -36,7 +36,7 @@ def default_form_renderer(form_info: FormInfo) -> QLayout:
     """
     layout = QVBoxLayout()
 
-    for name, field_info in form_info.fields.items():
+    for field_info in form_info.fields.values():
         if field_info.header:
             layout.addWidget(
                 _create_named_label(f"{field_info.header.capitalize()}:", "header")
