@@ -207,6 +207,39 @@ def test_form_validate_sub_class_multiple_inheritance():
         schema.load(dict(a=1, b=0))
 
 
+def test_form_field_order_preserved(qtbot):
+    """Check order of fields in FormInfo is perserved from definition."""
+
+    class SubForm(TestForm):
+        c = FloatField()
+
+    form_info = SubForm().form_info()
+    assert list(form_info.fields.keys()) == ["a", "b", "c"]
+
+
+def test_form_field_order_override(qtbot):
+    """Check order of fields can be controlled via field_order attribute."""
+    order = ["c", "b", "a"]
+
+    class SubForm(TestForm):
+        c = FloatField()
+        field_order = order
+
+    form_info = SubForm().form_info()
+    assert list(form_info.fields.keys()) == order
+
+
+def test_form_field_order_override_subset(qtbot):
+    """Check order of fields when only specifying a subset of field names."""
+
+    class SubForm(TestForm):
+        c = FloatField()
+        field_order = ["c"]
+
+    form_info = SubForm().form_info()
+    assert list(form_info.fields.keys()) == ["c", "a", "b"]
+
+
 @pytest.mark.parametrize("widget_class", (SpinBoxWidget, DoubleSpinBoxWidget))
 def test_spin_box_widget(qtbot, widget_class):
     """Test SpinBoxBase sub-classes."""

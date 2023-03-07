@@ -5,7 +5,7 @@ that gather structured data from the user.
 """
 
 from itertools import chain
-from typing import Any, Callable, Dict, List, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
 
 from marshmallow import Schema
 from marshmallow import ValidationError as MarshmallowValidationError
@@ -44,6 +44,7 @@ class Form:
 
     fields: Dict[str, BaseField]
     _marshmallow_class: type
+    field_order: Optional[List[str]] = None
 
     def __init_subclass__(cls) -> None:
         """Initialise subclasses with additional attributes.
@@ -75,6 +76,14 @@ class Form:
             f"{cls.__name__}Schema", (Schema,), marshmallow_attrs
         )
 
+    def _iter_ordered_field_items(self) -> Iterable[Tuple[str, BaseField]]:
+        """Iterate over fields respecting the value of self.field_order."""
+        keys = self.field_order if self.field_order else []
+        for key in self.fields.keys():
+            if key not in keys:
+                keys.append(key)
+        return ((key, getattr(self, key)) for key in keys)
+
     def form_info(
         self,
         data: Dict[str, Any] = {},
@@ -86,7 +95,7 @@ class Form:
             name: field.field_info(
                 name, data.get(name, None), errors=errors.get(name, dict())
             )
-            for name, field in self.fields.items()
+            for name, field in self._iter_ordered_field_items()
         }
         return FormInfo(fields=fields, schema_errors=schema_errors)
 
@@ -100,7 +109,7 @@ class Form:
             return self._marshmallow_class().load(
                 {
                     name: field.process(form_info.fields[name].input)
-                    for name, field in (self.fields.items())
+                    for name, field in self._iter_ordered_field_items()
                 }
             )
         except MarshmallowValidationError as e:
