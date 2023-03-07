@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 
 from solidity_gui.main.forms.dialog import SimpleFormDialog, default_form_renderer
 from solidity_gui.main.forms.fields import FloatField, IntField, StrField, VectorField
-from solidity_gui.main.forms.forms import Form, FormMeta
+from solidity_gui.main.forms.forms import Form
 from solidity_gui.main.forms.info import FieldInfo, FormInfo
 from solidity_gui.main.forms.widgets import (
     DoubleSpinBoxWidget,
@@ -94,26 +94,6 @@ def test_vector_field_field_info_data_wrong_length(qtbot, data):
     field = VectorField()
     with pytest.raises(ValueError):
         field.field_info(name="name", data=data)
-
-
-def test_form_meta():
-    """Test class created correctly using FormMeta metaclass."""
-
-    class TestForm(metaclass=FormMeta):
-        x = IntField()
-        y = StrField()
-
-    assert isinstance(TestForm.fields["x"], IntField)
-    assert isinstance(TestForm.fields["y"], StrField)
-
-    schema = TestForm._marshmallow_class()
-    assert isinstance(schema, Schema)
-
-    schema.load(dict(x=1, y="e"))
-    with pytest.raises(ValidationError):
-        schema.load(dict(x="ee", y="e"))
-    with pytest.raises(ValidationError):
-        schema.load(dict(x=2, y=1))
 
 
 def test_form_subclass():

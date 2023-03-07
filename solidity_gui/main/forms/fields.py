@@ -17,7 +17,7 @@ however the Widget class may also be provided at initialisation time.
 """
 
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Generic, Iterable, List, Optional, Type, TypeVar
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Type, TypeVar
 
 from marshmallow import fields as marshmallow_fields
 from marshmallow import validate
@@ -108,6 +108,14 @@ class BaseField(ABC, Generic[DataType]):
     def marshmallow(self) -> marshmallow_fields.Field:
         """Generates a corresponding Marshmallow Field for use in a Schema."""
         pass
+
+    @abstractmethod
+    def process(self, inputs: List[QWidget]) -> Any:
+        """Return data for the field.
+
+        Args:
+          inputs: the gui widget instance(s).
+        """
 
 
 class CompositeField(BaseField, Generic[DataType]):

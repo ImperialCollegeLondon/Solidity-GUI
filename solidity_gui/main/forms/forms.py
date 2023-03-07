@@ -5,14 +5,14 @@ that gather structured data from the user.
 """
 
 from itertools import chain
-from typing import Any, Callable, Dict, List, Tuple, cast
+from typing import Any, Callable, Dict, List, cast
 
 from marshmallow import Schema
 from marshmallow import ValidationError as MarshmallowValidationError
 from marshmallow import fields as marshmallow_fields
 from marshmallow import validates_schema
 
-from .fields import BaseField, CompositeField, SingleField
+from .fields import BaseField
 from .info import FormInfo
 
 
@@ -35,67 +35,45 @@ class ValidationError(Exception):
         self.form_data = form_data
 
 
-class FormMeta(type):
-    """Metaclass for Form classes that proccesses Field attributes.
-
-    When constructing a new Form class, this metaclass looks for attributes that are
-    Field subclasses and 1) adds a new dictionary `field` attribute containing
-    name->attribute mappings and 2) uses the marshmallow method of each field to
-    construct a Marshmallow Schema class for data validation.
-    """
-
-    def __new__(cls, name: str, bases: Tuple[type], attrs: Dict[str, Any]) -> type:
-        """Constructor for new classes.
-
-        Args:
-          name: the class name
-          bases: the base classes
-          attrs: class attributes
-        """
-        marshmallow_attrs: Dict[str, marshmallow_fields.Field | Callable] = {}
-        attrs["fields"] = {}
-
-        for name_, attr in chain(attrs.items()):
-            if isinstance(attr, BaseField):
-                marshmallow_attrs[name_] = attr.marshmallow()
-                attrs["fields"][name_] = attr
-
-        for base in bases:
-            for name_ in dir(base):
-                if name_ in marshmallow_attrs:
-                    # don't overwrite an existing attribute with the base class
-                    continue
-                attr = getattr(base, name_)
-                if isinstance(attr, BaseField):
-                    marshmallow_attrs[name_] = attr.marshmallow()
-                    attrs["fields"][name_] = attr
-
-        schema_validator = attrs.get("validate", None)
-        if not schema_validator:
-            for base in bases:
-                if schema_validator := getattr(base, "validate", None):
-                    break
-
-        if schema_validator:
-            marshmallow_attrs["schema_validator"] = validates_schema(schema_validator)
-        # could have used Schema.from_dict rather than the below but expected function
-        # signature is not compatible with the return type of validates_schema
-        attrs["_marshmallow_class"] = type(
-            f"{name}Schema", (Schema,), marshmallow_attrs
-        )
-
-        return super().__new__(cls, name, bases, attrs)
-
-
-class Form(metaclass=FormMeta):
+class Form:
     """A Form object for collection and validation of data.
 
     Form sub-classes may optionally have a `validate` method. If present, this is used
     as a schema level validator for the Marshmallow Schema of the form.
     """
 
-    fields: Dict[str, SingleField | CompositeField]
+    fields: Dict[str, BaseField]
     _marshmallow_class: type
+
+    def __init_subclass__(cls) -> None:
+        """Initialise subclasses with additional attributes.
+
+        When constructing a new Form subclass, this method looks for attributes that are
+        Field subclasses and 1) adds a new dictionary `field` attribute containing
+        name->attribute mappings and 2) uses the marshmallow method of each field to
+        construct a Marshmallow Schema class for data validation.
+        """
+        super().__init_subclass__()
+        marshmallow_attrs: Dict[str, marshmallow_fields.Field | Callable] = {}
+        cls.fields = {}
+
+        # iter through __dict__ for bases using __mro__ in order to preserve
+        # order of fields according to the order they are defined
+        for attr_name, attr in chain(
+            *(c.__dict__.items() for c in reversed(cls.__mro__))
+        ):
+            if isinstance(attr, BaseField):
+                cls.fields[attr_name] = attr
+                marshmallow_attrs[attr_name] = attr.marshmallow()
+
+        if schema_validator := getattr(cls, "validate", None):
+            marshmallow_attrs["schema_validator"] = validates_schema(schema_validator)
+
+        # could have used Schema.from_dict rather than the below but expected function
+        # signature is not compatible with the return type of validates_schema
+        cls._marshmallow_class = type(
+            f"{cls.__name__}Schema", (Schema,), marshmallow_attrs
+        )
 
     def form_info(
         self,
