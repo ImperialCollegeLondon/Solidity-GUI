@@ -163,7 +163,7 @@ def test_form_subclass_overwrite():
     class BaseForm(Form):
         a = FloatField()
 
-    class SubForm(Form):
+    class SubForm(BaseForm):
         a = IntField()
 
     assert isinstance(SubForm.a, IntField)
