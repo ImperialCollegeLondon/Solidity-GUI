@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from .edit_material_dialog import EditMaterialDialog
 from .material import Material
 
 
@@ -44,22 +45,25 @@ class CreateMaterialDialog(QDialog):
         layout.addWidget(self.button_box)
 
     def _ok_clicked(self) -> None:
+        material_name = self.name_input.text()
+
         # validate material name
-        if not self.name_input.text().isalnum():
+        if not material_name.isalnum():
             QMessageBox.warning(
                 self, "Invalid input", "Input must contain only letters and numbers."
             )
             return
 
-        if not self.name_input.text():
+        if not material_name:
             QMessageBox.warning(self, "Invalid input", "Name cannot be empty.")
             return
 
-        if self.name_input.text().strip().lower() in [
+        if material_name.strip().lower() in [
             name.strip().lower() for name in self.materials.keys()
         ]:
             QMessageBox.warning(self, "Invalid input", "Name already exists!")
             return
 
-        pub.sendMessage("materials.add", material=self.name_input.text())
+        pub.sendMessage("materials.add", material=material_name)
         self.close()
+        EditMaterialDialog(self.materials[material_name]).exec()

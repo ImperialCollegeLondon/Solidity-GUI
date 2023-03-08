@@ -20,7 +20,12 @@ class PropertiesTree(QTreeView):
     """Implementation of a tree view for enabling/disabling properties."""
 
     def __init__(self, material: Material, enabled_properties: bool):
-        """Initialise a new PropertiesTree."""
+        """Initialise a new PropertiesTree.
+
+        Args:
+          material: Material object from which to build this tree
+          enabled_properties: builds enabled/disabled properties tree if true/false
+        """
         super().__init__()
 
         self.setHeaderHidden(True)
@@ -57,7 +62,11 @@ class EditMaterialDialog(QDialog):
     """Dialog for editing a material."""
 
     def __init__(self, material: Material):
-        """Initialise a new dialog."""
+        """Initialise a new dialog.
+
+        Args:
+            material: Material object for which properties this dialog will edit
+        """
         super().__init__()
         self.material = material
         self.setWindowTitle(f"Editing {material.name}")
@@ -123,6 +132,8 @@ class EditMaterialDialog(QDialog):
     def _toggle_property(
         self, from_tree: PropertiesTree, to_tree: PropertiesTree
     ) -> None:
+        if not from_tree.selectedIndexes():
+            return
         selected_property_index = from_tree.selectedIndexes()[0]
         selected_property_text = from_tree.base_model.itemFromIndex(
             selected_property_index
