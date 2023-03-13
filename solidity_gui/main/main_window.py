@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QTextEdit, QVBox
 from .. import config
 from .base_model_tree import BaseModelTree
 from .control_panel import ControlPanel
+from .menu_bar import MenuBar
 from .uncaught_exceptions import set_uncaught_exception_handler
 from .visualisation_toolbar import VisualisationToolbar
 from .vtk_window import VTKWindow
@@ -21,31 +22,14 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(config.APP_NAME)
 
-        self.create_menu_bar()
+        menu_bar = MenuBar()
+        self.setMenuBar(menu_bar)
         self.create_main_frame()
         # create the toolbar containing the various visualisation buttons
         visualisation_toolbar = VisualisationToolbar()
         self.addToolBar(Qt.TopToolBarArea, visualisation_toolbar)
 
         self.setCentralWidget(self.main_frame)
-
-    def create_menu_bar(self) -> None:
-        """Create the menu bar at the top of the main window."""
-        self.menu_bar = self.menuBar()
-
-        self.menu_bar.addMenu("&File")
-        self.menu_bar.addMenu("&Geometry")
-        self.menu_bar.addMenu("&Mesh")
-        self.menu_bar.addMenu("Materia&ls")
-        self.menu_bar.addMenu("&Assembly")
-        self.menu_bar.addMenu("&Step")
-        self.menu_bar.addMenu("&Conditions")
-        self.menu_bar.addMenu("&Interaction")
-        self.menu_bar.addMenu("&Job")
-        self.menu_bar.addMenu("&Results")
-        self.menu_bar.addMenu("&Tools")
-        self.menu_bar.addMenu("&View")
-        self.menu_bar.addMenu("&Help")
 
     def create_main_frame(self) -> None:
         """Create the main frame of the window.
