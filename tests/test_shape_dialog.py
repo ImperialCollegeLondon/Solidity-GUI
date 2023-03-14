@@ -4,31 +4,25 @@ from unittest.mock import MagicMock
 
 import pytest
 from pubsub import pub
-from qtpy import QtCore
 
-from solidity_gui.main.add_shape_dialogue import AddShapeDialog, _get_args
+from solidity_gui.main.add_shape_dialogue import AddShapeDialog
+from solidity_gui.main.forms import Form
+from solidity_gui.main.forms.fields import FloatField, IntField, VectorField
 from solidity_gui.main.geometry import Component, Shape
 
 
-def test_get_args(shape):
-    """Test conversion of input data via _get_args helper function."""
-    inputs = [1, "aa", 3, 2]
-    args = _get_args(inputs, shape.args)
-    assert args == [[1.0, "aa"], 3.0, 2]
-    assert type(args[0][0]) is float
-    assert type(args[0][1]) is str
-    assert type(args[1]) is float
-    assert type(args[2]) is int
+class ShapeForm(Form):
+    """Form for simple test shape."""
+
+    a = VectorField()
+    b = FloatField()
+    c = IntField()
 
 
 @pytest.fixture
 def shape(monkeypatch):
     """Dummy Shape instance that is registered in solidity_gui.main.geometry.SHAPES."""
-    shape = Shape(
-        name="shape",
-        method=MagicMock(),
-        args=dict(a=(float, str), b=float, c=int),
-    )
+    shape = Shape(name="shape", method=MagicMock(), form=ShapeForm)
     monkeypatch.setattr("solidity_gui.main.geometry.SHAPES", dict(shape=shape))
     return shape
 
@@ -57,39 +51,48 @@ def send_message_mock(monkeypatch):
     return mock
 
 
-def test_dialog_inputs(qtbot, shape):
+def test_dialog_form_info(qtbot, shape):
     """Test dialog has correct number of inputs."""
     dialog = AddShapeDialog(shape)
     qtbot.addWidget(dialog)
-    assert len(dialog.inputs) == 4
+    form_info = dialog.form_info
+    for name, field in ShapeForm.fields.items():
+        input_ = form_info.fields[name].input
+        if isinstance(input_, list):
+            for i in input_:
+                assert isinstance(i, field.widget.qt_input_class)
+        else:
+            assert isinstance(input_, field.widget.qt_input_class)
 
 
 def test_dialog_ok(close_mock, send_message_mock, dialog, qtbot, shape):
     """Test successful submission of dialog with correct data."""
-    values = ["1.0", "etete", "3.0", "4"]
-    for val, inp in zip(values, dialog.inputs):
-        inp.setText(val)
+    label = "foo"
+    data = dict(a=[0, 1, 2], b=3.5, c=1)
 
-    label = "labeltext"
-    dialog.label_field_input.setText(label)
+    form_fields = dialog.form_info.fields
+    for input_, value in zip(form_fields["a"].input, data["a"]):
+        input_.setValue(value)
+    form_fields["b"].input[0].setValue(data["b"])
+    form_fields["c"].input[0].setValue(data["c"])
+    form_fields["label"].input[0].setText(label)
 
-    button = dialog.button_box.buttons()[0]
-    assert button.text() == "OK"
-    qtbot.mouseClick(button, QtCore.Qt.LeftButton)
+    layout = dialog.layout()
+    button_box = layout.itemAt(layout.count() - 1).widget()
+
+    button_box.accepted.emit()
     close_mock.assert_called_once()
 
     # check that geometry update signal was called with correct data
     send_message_mock.assert_called_once_with(
         "geometry.update",
-        component=Component(
-            label=label, args=[[1.0, "etete"], 3.0, 4], shape=shape.name
-        ),
+        component=Component(label=label, kwargs=data, shape=shape.name),
     )
 
 
 def test_dialog_cancel(close_mock, dialog, qtbot):
     """Test behaviour of dialog cancel button."""
-    button = dialog.button_box.buttons()[1]
-    assert button.text() == "Cancel"
-    qtbot.mouseClick(button, QtCore.Qt.LeftButton)
+    layout = dialog.layout()
+    button_box = layout.itemAt(layout.count() - 1).widget()
+    button_box.rejected.emit()
     close_mock.assert_called_once()
