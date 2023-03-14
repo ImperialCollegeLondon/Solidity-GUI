@@ -157,7 +157,7 @@ numpy==1.23.4
     #   pygmsh
     #   scikit-learn
     #   scipy
-packaging==21.3
+packaging==23.0
     # via
     #   build
     #   marshmallow
