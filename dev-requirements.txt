@@ -255,7 +255,7 @@ scikit-learn==1.2.0
     # via SolidityGUI (pyproject.toml)
 scipy==1.10.0
     # via scikit-learn
-shiboken6==6.3.2
+shiboken6==6.4.2
     # via
     #   pyside6
     #   pyside6-addons
