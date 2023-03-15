@@ -1,4 +1,6 @@
-"""Module for the MaterialsManagerDialog class."""
+"""Module for the AssignPropertiesDialog class."""
+from typing import Dict
+
 from meshio import Mesh
 from pubsub import pub
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QVBoxLayout
@@ -11,6 +13,8 @@ class AssignPropertiesDialog(QDialog):
         """Initialise a new dialog."""
         super().__init__()
         self.setWindowTitle("Assign Properties")
+
+        self.assigned_materials: Dict[str, str] = {}
 
         component_label = QLabel("Component:")
         self.select_component_combo = QComboBox()
@@ -44,4 +48,10 @@ class AssignPropertiesDialog(QDialog):
         self.select_material_combo.addItem(material)
 
     def _save_clicked(self):
-        ...
+        selectedComponentValue = self.select_component_combo.currentText()
+        selectedMaterialValue = self.select_material_combo.currentText()
+        if not (selectedComponentValue and selectedMaterialValue):
+            return
+
+        self.assigned_materials[selectedComponentValue] = selectedMaterialValue
+        self.close()
