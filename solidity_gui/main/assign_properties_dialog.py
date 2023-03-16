@@ -47,7 +47,7 @@ class AssignPropertiesDialog(QDialog):
     def _set_materials(self, material: str) -> None:
         self.select_material_combo.addItem(material)
 
-    def _save_clicked(self):
+    def _save_clicked(self) -> None:
         selectedComponentValue = self.select_component_combo.currentText()
         selectedMaterialValue = self.select_material_combo.currentText()
         if not (selectedComponentValue and selectedMaterialValue):

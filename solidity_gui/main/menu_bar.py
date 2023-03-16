@@ -4,8 +4,8 @@ from typing import Any
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenuBar
 
-from .materials_manager_dialog import MaterialsManagerDialog
 from .assign_properties_dialog import AssignPropertiesDialog
+from .materials_manager_dialog import MaterialsManagerDialog
 
 
 class MenuBar(QMenuBar):
