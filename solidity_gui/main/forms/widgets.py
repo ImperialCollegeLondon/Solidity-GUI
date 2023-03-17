@@ -169,9 +169,17 @@ class LineEditWidget(Widget[QLineEdit, str]):
 
 
 class CheckBoxWidget(Widget[QCheckBox, bool]):
+    """Widget for collecting bools via a QCheckBox."""
+
     qt_input_class = QCheckBox
 
     def create(self, data: Optional[bool], validators: Iterable[Callable]) -> QCheckBox:
+        """Return a QCheckBox instance.
+
+        Args:
+          data: value to populate into the QCheckBox
+          validators: marshmallow validators (passed by associated Field)
+        """
         qt_input = self.qt_input_class()
         if data is not None:
             qt_input.setChecked(data)
@@ -179,4 +187,9 @@ class CheckBoxWidget(Widget[QCheckBox, bool]):
 
     @staticmethod
     def process(input_: QCheckBox) -> bool:
+        """Extract form data from an instance of QCheckBox.
+
+        Args:
+          input_: QCheckBox instance containing data
+        """
         return input_.isChecked()
