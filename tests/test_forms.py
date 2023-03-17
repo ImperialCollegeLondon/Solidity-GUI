@@ -14,10 +14,17 @@ from PySide6.QtWidgets import (
 )
 
 from solidity_gui.main.forms.dialog import SimpleFormDialog, default_form_renderer
-from solidity_gui.main.forms.fields import FloatField, IntField, StrField, VectorField
+from solidity_gui.main.forms.fields import (
+    BoolField,
+    FloatField,
+    IntField,
+    StrField,
+    VectorField,
+)
 from solidity_gui.main.forms.forms import Form
 from solidity_gui.main.forms.info import FieldInfo, FormInfo
 from solidity_gui.main.forms.widgets import (
+    CheckBoxWidget,
     DoubleSpinBoxWidget,
     LineEditWidget,
     SpinBoxWidget,
@@ -94,6 +101,48 @@ def test_vector_field_field_info_data_wrong_length(qtbot, data):
     field = VectorField()
     with pytest.raises(ValueError):
         field.field_info(name="name", data=data)
+
+
+def test_float_field(qtbot):
+    """Basic test of FloatField class."""
+    validators = [validate.Equal(5)]
+    field = FloatField(validators=validators)
+
+    marshmallow_field = field.marshmallow()
+    assert isinstance(marshmallow_field, fields.Float)
+    assert marshmallow_field.validators == field.validators
+
+    data = 1.1
+    qt_input = field.input(data)
+    assert field.process([qt_input]) == data
+
+
+def test_int_field(qtbot):
+    """Basic test of FloatField class."""
+    validators = [validate.Equal(5)]
+    field = IntField(validators=validators)
+
+    marshmallow_field = field.marshmallow()
+    assert isinstance(marshmallow_field, fields.Int)
+    assert marshmallow_field.validators == field.validators
+
+    data = 1
+    qt_input = field.input(data)
+    assert field.process([qt_input]) == data
+
+
+def test_bool_field(qtbot):
+    """Basic test of FloatField class."""
+    validators = [validate.Equal(True)]
+    field = BoolField(validators=validators)
+
+    marshmallow_field = field.marshmallow()
+    assert isinstance(marshmallow_field, fields.Bool)
+    assert marshmallow_field.validators == field.validators
+
+    data = True
+    qt_input = field.input(data)
+    assert field.process([qt_input]) == data
 
 
 def test_form_subclass():
@@ -310,6 +359,27 @@ def test_line_edit_widget_process(qtbot):
     input_ = LineEditWidget.qt_input_class()
     input_.setText(data)
     assert LineEditWidget().process(input_) == data
+
+
+def test_check_box_widget(qtbot):
+    """Test CheckBoxWidget class."""
+    input_ = CheckBoxWidget().create(None, [])
+    assert not input_.isChecked()
+
+
+def test_check_box_widget_data(qtbot):
+    """Test CheckBoxWidget class sets QCheckBox data."""
+    data = True
+    input_ = CheckBoxWidget().create(data, [])
+    assert input_.isChecked() == data
+
+
+def test_check_box_widget_process(qtbot):
+    """Test process method of CheckBoxWidget."""
+    data = True
+    input_ = CheckBoxWidget.qt_input_class()
+    input_.setChecked(data)
+    assert CheckBoxWidget().process(input_) == data
 
 
 def _check_label(layout, pos, text):
