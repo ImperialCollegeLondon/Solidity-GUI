@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from typing import Callable, Generic, Iterable, Optional, Type, TypeVar
 
 from marshmallow import validate
-from PySide6.QtWidgets import QDoubleSpinBox, QLineEdit, QSpinBox
+from PySide6.QtWidgets import QCheckBox, QDoubleSpinBox, QLineEdit, QSpinBox
 from typing_extensions import Protocol
 
 DataType = TypeVar("DataType")
@@ -166,3 +166,17 @@ class LineEditWidget(Widget[QLineEdit, str]):
           input_: QLineEdit instance containing data
         """
         return input_.text()
+
+
+class CheckBoxWidget(Widget[QCheckBox, bool]):
+    qt_input_class = QCheckBox
+
+    def create(self, data: Optional[bool], validators: Iterable[Callable]) -> QCheckBox:
+        qt_input = self.qt_input_class()
+        if data is not None:
+            qt_input.setChecked(data)
+        return qt_input
+
+    @staticmethod
+    def process(input_: QCheckBox) -> bool:
+        return input_.isChecked()

@@ -24,7 +24,13 @@ from marshmallow import validate
 from PySide6.QtWidgets import QWidget
 
 from .info import FieldInfo
-from .widgets import DoubleSpinBoxWidget, LineEditWidget, SpinBoxWidget, Widget
+from .widgets import (
+    CheckBoxWidget,
+    DoubleSpinBoxWidget,
+    LineEditWidget,
+    SpinBoxWidget,
+    Widget,
+)
 
 DataType = TypeVar("DataType")
 
@@ -196,6 +202,13 @@ class FloatField(SingleField[float]):
 
     _marshmallow_field = marshmallow_fields.Float
     _default_widget = DoubleSpinBoxWidget()
+
+
+class BoolField(SingleField[bool]):
+    """A field for float data."""
+
+    _marshmallow_field = marshmallow_fields.Boolean
+    _default_widget = CheckBoxWidget()
 
 
 class VectorField(CompositeField[Iterable[float]]):
