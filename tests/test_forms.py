@@ -96,6 +96,34 @@ def test_vector_field_field_info_data_wrong_length(qtbot, data):
         field.field_info(name="name", data=data)
 
 
+def test_float_field(qtbot):
+    """Basic test of FloatField class."""
+    validators = [validate.Equal(5)]
+    field = FloatField(validators=validators)
+
+    marshmallow_field = field.marshmallow()
+    assert isinstance(marshmallow_field, fields.Float)
+    assert marshmallow_field.validators == field.validators
+
+    data = 1.1
+    qt_input = field.input(data)
+    assert field.process([qt_input]) == data
+
+
+def test_int_field(qtbot):
+    """Basic test of FloatField class."""
+    validators = [validate.Equal(5)]
+    field = IntField(validators=validators)
+
+    marshmallow_field = field.marshmallow()
+    assert isinstance(marshmallow_field, fields.Int)
+    assert marshmallow_field.validators == field.validators
+
+    data = 1
+    qt_input = field.input(data)
+    assert field.process([qt_input]) == data
+
+
 def test_form_subclass():
     """Test FormMeta metaclass behaviour for multiple Form sub-classes."""
 
