@@ -364,7 +364,7 @@ def test_line_edit_widget_process(qtbot):
 def test_check_box_widget(qtbot):
     """Test CheckBoxWidget class."""
     input_ = CheckBoxWidget().create(None, [])
-    assert input_.isChecked() is False
+    assert not input_.isChecked()
 
 
 def test_check_box_widget_data(qtbot):
