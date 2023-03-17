@@ -4,13 +4,16 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from marshmallow import Schema, ValidationError, fields, validate
+from marshmallow import Schema
+from marshmallow import ValidationError as MarshmallowValidationError
+from marshmallow import fields, validate
 from PySide6.QtWidgets import (
     QDialogButtonBox,
     QDoubleSpinBox,
     QLabel,
     QLineEdit,
     QSpinBox,
+    QVBoxLayout,
 )
 
 from solidity_gui.main.forms.dialog import SimpleFormDialog, default_form_renderer
@@ -21,7 +24,7 @@ from solidity_gui.main.forms.fields import (
     StrField,
     VectorField,
 )
-from solidity_gui.main.forms.forms import Form
+from solidity_gui.main.forms.forms import Form, NestedForm
 from solidity_gui.main.forms.info import FieldInfo, FormInfo
 from solidity_gui.main.forms.widgets import (
     CheckBoxWidget,
@@ -163,9 +166,9 @@ def test_form_subclass():
     assert isinstance(schema, Schema)
 
     schema.load(dict(a=1, b="a"))
-    with pytest.raises(ValidationError):
+    with pytest.raises(MarshmallowValidationError):
         schema.load(dict(a="a", b="b"))
-    with pytest.raises(ValidationError):
+    with pytest.raises(MarshmallowValidationError):
         schema.load(dict(label=1, b=1))
 
 
@@ -208,14 +211,14 @@ class TestForm(Form):
     def validate(self, data, **kwargs):
         """Form validation method."""
         if data["a"] > data["b"]:
-            raise ValidationError("bad data")
+            raise MarshmallowValidationError("bad data")
 
 
 def test_form_validate():
     """Test form level validation using form schema class."""
     schema = TestForm._marshmallow_class()
     schema.load(dict(a=0, b=1))
-    with pytest.raises(ValidationError):
+    with pytest.raises(MarshmallowValidationError):
         schema.load(dict(a=1, b=0))
 
 
@@ -227,9 +230,9 @@ def test_form_validate_sub_class():
 
     schema = SubForm._marshmallow_class()
     schema.load(dict(a=0, b=1, c="a"))
-    with pytest.raises(ValidationError):
+    with pytest.raises(MarshmallowValidationError):
         schema.load(dict(a=0, b=1, c=1))
-    with pytest.raises(ValidationError):
+    with pytest.raises(MarshmallowValidationError):
         schema.load(dict(a=1, b=0, c="a"))
 
 
@@ -244,7 +247,7 @@ def test_form_validate_sub_class_multiple_inheritance():
 
     schema = SubForm._marshmallow_class()
     schema.load(dict(a=0, b=1))
-    with pytest.raises(ValidationError):
+    with pytest.raises(MarshmallowValidationError):
         schema.load(dict(a=1, b=0))
 
     class SubForm(TestForm, DummyMixin):
@@ -252,7 +255,7 @@ def test_form_validate_sub_class_multiple_inheritance():
 
     schema = SubForm._marshmallow_class()
     schema.load(dict(a=0, b=1))
-    with pytest.raises(ValidationError):
+    with pytest.raises(MarshmallowValidationError):
         schema.load(dict(a=1, b=0))
 
 
@@ -528,3 +531,110 @@ def test_simple_form_dialog_ok_clicked_bad_data(qtbot):
     assert dialog._ok_clicked() is None
     assert dialog.form_info.schema_errors
     assert dialog.layout() is not layout  # layout was updated
+
+
+def test_nested_form(qtbot):
+    """Test nesting of form classes."""
+
+    class TestNestedForm(Form):
+        b = StrField()
+        c = FloatField()
+
+    class TestForm(Form):
+        a = NestedForm(TestNestedForm)
+        d = IntField()
+
+    TestForm._marshmallow_class().load(dict(a=dict(b="22", c=3), d=4))
+
+    form_info = TestForm().form_info()
+    assert (
+        form_info.fields["a"].fields.keys()
+        == TestNestedForm().form_info().fields.keys()
+    )
+
+    form_info.fields["a"].fields["b"].input[0].setText("aoeu")
+    form_info.fields["a"].fields["c"].input[0].setValue(3.5)
+    form_info.fields["d"].input[0].setValue(8)
+
+    data = TestForm().process(form_info)
+    assert data == dict(a=dict(b="aoeu", c=3.5), d=8)
+
+
+def test_nested_form_errors(qtbot):
+    """Test generation of field errors for nested forms."""
+
+    class TestNestedForm(Form):
+        b = IntField(validators=[validate.Range(min=0)])
+
+    class TestForm(Form):
+        a = NestedForm(TestNestedForm)
+
+    data = dict(a=dict(b=-5))
+    try:
+        TestForm()._marshmallow_class().load(data)
+    except MarshmallowValidationError as e:
+        assert e.messages == dict(a=dict(b=["Must be greater than or equal to 0."]))
+
+
+def test_nested_form_schema_errors(qtbot):
+    """Test generation of schema errors for nested forms."""
+
+    class TestNestedForm(Form):
+        b = IntField()
+
+        def validate(self, data, **kwargs):
+            if data["b"] == -5:
+                raise MarshmallowValidationError("bad data")
+
+    class TestForm(Form):
+        a = NestedForm(TestNestedForm)
+
+    data = dict(a=dict(b=-5))
+
+    try:
+        TestForm()._marshmallow_class().load(data)
+    except MarshmallowValidationError as e:
+        assert e.messages == dict(a=dict(_schema=["bad data"]))
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    (
+        dict(header="header"),
+        dict(description="description"),
+        dict(header="header", description="description"),
+        dict(errors={0: ["error text 1"]}),
+        dict(
+            header="header",
+            description="description",
+            errors={0: ["error text 1"]},
+        ),
+    ),
+)
+def test_default_form_renderer_nested_form(qtbot, kwargs):
+    """Check default_form_renderer function when passed a single field."""
+    form_info = FormInfo(
+        fields=dict(
+            a=FormInfo(
+                fields=dict(b=FieldInfo(input=[QSpinBox()], **kwargs)),
+            ),
+            c=FieldInfo(input=[QDoubleSpinBox()], header="outer header"),
+        ),
+    )
+    layout = default_form_renderer(form_info)
+    nested_layout = layout.itemAt(0).layout()
+    assert isinstance(nested_layout, QVBoxLayout)
+
+    pos = 0
+    if header := kwargs.get("header"):
+        pos = _check_label(nested_layout, pos, f"{header.capitalize()}:")
+    if description := kwargs.get("description"):
+        pos = _check_label(nested_layout, pos, description)
+    if errors := kwargs.get("errors"):
+        for error in errors[0]:
+            pos = _check_label(nested_layout, pos, error)
+
+    assert isinstance(nested_layout.itemAt(pos).widget(), QSpinBox)
+
+    _check_label(layout, 1, "Outer header:")
+    assert isinstance(layout.itemAt(2).widget(), QDoubleSpinBox)

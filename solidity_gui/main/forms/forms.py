@@ -4,8 +4,20 @@ Form classes aim to provide a simple, declarative approach to defining GUI compo
 that gather structured data from the user.
 """
 
+from collections.abc import Mapping
 from itertools import chain
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 from marshmallow import Schema
 from marshmallow import ValidationError as MarshmallowValidationError
@@ -13,7 +25,7 @@ from marshmallow import fields as marshmallow_fields
 from marshmallow import validates_schema
 
 from .fields import BaseField
-from .info import FormInfo
+from .info import FieldInfo, FormInfo
 
 
 class ValidationError(Exception):
@@ -35,6 +47,13 @@ class ValidationError(Exception):
         self.form_data = form_data
 
 
+# Define some custom recursive types to support nested forms
+FormFieldType = Dict[str, Union[BaseField, "FormFieldType"]]
+# Using Mapping instead of Dict below as MyPy was complaining about Dicts being
+# invariant, not totally sure why that came up here only
+FormErrorsType = Mapping[str, Union[Mapping[int, List[str]], "FormErrorsType"]]
+
+
 class Form:
     """A Form object for collection and validation of data.
 
@@ -42,7 +61,7 @@ class Form:
     as a schema level validator for the Marshmallow Schema of the form.
     """
 
-    fields: Dict[str, BaseField]
+    fields: FormFieldType
     _marshmallow_class: type
     field_order: Optional[List[str]] = None
 
@@ -66,6 +85,11 @@ class Form:
             if isinstance(attr, BaseField):
                 cls.fields[attr_name] = attr
                 marshmallow_attrs[attr_name] = attr.marshmallow()
+            elif isinstance(attr, NestedForm):
+                cls.fields[attr_name] = attr.form_class.fields
+                marshmallow_attrs[attr_name] = marshmallow_fields.Nested(
+                    attr.form_class._marshmallow_class
+                )
 
         if schema_validator := getattr(cls, "validate", None):
             marshmallow_attrs["schema_validator"] = validates_schema(schema_validator)
@@ -87,16 +111,25 @@ class Form:
     def form_info(
         self,
         data: Dict[str, Any] = {},
-        errors: Dict[str, Dict[int, List[str]]] = {},
+        errors: FormErrorsType = {},
         schema_errors: List[str] = [],
     ) -> FormInfo:
         """Return a FormInfo object for this Form."""
-        fields = {
-            name: field.field_info(
-                name, data.get(name, None), errors=errors.get(name, dict())
-            )
-            for name, field in self._iter_ordered_field_items()
-        }
+        fields: Dict[str, FieldInfo | FormInfo] = {}
+        for name, field in self._iter_ordered_field_items():
+            # below casts differentiate between the expected datastructures
+            # for fields and nested forms.
+            if isinstance(field, NestedForm):
+                fields[name] = field.form_class().form_info(
+                    data.get(name, dict()),
+                    errors=cast(FormErrorsType, errors.get(name, dict())),
+                )
+            else:
+                fields[name] = field.field_info(
+                    name,
+                    data.get(name, None),
+                    errors=cast(Dict[int, List[str]], errors.get(name, dict())),
+                )
         return FormInfo(fields=fields, schema_errors=schema_errors)
 
     def process(self, form_info: FormInfo) -> Dict[str, Any]:
@@ -106,12 +139,16 @@ class Form:
           form_info: FormInfo object containing form data
         """
         try:
-            return self._marshmallow_class().load(
-                {
-                    name: field.process(form_info.fields[name].input)
-                    for name, field in self._iter_ordered_field_items()
-                }
-            )
+            data = {}
+            for name, field in self._iter_ordered_field_items():
+                if isinstance(field, BaseField):
+                    data[name] = field.process(
+                        cast(FieldInfo, form_info.fields[name]).input
+                    )
+                elif isinstance(field, NestedForm):
+                    data[name] = field.form_class().process(form_info.fields[name])
+
+            return self._marshmallow_class().load(data)
         except MarshmallowValidationError as e:
             # casts below are used to narrow expected return types as many=True is not
             # used by the underlying Marshmallow schema
@@ -127,3 +164,15 @@ class Form:
                 else:
                     ValueError("Unexpected data in Marshmallow errors")
             raise ValidationError(field_errors, schema_errors, data)
+
+
+class NestedForm:
+    """Special Field Class denoting a NestedForm."""
+
+    def __init__(self, form_class: Type[Form]) -> None:
+        """Create a new NestedForm.
+
+        Args:
+          form_class: the class of the form to nest
+        """
+        self.form_class = form_class

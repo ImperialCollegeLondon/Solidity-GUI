@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from .forms import Form, ValidationError
-from .info import FormInfo
+from .info import FieldInfo, FormInfo
 
 
 def _create_named_label(text: str, object_name: str) -> QLabel:
@@ -36,22 +36,25 @@ def default_form_renderer(form_info: FormInfo) -> QLayout:
     """
     layout = QVBoxLayout()
 
-    for field_info in form_info.fields.values():
-        if field_info.header:
-            layout.addWidget(
-                _create_named_label(f"{field_info.header.capitalize()}:", "header")
-            )
-        if field_info.description:
-            layout.addWidget(_create_named_label(field_info.description, "description"))
-        for i, input_ in enumerate(field_info.input):
-            if isinstance(field_info.errors, dict):
-                if errors := field_info.errors.get(i, None):
-                    for error in errors:
-                        layout.addWidget(_create_named_label(error, "error"))
-            layout.addWidget(input_)
-        if isinstance(field_info.errors, list):
-            for error in field_info.errors:
-                layout.addWidget(_create_named_label(error, "error"))
+    for info in form_info.fields.values():
+        if isinstance(info, FieldInfo):
+            if info.header:
+                layout.addWidget(
+                    _create_named_label(f"{info.header.capitalize()}:", "header")
+                )
+            if info.description:
+                layout.addWidget(_create_named_label(info.description, "description"))
+            for i, input_ in enumerate(info.input):
+                if isinstance(info.errors, dict):
+                    if errors := info.errors.get(i, None):
+                        for error in errors:
+                            layout.addWidget(_create_named_label(error, "error"))
+                layout.addWidget(input_)
+            if isinstance(info.errors, list):
+                for error in info.errors:
+                    layout.addWidget(_create_named_label(error, "error"))
+        elif isinstance(info, FormInfo):
+            layout.addLayout(default_form_renderer(info))
 
     for error in form_info.schema_errors:
         layout.addWidget(_create_named_label(error, "error"))
