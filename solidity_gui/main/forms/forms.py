@@ -113,6 +113,7 @@ class Form:
         data: Dict[str, Any] = {},
         errors: FormErrorsType = {},
         schema_errors: List[str] = [],
+        header: Optional[str] = None,
     ) -> FormInfo:
         """Return a FormInfo object for this Form."""
         fields: Dict[str, FieldInfo | FormInfo] = {}
@@ -125,6 +126,7 @@ class Form:
                     data.get(name, dict()),
                     errors=cast(FormErrorsType, nested_errors),
                     schema_errors=cast(List[str], nested_errors.get("_schema", [])),
+                    header=field.display_name if field.display_name else name,
                 )
             else:
                 fields[name] = field.field_info(
@@ -132,7 +134,7 @@ class Form:
                     data.get(name, None),
                     errors=cast(Dict[int, List[str]], errors.get(name, dict())),
                 )
-        return FormInfo(fields=fields, schema_errors=schema_errors)
+        return FormInfo(fields=fields, schema_errors=schema_errors, header=header)
 
     def process(self, form_info: FormInfo, validate: bool = True) -> Dict[str, Any]:
         """Extract form data from the provided FormInfo object.
@@ -178,10 +180,14 @@ class Form:
 class NestedForm:
     """Special Field Class denoting a NestedForm."""
 
-    def __init__(self, form_class: Type[Form]) -> None:
+    def __init__(
+        self, form_class: Type[Form], display_name: Optional[str] = None
+    ) -> None:
         """Create a new NestedForm.
 
         Args:
           form_class: the class of the form to nest
+          display_name: a human friendly name for the nested form
         """
         self.form_class = form_class
+        self.display_name = display_name

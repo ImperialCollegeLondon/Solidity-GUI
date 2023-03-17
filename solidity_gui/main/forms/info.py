@@ -26,3 +26,4 @@ class FormInfo:
 
     fields: Dict[str, Union[FieldInfo, "FormInfo"]]
     schema_errors: List[str] = field(default_factory=list)
+    header: Optional[str] = None
