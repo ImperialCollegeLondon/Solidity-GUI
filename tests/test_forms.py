@@ -638,3 +638,30 @@ def test_default_form_renderer_nested_form(qtbot, kwargs):
 
     _check_label(layout, 1, "Outer header:")
     assert isinstance(layout.itemAt(2).widget(), QDoubleSpinBox)
+
+
+def test_nested_form_info(qtbot):
+    """Test the form_info method of Form classes with nested forms."""
+
+    class TestNestedForm(Form):
+        a = FloatField()
+        b = IntField()
+
+    class TestForm(Form):
+        c = NestedForm(TestNestedForm)
+        d = FloatField()
+
+    data = dict(c=dict(a=0.5, b=2), d=3.5)
+    errors = dict(c=dict(_schema=["schema2"], a={0: "fielda"}), d={0: "fieldd"})
+    form_info = TestForm().form_info(
+        data=data, errors=errors, schema_errors=["schema1"]
+    )
+    nested_form_info = form_info.fields["c"]
+    assert nested_form_info.schema_errors == errors["c"]["_schema"]
+    assert nested_form_info.fields["a"].errors == errors["c"]["a"]
+    assert nested_form_info.fields["b"].errors == {}
+    assert form_info.fields["d"].errors == errors["d"]
+
+    assert form_info.fields["d"].input[0].value() == data["d"]
+    assert nested_form_info.fields["a"].input[0].value() == data["c"]["a"]
+    assert nested_form_info.fields["b"].input[0].value() == data["c"]["b"]
