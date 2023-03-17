@@ -3,7 +3,14 @@
 from dataclasses import dataclass, field
 from typing import Dict, Type
 
+from .forms import Form
+from .forms.fields import FloatField
+
 Attributes_Dict_Type = Dict[str, Type[float] | bool]
+
+
+class DensityForm(Form):
+    density = FloatField()
 
 
 @dataclass
@@ -25,7 +32,7 @@ class Property:
     name: str
     category: str
     enabled: bool
-    attributes: Attributes_Dict_Type
+    attributes: Type[Form]
 
 
 Properties_Dict_Type = dict[str, Property]
@@ -35,29 +42,26 @@ def PROPERTIES() -> Properties_Dict_Type:
     """Define the dictionary of available properties for a Material."""
     return {
         "density": Property(
-            category="General",
-            name="Density",
-            enabled=False,
-            attributes=dict(density=float),
+            category="General", name="Density", enabled=False, attributes=DensityForm
         ),
-        "mohr_coulomb": Property(
-            category="Mechanical",
-            name="Mohr-Coulomb",
-            enabled=False,
-            attributes=dict(specify_tension_cutoff=bool),
-        ),
-        "example_property_1": Property(
-            category="General",
-            name="Example Property 1",
-            enabled=False,
-            attributes=dict(example_setting=bool),
-        ),
-        "example_property_2": Property(
-            category="General",
-            name="Example Property 2",
-            enabled=False,
-            attributes=dict(example_setting=bool),
-        ),
+        #        "mohr_coulomb": Property(
+        #            category="Mechanical",
+        #            name="Mohr-Coulomb",
+        #            enabled=False,
+        #            attributes=dict(specify_tension_cutoff=bool),
+        #        ),
+        #        "example_property_1": Property(
+        #            category="General",
+        #            name="Example Property 1",
+        #            enabled=False,
+        #            attributes=dict(example_setting=bool),
+        #        ),
+        #        "example_property_2": Property(
+        #            category="General",
+        #            name="Example Property 2",
+        #            enabled=False,
+        #            attributes=dict(example_setting=bool),
+        #        ),
     }
 
 

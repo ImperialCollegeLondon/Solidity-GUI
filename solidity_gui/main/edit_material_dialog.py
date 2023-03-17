@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from .edit_property_dialog import EditPropertyDialog
 from .material import Material
 
 
@@ -104,7 +105,12 @@ class EditMaterialDialog(QDialog):
         self.button_box.button(QDialogButtonBox.Reset).clicked.connect(
             self._reset_clicked
         )
+
+        edit_button = QPushButton("Edit Property")
+        edit_button.clicked.connect(self._edit_button_clicked)
+
         layout.addWidget(self.button_box)
+        layout.addWidget(edit_button)
 
         self.properties_trees = {
             "enabled": self.enabled_properties_tree,
@@ -183,3 +189,13 @@ class EditMaterialDialog(QDialog):
         self.done(QDialog.Rejected)
         dialog = EditMaterialDialog(self.material)
         dialog.exec_()
+
+    def _edit_button_clicked(self) -> None:
+        from_tree = self.disabled_properties_tree
+        selected_property_index = from_tree.selectedIndexes()[0]
+        selected_property_text = from_tree.base_model.itemFromIndex(
+            selected_property_index
+        ).text()
+        property = self.material.properties[selected_property_text]
+
+        EditPropertyDialog(property).exec_()
