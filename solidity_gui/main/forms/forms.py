@@ -57,6 +57,15 @@ FormErrorsType = Mapping[str, Union[Mapping[int, List[str]], "FormErrorsType"]]
 class Form:
     """A Form object for collection and validation of data.
 
+    This class should be sub-classed to add data fields to the form. Any attributes
+    added that are fields.BaseField subclasses are used to define the data collected and
+    validated by the form. The name of each field is taken from the name of attribute.
+
+    By default form fields are ordered according to the orderin which they are defined
+    on the class. This can be manually overridden by setting the field_order attribute
+    of the class to an iterable of field names. Fields will then be ordered according to
+    the specified field names with any left over fields following in the default order.
+
     Form sub-classes may optionally have a `validate` method. If present, this is used
     as a schema level validator for the Marshmallow Schema of the form.
     """
