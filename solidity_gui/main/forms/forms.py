@@ -68,6 +68,8 @@ class Form:
 
     Form sub-classes may optionally have a `validate` method. If present, this is used
     as a schema level validator for the Marshmallow Schema of the form.
+
+    Forms may be nested via attributes using a NestedForm instance.
     """
 
     fields: FormFieldType
