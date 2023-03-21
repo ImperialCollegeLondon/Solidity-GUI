@@ -18,6 +18,19 @@ class FieldInfo:
     header: Optional[str] = None
     errors: Dict[int, List[str]] = field(default_factory=dict)
     description: Optional[str] = None
+    _disabled: bool = False
+
+    @property
+    def disabled(self) -> bool:
+        """Whether the field is disabled."""
+        return self._disabled
+
+    @disabled.setter
+    def disabled(self, value: bool) -> None:
+        """Set disabled value and call setDisabled on all QWidgets in self.input."""
+        self._disabled = value
+        for inp in self.input:
+            inp.setDisabled(value)
 
 
 @dataclass
@@ -27,3 +40,4 @@ class FormInfo:
     fields: Dict[str, Union[FieldInfo, "FormInfo"]]
     schema_errors: List[str] = field(default_factory=list)
     header: Optional[str] = None
+    single_choice: bool = False
