@@ -29,6 +29,7 @@ from .widgets import (
     DoubleSpinBoxWidget,
     LineEditWidget,
     SpinBoxWidget,
+    TrueWidget,
     Widget,
 )
 
@@ -235,3 +236,34 @@ class VectorField(CompositeField[Iterable[float]]):
             widget,
             field_validators=[validate.Length(equal=length)] + vector_validators,
         )
+
+
+class BlankField(SingleField[bool]):
+    """A field that always has a value of True."""
+
+    _marshmallow_field = marshmallow_fields.Boolean
+    _default_widget = TrueWidget()
+
+    def __init__(
+        self,
+        display_name: Optional[str] = None,
+        description: Optional[str] = None,
+        widget: Optional[Widget] = None,
+    ):
+        """Initialise a new BlankField instance.
+
+        Args:
+          display_name: human friendly name
+          description: human friendly description of the field's purpose
+          widget: the GUI widget displayed to the user
+        """
+        super().__init__(
+            display_name=display_name,
+            description=description,
+            validators=[],
+            widget=widget,
+        )
+
+    def marshmallow(self) -> marshmallow_fields.Boolean:
+        """Generates a corresponding Marshmallow Field for use in a Schema."""
+        return self._marshmallow_field(validate=validate.Equal(True))

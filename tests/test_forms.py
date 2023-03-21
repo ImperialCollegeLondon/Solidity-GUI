@@ -8,6 +8,7 @@ from marshmallow import Schema
 from marshmallow import ValidationError as MarshmallowValidationError
 from marshmallow import fields, validate
 from PySide6.QtWidgets import (
+    QCheckBox,
     QDialogButtonBox,
     QDoubleSpinBox,
     QGroupBox,
@@ -26,6 +27,7 @@ from solidity_gui.main.forms.dialog import (
     single_choice_form_renderer,
 )
 from solidity_gui.main.forms.fields import (
+    BlankField,
     BoolField,
     FloatField,
     IntField,
@@ -39,6 +41,7 @@ from solidity_gui.main.forms.widgets import (
     DoubleSpinBoxWidget,
     LineEditWidget,
     SpinBoxWidget,
+    TrueWidget,
 )
 
 
@@ -771,3 +774,44 @@ def test_single_choice_form_renderer(
         error_label = layout.itemAt(1).widget()
         assert isinstance(error_label, QLabel)
         assert error_label.text() == schema_errors[0]
+
+
+def test_blank_field(qtbot):
+    """Basic test of BlankField class."""
+    field = BlankField()
+
+    marshmallow_field = field.marshmallow()
+    assert isinstance(marshmallow_field, fields.Bool)
+    assert isinstance(marshmallow_field.validators[0], validate.Equal)
+
+    # process method should always return True
+    for data in (True, False):
+        qt_input = field.input(data)
+        assert field.process([qt_input]) is True
+
+
+def test_blank_field_no_validators(qtbot):
+    """Test BlankField class does not accept validators."""
+    with pytest.raises(TypeError):
+        BlankField(validators=[])
+
+
+def test_true_widget(qtbot):
+    """Test BlankWidget class."""
+    input_ = TrueWidget().create(None, [])
+    assert isinstance(input_, QCheckBox)
+
+
+@pytest.mark.parametrize("data", (True, False))
+def test_true_widget_data(qtbot, data):
+    """Test BlankWidget class always has checked QCheckBox."""
+    input_ = TrueWidget().create(data, [])
+    assert input_.isChecked()
+
+
+@pytest.mark.parametrize("data", (True, False))
+def test_true_widget_process(qtbot, data):
+    """Test process method of BlankWidget always returns True."""
+    input_ = TrueWidget.qt_input_class()
+    input_.setChecked(data)
+    assert TrueWidget().process(input_)
