@@ -67,9 +67,10 @@ jobs:
 
     - name: Build executable
       run: pyinstaller Solidity-GUI.spec
+      if: github.ref == 'refs/heads/main'
 
     - uses: actions/upload-artifact@v3
-      if: success()
+      if: github.ref == 'refs/heads/main' && success()
       with:
         name: Solidity-GUI-${{ matrix.os }}
         path: dist/*
