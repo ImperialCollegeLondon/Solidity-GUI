@@ -147,30 +147,33 @@ class Form:
                 )
         return FormInfo(fields=fields, schema_errors=schema_errors, header=header)
 
-    def process(self, form_info: FormInfo, validate: bool = True) -> Dict[str, Any]:
-        """Extract form data from the provided FormInfo object.
+    def _extract_data(self, form_info: FormInfo) -> Dict[str, Any]:
+        """Extract form data from the provide FormInfo object.
 
         Args:
           form_info: FormInfo object containing form data
-          validate: whether to validate form data using Marshmallow
+        """
+        data = {}
+        for name, field in self._iter_ordered_field_items():
+            if isinstance(field, BaseField):
+                data[name] = field.process(
+                    cast(FieldInfo, form_info.fields[name]).input
+                )
+            elif isinstance(field, NestedForm):
+                # note validation is skipped for nested forms, this will be done
+                # all at once when the top level schema is validated
+                data[name] = field.form_class()._extract_data(form_info.fields[name])
+        return data
+
+    def process(self, form_info: FormInfo) -> Dict[str, Any]:
+        """Extract form data from the provided FormInfo object and validate it.
+
+        Args:
+          form_info: FormInfo object containing form data
         """
         try:
-            data = {}
-            for name, field in self._iter_ordered_field_items():
-                if isinstance(field, BaseField):
-                    data[name] = field.process(
-                        cast(FieldInfo, form_info.fields[name]).input
-                    )
-                elif isinstance(field, NestedForm):
-                    # note validation is skipped for nested forms, this will be done
-                    # all at once when the top level schema is validated
-                    data[name] = field.form_class().process(
-                        form_info.fields[name], validate=False
-                    )
-            if validate:
-                return self._marshmallow_class().load(data)
-            else:
-                return data
+            data = self._extract_data(form_info)
+            return self._marshmallow_class().load(data)
         except MarshmallowValidationError as e:
             # casts below are used to narrow expected return types as many=True is not
             # used by the underlying Marshmallow schema
