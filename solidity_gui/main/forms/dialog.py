@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from .forms import Form, ValidationError
-from .info import FormInfo
+from .info import FieldInfo, FormInfo
 
 
 def _create_named_label(text: str, object_name: str) -> QLabel:
@@ -22,7 +22,7 @@ def _create_named_label(text: str, object_name: str) -> QLabel:
     return label
 
 
-def default_form_renderer(form_info: FormInfo) -> QLayout:
+def default_form_renderer(form_info: FormInfo, level: int = 0) -> QLayout:
     """Render a FormInfo instance into a QVBoxLayout.
 
     This function aims to provide a sensible default layout agnostic to use
@@ -31,27 +31,50 @@ def default_form_renderer(form_info: FormInfo) -> QLayout:
     displayed immediately after the most relevant context (e.g. input widget for field
     level errors, end of form for schema level errors).
 
+    Rendering of nested forms is supported. The level of nesting is tracked via `level`
+    and is used to set different ObjectNames for field headers i.e. the QLabel's used to
+    display header information at the outer level have the ObjectName 'header-0', at the
+    first level of nesting 'header-1' and so on. This can be used in combination with
+    the StyleSheet of a dialog to control the appearance of headers at different
+    levels. Nested forms are also rendered with a small indent on the left.
+
     Args:
       form_info: description of the form to render
+      level: the level of nesting of the form to render used to fine tune appearance
     """
     layout = QVBoxLayout()
 
-    for field_info in form_info.fields.values():
-        if field_info.header:
-            layout.addWidget(
-                _create_named_label(f"{field_info.header.capitalize()}:", "header")
-            )
-        if field_info.description:
-            layout.addWidget(_create_named_label(field_info.description, "description"))
-        for i, input_ in enumerate(field_info.input):
-            if isinstance(field_info.errors, dict):
-                if errors := field_info.errors.get(i, None):
-                    for error in errors:
-                        layout.addWidget(_create_named_label(error, "error"))
-            layout.addWidget(input_)
-        if isinstance(field_info.errors, list):
-            for error in field_info.errors:
-                layout.addWidget(_create_named_label(error, "error"))
+    for info in form_info.fields.values():
+        if isinstance(info, FieldInfo):
+            if info.header:
+                layout.addWidget(
+                    _create_named_label(
+                        f"{info.header.capitalize()}:", f"header-{level}"
+                    )
+                )
+            if info.description:
+                layout.addWidget(_create_named_label(info.description, "description"))
+            for i, input_ in enumerate(info.input):
+                if isinstance(info.errors, dict):
+                    if errors := info.errors.get(i, None):
+                        for error in errors:
+                            layout.addWidget(_create_named_label(error, "error"))
+                layout.addWidget(input_)
+            if isinstance(info.errors, list):
+                for error in info.errors:
+                    layout.addWidget(_create_named_label(error, "error"))
+        elif isinstance(info, FormInfo):
+            if info.header:
+                layout.addWidget(
+                    _create_named_label(
+                        f"{info.header.capitalize()}:", f"header-{level}"
+                    )
+                )
+            nested_layout = default_form_renderer(info, level + 1)
+            # add to left margin to indent nested forms a bit
+            margins = nested_layout.getContentsMargins()
+            nested_layout.setContentsMargins(margins[0] + 20, *margins[1:])
+            layout.addLayout(nested_layout)
 
     for error in form_info.schema_errors:
         layout.addWidget(_create_named_label(error, "error"))
@@ -85,6 +108,10 @@ class SimpleFormDialog(QDialog):
     `_ok_clicked` without calling the superclass implementation. This gives more
     flexibility but you will probably need to implement data validation and form update
     behaviours.
+
+    A basic StyleSheet is applied that assumes the naming conventions used by
+    `default_form_renderer`. The headers of fields in top-level forms are shown in bold
+    and without bolding for nested fields.
     """
 
     def __init__(
@@ -109,7 +136,7 @@ class SimpleFormDialog(QDialog):
         self.setStyleSheet(
             "QLabel#error { color: red } "
             "QLabel#description { color: gray } "
-            "QLabel#header { font-weight: bold }"
+            "QLabel#header-0 { font-weight: bold }"
         )
 
     def _create_contents(self, form_info: FormInfo) -> QLayout:

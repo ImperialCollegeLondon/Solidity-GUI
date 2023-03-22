@@ -39,4 +39,4 @@ For further information, please see:
 from . import fields  # noqa: F401
 from . import widgets  # noqa: F401
 from .dialog import SimpleFormDialog  # noqa: F401
-from .forms import Form  # noqa: F401
+from .forms import Form, NestedForm  # noqa: F401
