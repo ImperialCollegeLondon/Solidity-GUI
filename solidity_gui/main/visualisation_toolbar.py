@@ -4,7 +4,7 @@ from typing import Any
 import qtawesome as qta
 from pubsub import pub
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import QComboBox, QToolBar
 
 from .. import config
@@ -24,11 +24,12 @@ class VisualisationToolbar(QToolBar):
         self.view_mode_combo = QComboBox()
         self.modules_combo = QComboBox()
         self.grid_action = QAction(qta.icon("mdi.apps"), "", self)
-        self.rotation_action = QAction(
-            qta.icon("mdi.rotate-3d-variant"), "&Rotation", self
-        )
+        self.rotate_action = QAction(qta.icon("mdi.rotate-3d-variant"), "&Rotate", self)
+        self.rotate_action.setCheckable(True)
         self.pan_action = QAction(qta.icon("fa5s.arrows-alt"), "&Pan", self)
+        self.pan_action.setCheckable(True)
         self.zoom_action = QAction(qta.icon("ph.magnifying-glass-light"), "&Zoom", self)
+        self.zoom_action.setCheckable(True)
         self.transform_xy_action = QAction(qta.icon("mdi6.axis-arrow"), "&X-Y", self)
         self.transform_xz_action = QAction(qta.icon("mdi6.axis-arrow"), "X-&Z", self)
         self.transform_yz_action = QAction(qta.icon("mdi6.axis-arrow"), "&Y-Z", self)
@@ -37,11 +38,19 @@ class VisualisationToolbar(QToolBar):
         self.screenshot_action = QAction(qta.icon("fa5s.camera"), "", self)
         self.clip_action = QAction(qta.icon("mdi.select-compare"), "&Clip", self)
 
+        # Group these QActions together so that only one can be selected at a time
+        self.action_group = QActionGroup(self)
+        self.action_group.addAction(self.rotate_action)
+        self.action_group.addAction(self.pan_action)
+        self.action_group.addAction(self.zoom_action)
+
+        self.pan_action.setChecked(True)  # Pan is default
+
         self.addAction(self.mask_action)
         self.addWidget(self.view_mode_combo)
         self.addWidget(self.modules_combo)
         self.addAction(self.grid_action)
-        self.addAction(self.rotation_action)
+        self.addAction(self.rotate_action)
         self.addAction(self.pan_action)
         self.addAction(self.zoom_action)
         self.addAction(self.transform_xy_action)
