@@ -42,7 +42,9 @@ class AssignPropertiesDialog(QDialog):
         pub.subscribe(self._set_materials, "materials.add")
 
     def _set_components(self, mesh: Mesh) -> None:
-        self.select_component_combo.addItems(mesh.cell_sets.keys())
+        self.select_component_combo.addItems(
+            [key for key, value in mesh.cell_sets.items() if value[2] is not None]
+        )
 
     def _set_materials(self, material: str) -> None:
         self.select_material_combo.addItem(material)
