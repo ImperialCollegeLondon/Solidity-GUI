@@ -9,7 +9,7 @@ from meshio import CellBlock, Mesh
 from numpy.typing import NDArray
 from pubsub import pub
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QVBoxLayout
+from PySide6.QtWidgets import QApplication
 from vtk.util import numpy_support
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
@@ -53,7 +53,7 @@ def _restore_cursor(mesh: Mesh = None) -> None:
     QApplication.restoreOverrideCursor()
 
 
-class VTKWindow(QVBoxLayout):
+class VTKWindow(QVTKRenderWindowInteractor):
     """A frame containing a VTK window."""
 
     unselected_lookup_value, selected_lookup_value = 0, 1
@@ -69,17 +69,15 @@ class VTKWindow(QVBoxLayout):
         surface_cell_ids = mesh.cell_sets[name][1]
         return triangles.data[surface_cell_ids]
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self) -> None:
         """Create new VTKWindow."""
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
-        vtkWidget = QVTKRenderWindowInteractor()
-        self.addWidget(vtkWidget)
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(*config.BACKGROUND_COLOUR)
 
-        vtkWidget.GetRenderWindow().AddRenderer(self.ren)
-        self.iren = vtkWidget.GetRenderWindow().GetInteractor()
+        self.GetRenderWindow().AddRenderer(self.ren)
+        self.iren = self.GetRenderWindow().GetInteractor()
         self.iren.Initialize()
         self.meshes: List[Mesh] = []
         self.components: List[Component] = []
