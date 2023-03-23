@@ -146,7 +146,7 @@ class MaterialsManagerDialog(QDialog):
             row = self.materials_table.currentIndex().row()
             self.materials_table.removeRow(row)
 
-            pub.sendMessage("materials.remove", selected_material)
+            pub.sendMessage("materials.remove", material=selected_material)
 
     def _toggle_property(self, material: str, property: str) -> None:
         self.materials[material].properties[property].enabled ^= True
