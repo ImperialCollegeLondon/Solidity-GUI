@@ -7,14 +7,15 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 import gmsh
 import numpy as np
 import pygmsh
+from marshmallow import ValidationError, validate
 from meshio import Mesh
 from pubsub import pub
 from pygmsh.common.dummy import Dummy
 from PySide6.QtCore import QThread, Signal
 
-# Type[float] indicates the object `float` rather than a float instance e.g. 1.0
-Arg_Dict_Type = Dict[str, Tuple[Type[float], Type[float], Type[float]] | Type[float]]
-Arg_List_Type = List[List[float] | float]
+from .forms import Form
+from .forms.fields import FloatField, VectorField
+
 Vector = Tuple[float, float, float]
 
 
@@ -64,12 +65,12 @@ class Component:
     Attributes:
       shape: name of the shape to use for this component
       label: unique label to apply to this component
-      args: function arguments to pass to the shape constructor
+      kwargs: function arguments to pass to the shape constructor
     """
 
     shape: str
     label: str
-    args: Arg_List_Type
+    kwargs: Dict[str, float | List[float]]
 
 
 def add_dome(
@@ -143,40 +144,85 @@ class Shape:
 
     name: str
     method: Callable
-    args: Arg_Dict_Type
+    form: Type[Form]
+
+
+class BoxForm(Form):
+    """Form defining data required for box shape creation."""
+
+    x0 = VectorField(display_name="Corner Coordinates")
+    extents = VectorField(
+        display_name="Side Lengths",
+        description="Length of box sides in x, y and z dimensions.",
+        validators=[validate.NoneOf([0.0])],
+    )
+
+
+class BallForm(Form):
+    """Form defining data required for ball shape creation."""
+
+    center = VectorField(display_name="Center Coordinates")
+    radius = FloatField(
+        description="The radius of the ball.",
+        validators=[validate.Range(min=0, min_inclusive=False)],
+    )
+
+
+def non_zero_magnitude(vector: List[float], **kwargs: Any) -> None:
+    """Validate vector data has a magnitude greater than zero.
+
+    Args:
+      vector: vector data
+      **kwargs: additional keyword arguments passed to Marshmallow validators
+    """
+    if np.linalg.norm(vector) == 0.0:
+        raise ValidationError("Vector must have non-zero magnitude.")
+
+
+class ConeForm(Form):
+    """Form defining data required for cone shape creation."""
+
+    center = VectorField(display_name="Base Center Coordinates")
+    axis = VectorField(
+        display_name="Axis Vector", vector_validators=[non_zero_magnitude]
+    )
+    radius0 = FloatField(
+        display_name="Base Radius",
+        validators=[validate.Range(min=0, min_inclusive=False)],
+    )
+    radius1 = FloatField(
+        display_name="Tip Radius",
+        validators=[validate.Range(min=0, min_inclusive=True)],
+    )
+
+    def validate(self, data: Dict[str, Any], **kwargs: Any) -> None:
+        """Schema level validator."""
+        if data["radius1"] >= data["radius0"]:
+            raise ValidationError("Base radius must be larger than tip radius.")
+
+
+class CylinderForm(Form):
+    """Form defining data required for cylinder shape creation."""
+
+    x0 = VectorField(display_name="Base Center Coordinates")
+    axis = VectorField(
+        display_name="Axis Vector", vector_validators=[non_zero_magnitude]
+    )
+    radius = FloatField(validators=[validate.Range(min=0, min_inclusive=False)])
+
+
+class DomeForm(CylinderForm):
+    """Form defining data required for dome shape creation."""
 
 
 SHAPES = dict(
-    box=Shape(
-        name="box",
-        method=pygmsh.occ.geometry.Geometry.add_box,
-        args=dict(x0=(float, float, float), extents=(float, float, float)),
-    ),
-    ball=Shape(
-        name="ball",
-        method=pygmsh.occ.Geometry.add_ball,
-        args=dict(x0=(float, float, float), radius=float),
-    ),
-    cone=Shape(
-        name="cone",
-        method=pygmsh.occ.Geometry.add_cone,
-        args=dict(
-            x0=(float, float, float),
-            axis=(float, float, float),
-            radius0=float,
-            radius1=float,
-        ),
-    ),
+    box=Shape(name="box", method=pygmsh.occ.geometry.Geometry.add_box, form=BoxForm),
+    ball=Shape(name="ball", method=pygmsh.occ.Geometry.add_ball, form=BallForm),
+    cone=Shape(name="cone", method=pygmsh.occ.Geometry.add_cone, form=ConeForm),
     cylinder=Shape(
-        name="cylinder",
-        method=pygmsh.occ.Geometry.add_cylinder,
-        args=dict(x0=(float, float, float), axis=(float, float, float), radius=float),
+        name="cylinder", method=pygmsh.occ.Geometry.add_cylinder, form=CylinderForm
     ),
-    dome=Shape(
-        name="dome",
-        method=add_dome,
-        args=dict(x0=(float, float, float), axis=(float, float, float), radius=float),
-    ),
+    dome=Shape(name="dome", method=add_dome, form=DomeForm),
 )
 """Library of supported shapes."""
 
@@ -238,7 +284,7 @@ class ShapeFactory:
           resolution: resolution to use for mesh
         """
         shape = self.function_map[component.shape](
-            self.geom, *component.args, mesh_size=resolution
+            self.geom, **component.kwargs, mesh_size=resolution
         )
 
         # unfortunately when using the OCC geometry kernel there doesn't seem to be a
