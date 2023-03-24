@@ -53,15 +53,28 @@ def test_assign_set_components():
     assert dialog.select_component_combo.count() == 1
 
 
-def test_assign_set_materials():
-    """Test the _set_materials method of the AssignPropertiesDialog class."""
+def test_assign_add_material():
+    """Test the _add_material method of the AssignPropertiesDialog class."""
     dialog = AssignPropertiesDialog()
 
     assert dialog.select_material_combo.count() == 0
 
-    dialog._set_materials("test")
+    dialog._add_material("test")
 
     assert dialog.select_material_combo.count() == 1
+
+
+def test_assign_remove_material():
+    """Test the _remove_material method of the AssignPropertiesDialog class."""
+    dialog = AssignPropertiesDialog()
+
+    dialog.select_material_combo.addItem("test")
+
+    assert dialog.select_material_combo.count() == 1
+
+    dialog._remove_material("test")
+
+    assert dialog.select_material_combo.count() == 0
 
 
 def test_assign_save_clicked():

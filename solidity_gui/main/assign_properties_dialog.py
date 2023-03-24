@@ -39,15 +39,21 @@ class AssignPropertiesDialog(QDialog):
         layout.addWidget(self.button_box)
 
         pub.subscribe(self._set_components, "geometry.updated")
-        pub.subscribe(self._set_materials, "materials.add")
+        pub.subscribe(self._add_material, "materials.add")
+        pub.subscribe(self._remove_material, "materials.remove")
 
     def _set_components(self, mesh: Mesh) -> None:
         self.select_component_combo.addItems(
             [key for key, value in mesh.cell_sets.items() if value[2] is not None]
         )
 
-    def _set_materials(self, material: str) -> None:
+    def _add_material(self, material: str) -> None:
         self.select_material_combo.addItem(material)
+
+    def _remove_material(self, material: str) -> None:
+        self.select_material_combo.removeItem(
+            self.select_material_combo.findText(material)
+        )
 
     def _save_clicked(self) -> None:
         selectedComponentValue = self.select_component_combo.currentText()
