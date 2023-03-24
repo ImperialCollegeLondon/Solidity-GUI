@@ -56,10 +56,10 @@ class AssignPropertiesDialog(QDialog):
         )
 
     def _save_clicked(self) -> None:
-        selectedComponentValue = self.select_component_combo.currentText()
-        selectedMaterialValue = self.select_material_combo.currentText()
-        if not (selectedComponentValue and selectedMaterialValue):
+        selected_component_value = self.select_component_combo.currentText()
+        selected_material_value = self.select_material_combo.currentText()
+        if not (selected_component_value and selected_material_value):
             return
 
-        self.assigned_materials[selectedComponentValue] = selectedMaterialValue
+        self.assigned_materials[selected_component_value] = selected_material_value
         self.close()
