@@ -57,12 +57,15 @@ def test_assign_remove_material():
     dialog = AssignPropertiesDialog()
 
     dialog.select_material_combo.addItem("test")
+    dialog.assigned_materials["test"] = "test"
 
     assert dialog.select_material_combo.count() == 1
+    assert dialog.assigned_materials == {"test": "test"}
 
     dialog._remove_material("test")
 
     assert dialog.select_material_combo.count() == 0
+    assert dialog.assigned_materials == {}
 
 
 def test_assign_save_clicked():

@@ -54,6 +54,7 @@ class AssignPropertiesDialog(QDialog):
         self.select_material_combo.removeItem(
             self.select_material_combo.findText(material)
         )
+        self.assigned_materials.pop(material, None)
 
     def _save_clicked(self) -> None:
         selected_component_value = self.select_component_combo.currentText()
