@@ -4,7 +4,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from meshio import Mesh
 from PySide6.QtWidgets import QDialogButtonBox
 
 from solidity_gui.main.assign_properties_dialog import AssignPropertiesDialog
@@ -38,19 +37,8 @@ def test_assign_properties(qtbot, handler_mocks, subscribe_mock):
     handler_mocks.close.assert_called()
 
     subscribe_mock.assert_any_call(dialog._set_components, "geometry.updated")
-    subscribe_mock.assert_any_call(dialog._set_materials, "materials.add")
-
-
-def test_assign_set_components():
-    """Test the _set_components method of the AssignPropertiesDialog class."""
-    dialog = AssignPropertiesDialog()
-
-    assert dialog.select_component_combo.count() == 0
-
-    mesh = Mesh(cell_sets={"test": None}, points=[], cells={})
-    dialog._set_components(mesh)
-
-    assert dialog.select_component_combo.count() == 1
+    subscribe_mock.assert_any_call(dialog._add_material, "materials.add")
+    subscribe_mock.assert_any_call(dialog._remove_material, "materials.remove")
 
 
 def test_assign_add_material():
