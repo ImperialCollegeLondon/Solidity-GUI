@@ -2,11 +2,10 @@
 
 from random import random
 from sys import platform
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
-from pubsub import pub
 from sklearn.decomposition import PCA
 
 from solidity_gui.main.geometry import Component, MeshGenerator, generate_mesh
@@ -22,14 +21,6 @@ def mesh_generator(mock1, mock2):
     mesh_gen = MeshGenerator()
     mock2.assert_called_once()
     return mesh_gen
-
-
-@pytest.fixture()
-def send_message_mock(monkeypatch):
-    """Magic Mock patched over pubsub.pub.sendMessage."""
-    mock = MagicMock()
-    monkeypatch.setattr(pub, "sendMessage", mock)
-    return mock
 
 
 def component_factory(
