@@ -10,13 +10,13 @@ from numpy.typing import NDArray
 from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
-from vtk import vtkInteractorStyleTrackballCamera
 from vtk.util import numpy_support
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
+from .custom_interactor_style import CustomInteractorStyle
 from .geometry import Component, MeshGenerator, Vector
 
 
@@ -79,7 +79,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
         self.GetRenderWindow().AddRenderer(self.ren)
         self.iren = self.GetRenderWindow().GetInteractor()
-        self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
+        self.iren.SetInteractorStyle(CustomInteractorStyle())
         self.iren.Initialize()
         self.meshes: List[Mesh] = []
         self.components: List[Component] = []
