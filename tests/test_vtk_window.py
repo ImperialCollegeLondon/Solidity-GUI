@@ -17,14 +17,6 @@ def subscribe_mock(monkeypatch):
     return mock
 
 
-@pytest.fixture()
-def send_message_mock(monkeypatch):
-    """Magic Mock patched over pubsub.pub.sendMessage."""
-    mock = MagicMock()
-    monkeypatch.setattr(pub, "sendMessage", mock)
-    return mock
-
-
 @pytest.fixture
 def vtk_window(qtbot, subscribe_mock):
     """An AddShapeDialog instance initialised with the shape fixture."""
