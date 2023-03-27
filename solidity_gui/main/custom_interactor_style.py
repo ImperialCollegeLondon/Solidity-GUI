@@ -15,16 +15,14 @@ class CustomInteractorStyle(vtkInteractorStyleTrackballCamera):
         Args:
             initial_interact_mode: The initial interact mode (pan, rotate or zoom)
         """
-        if initial_interact_mode not in {"pan", "rotate", "zoom"}:
-            raise ValueError("initial_interact_mode must be pan, rotate or zoom")
-
         super().__init__()
 
-        self.interact_mode: str = initial_interact_mode
+        self.interact_mode: str
         """The current interaction mode.
 
         Can be pan, rotate or zoom.
         """
+        self._change_interact_mode(initial_interact_mode)
 
         # Override default handlers for left mouse button click
         self.AddObserver("LeftButtonPressEvent", self._mouse_down)
@@ -34,6 +32,9 @@ class CustomInteractorStyle(vtkInteractorStyleTrackballCamera):
         pub.subscribe(self._change_interact_mode, "window.change_mode")
 
     def _change_interact_mode(self, mode: str) -> None:
+        if mode not in {"pan", "rotate", "zoom"}:
+            raise ValueError("mode must be pan, rotate or zoom")
+
         self.interact_mode = mode
 
     def _mouse_down(self, obj: vtkRenderWindowInteractor, event: str) -> None:
