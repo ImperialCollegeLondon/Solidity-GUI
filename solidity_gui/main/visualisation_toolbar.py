@@ -43,6 +43,7 @@ class VisualisationToolbar(QToolBar):
         self.action_group.addAction(self.rotate_action)
         self.action_group.addAction(self.pan_action)
         self.action_group.addAction(self.zoom_action)
+        self.action_group.triggered.connect(self._change_interact_mode)
 
         self.pan_action.setChecked(True)  # Pan is default
 
@@ -64,6 +65,11 @@ class VisualisationToolbar(QToolBar):
         self.transform_xy_action.triggered.connect(self._xy_click_handler)
         self.transform_xz_action.triggered.connect(self._xz_click_handler)
         self.transform_yz_action.triggered.connect(self._yz_click_handler)
+
+    def _change_interact_mode(self, action: QAction) -> None:
+        pub.sendMessage(
+            "window.change_mode", mode=action.text().replace("&", "").lower()
+        )
 
     def _xy_click_handler(self) -> None:
         pub.sendMessage(
