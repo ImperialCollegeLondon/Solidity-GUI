@@ -4,6 +4,7 @@ from typing import Any
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenuBar
 
+from .drillco_dialog import DrillCoDialog
 from .materials_manager_dialog import MaterialsManagerDialog
 
 
@@ -15,7 +16,7 @@ class MenuBar(QMenuBar):
         super().__init__(*args, **kwargs)
 
         self.addMenu("&File")
-        self.addMenu("&Geometry")
+        geometry_menu = self.addMenu("&Geometry")
         self.addMenu("&Mesh")
         self.materials_menu = self.addMenu("Materia&ls")
         self.addMenu("&Assembly")
@@ -30,5 +31,13 @@ class MenuBar(QMenuBar):
 
         self.materials_manager_dialog = MaterialsManagerDialog()
         materials_manager_action = QAction("&Create and edit &materials", self)
-        materials_manager_action.triggered.connect(self.materials_manager_dialog.open)
+        materials_manager_action.triggered.connect(  # type: ignore[attr-defined]
+            self.materials_manager_dialog.open
+        )
         self.materials_menu.addAction(materials_manager_action)
+
+        drill_action = QAction("Create &drill system", self)
+        drill_action.triggered.connect(  # type: ignore[attr-defined]
+            DrillCoDialog().exec_
+        )
+        geometry_menu.addAction(drill_action)
