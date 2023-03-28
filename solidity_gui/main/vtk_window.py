@@ -79,7 +79,10 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
         self.GetRenderWindow().AddRenderer(self.ren)
         self.iren = self.GetRenderWindow().GetInteractor()
-        self.iren.SetInteractorStyle(CustomInteractorStyle())
+
+        # iren doesn't seem to hold a reference so we have to save this
+        self.inter_style = CustomInteractorStyle()
+        self.iren.SetInteractorStyle(self.inter_style)
         self.iren.Initialize()
         self.meshes: List[Mesh] = []
         self.components: List[Component] = []
