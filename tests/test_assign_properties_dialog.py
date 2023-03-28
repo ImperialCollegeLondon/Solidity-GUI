@@ -41,7 +41,7 @@ def test_assign_properties(qtbot, handler_mocks, subscribe_mock):
     subscribe_mock.assert_any_call(dialog._remove_material, "materials.remove")
 
 
-def test_assign_add_material():
+def test_assign_add_material(qtbot):
     """Test the _add_material method of the AssignPropertiesDialog class."""
     dialog = AssignPropertiesDialog()
 
@@ -52,7 +52,7 @@ def test_assign_add_material():
     assert dialog.select_material_combo.count() == 1
 
 
-def test_assign_remove_material():
+def test_assign_remove_material(qtbot):
     """Test the _remove_material method of the AssignPropertiesDialog class."""
     dialog = AssignPropertiesDialog()
 
@@ -68,7 +68,7 @@ def test_assign_remove_material():
     assert dialog.assigned_materials == {}
 
 
-def test_assign_save_clicked():
+def test_assign_save_clicked(qtbot):
     """Test the _save_clicked method of the AssignPropertiesDialog class."""
     dialog = AssignPropertiesDialog()
 
