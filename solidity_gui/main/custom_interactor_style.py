@@ -9,6 +9,9 @@ class CustomInteractorStyle(vtkInteractorStyleTrackballCamera):
     Based on the behaviour of vtkInteractorStyleTrackballCamera.
     """
 
+    _INTERACT_FUNC_NAMES = {"pan": "Pan", "rotate": "Rotate", "zoom": "Dolly"}
+    """The suffixes for function names used for different interact modes."""
+
     def __init__(self, initial_interact_mode: str = "pan") -> None:
         """Create a new CustomInteractorStyle.
 
@@ -17,12 +20,10 @@ class CustomInteractorStyle(vtkInteractorStyleTrackballCamera):
         """
         super().__init__()
 
-        self.interact_mode: str
-        """The current interaction mode.
-
-        Can be pan, rotate or zoom.
-        """
-        self._change_interact_mode(initial_interact_mode)
+        self._interact_func_suffix: str = self._INTERACT_FUNC_NAMES[
+            initial_interact_mode
+        ]
+        """The suffix for the function name for the current interact mode."""
 
         # Override default handlers for left mouse button click
         self.AddObserver("LeftButtonPressEvent", self._mouse_down)
@@ -32,25 +33,14 @@ class CustomInteractorStyle(vtkInteractorStyleTrackballCamera):
         pub.subscribe(self._change_interact_mode, "window.change_mode")
 
     def _change_interact_mode(self, mode: str) -> None:
-        if mode not in {"pan", "rotate", "zoom"}:
-            raise ValueError("mode must be pan, rotate or zoom")
-
-        self.interact_mode = mode
+        self._interact_func_suffix = self._INTERACT_FUNC_NAMES[mode]
 
     def _mouse_down(self, obj: vtkRenderWindowInteractor, event: str) -> None:
         """Start the relevant interaction behaviour when mouse is clicked."""
-        if self.interact_mode == "pan":
-            self.StartPan()
-        elif self.interact_mode == "rotate":
-            self.StartRotate()
-        elif self.interact_mode == "zoom":
-            self.StartDolly()
+        func = getattr(self, f"Start{self._interact_func_suffix}")
+        func()
 
     def _mouse_up(self, obj: vtkRenderWindowInteractor, event: str) -> None:
         """Stop the relevant interaction behaviour when mouse button is released."""
-        if self.interact_mode == "pan":
-            self.EndPan()
-        elif self.interact_mode == "rotate":
-            self.EndRotate()
-        elif self.interact_mode == "zoom":
-            self.EndDolly()
+        func = getattr(self, f"End{self._interact_func_suffix}")
+        func()

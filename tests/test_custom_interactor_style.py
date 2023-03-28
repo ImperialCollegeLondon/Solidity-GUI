@@ -32,7 +32,7 @@ def test_init(add_observer_mock: Mock, subscribe_mock: MagicMock) -> None:
     style = CustomInteractorStyle()
 
     # Check default arg
-    assert style.interact_mode == "pan"
+    assert style._interact_func_suffix == "Pan"
 
     # Check that left mouse button events are overridden
     style.AddObserver.assert_any_call("LeftButtonPressEvent", style._mouse_down)
@@ -47,7 +47,7 @@ def test_init(add_observer_mock: Mock, subscribe_mock: MagicMock) -> None:
 @pytest.mark.parametrize(
     "mode,raises",
     (
-        (mode, does_not_raise() if mode in VALID_MODES else pytest.raises(ValueError))
+        (mode, does_not_raise() if mode in VALID_MODES else pytest.raises(KeyError))
         for mode in (*VALID_MODES, "PAN", "Pan", "badger")
     ),
 )
