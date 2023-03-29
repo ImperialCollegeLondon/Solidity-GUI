@@ -67,5 +67,5 @@ class MainWindow(QMainWindow):
         self.model_tree = BaseModelTree(2)
         central_layout.addLayout(self.model_tree)
         central_layout.addLayout(self.control_panel)
-        central_layout.addLayout(self.vtk_window)
+        central_layout.addWidget(self.vtk_window)
         self.central_frame.setLayout(central_layout)

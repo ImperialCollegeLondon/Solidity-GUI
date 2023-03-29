@@ -3,18 +3,9 @@
 from unittest.mock import MagicMock
 
 import pytest
-from pubsub import pub
 
 from solidity_gui.main.geometry import Component, generate_mesh
 from solidity_gui.main.vtk_window import VTKWindow
-
-
-@pytest.fixture()
-def send_message_mock(monkeypatch):
-    """Magic Mock patched over pubsub.pub.sendMessage."""
-    mock = MagicMock()
-    monkeypatch.setattr(pub, "sendMessage", mock)
-    return mock
 
 
 @pytest.fixture

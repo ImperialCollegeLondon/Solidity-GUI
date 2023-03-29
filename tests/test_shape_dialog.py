@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from pubsub import pub
 
 from solidity_gui.main.add_shape_dialogue import AddShapeDialog
 from solidity_gui.main.forms import Form
@@ -41,14 +40,6 @@ def dialog(qtbot, shape, close_mock):
     dialog = AddShapeDialog(shape)
     qtbot.addWidget(dialog)  # recommended for test clean up
     return dialog
-
-
-@pytest.fixture()
-def send_message_mock(monkeypatch):
-    """Magic Mock patched over pubsub.pub.sendMessage."""
-    mock = MagicMock()
-    monkeypatch.setattr(pub, "sendMessage", mock)
-    return mock
 
 
 def test_dialog_form_info(qtbot, shape):
