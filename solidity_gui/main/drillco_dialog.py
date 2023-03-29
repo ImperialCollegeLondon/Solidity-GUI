@@ -10,11 +10,17 @@ from .forms.fields import FloatField, IntField
 from .geometry import Component
 
 GAP_LENGTH = 0.5
+"""Length of gap between system components."""
 INSERT_DISPLACEMENT_FACTOR = 0.5
+"""Distance of inserts from bit center as a factor of the radius of the bit."""
 INSERT_LENGTH_FACTOR = 1.25
+"""Length of bit inserts as a factor of the bit face height."""
 BIT_FACE_HEIGHT = 0.25
-SYSTEM_AXIS = np.array([1, 0, 0])  # arbitrary axis for system orientation
+"""Height of the domed drill bit cap."""
+SYSTEM_AXIS = np.array([1, 0, 0])
+"""Arbitrary axis for system orientation"""
 GAP_VECTOR = SYSTEM_AXIS * GAP_LENGTH
+"""Vector added to space out system components."""
 
 
 class InsertForm(Form):
