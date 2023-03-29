@@ -38,6 +38,6 @@ class MenuBar(QMenuBar):
 
         drill_action = QAction("Create &drill system", self)
         drill_action.triggered.connect(  # type: ignore[attr-defined]
-            DrillCoDialog().exec_
+            lambda: DrillCoDialog().exec_()
         )
         geometry_menu.addAction(drill_action)
