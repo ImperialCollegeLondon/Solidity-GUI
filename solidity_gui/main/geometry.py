@@ -1,5 +1,6 @@
 """Creation and manipulation of system geometries."""
 
+import warnings
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
@@ -56,6 +57,22 @@ class Geometry(pygmsh.occ.Geometry):
     def add_surface(self, *args: Any, **kwargs: Any) -> Surface:
         """Add a new surface to the geometry."""
         return Surface(self.env, *args, **kwargs)
+
+    def boolean_union(
+        self,
+        entities: List[Dummy],
+        delete_first: bool = True,
+        delete_other: bool = True,
+    ) -> List[Dummy]:
+        """Perform a boolean union of geometric entities.
+
+        A thin wrapper around pygmsh.occ.Geometry that supresses warnings.
+        """
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=".*Specified mesh size.*", module=".*geometry"
+            )
+            return super().boolean_union(entities, delete_first, delete_other)
 
 
 @dataclass
