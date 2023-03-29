@@ -68,12 +68,12 @@ def single_choice_field_renderer(
     layout = QVBoxLayout()
     radio = QRadioButton(field_info.header)
 
-    field_info.disabled = not checked
+    field_info.enabled = checked
     field_layout = default_field_renderer(field_info, level, include_header=False)
 
     # set up signal handler that controls whether field input widgets are disabled
     def _toggled_handler(checked: bool) -> None:
-        field_info.disabled = not checked
+        field_info.enabled = checked
 
     radio.toggled.connect(_toggled_handler)  # type: ignore[attr-defined]
 

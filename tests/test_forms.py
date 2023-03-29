@@ -697,7 +697,7 @@ def test_single_choice_process(qtbot):
     form_info = TestForm().form_info(data=data)
 
     # renderer is usually responsible for disabling fields
-    form_info.fields["c"].fields["a"].disabled = True
+    form_info.fields["c"].fields["a"].enabled = False
 
     data["c"].pop("a")
     assert TestForm().process(form_info) == data
@@ -734,9 +734,9 @@ def test_single_choice_field_renderer(qtbot, checked):
     assert radio_button.text() == field_info.header
 
     # check toggled signal handler
-    assert field_info.disabled == (not checked)
+    assert field_info.enabled == checked
     radio_button.toggled.emit(not checked)
-    assert field_info.disabled == checked
+    assert field_info.enabled == (not checked)
 
     field_layout = layout.itemAt(1).layout()
     _check_field(field_layout, field_info, qwidget_class, check_header=False)

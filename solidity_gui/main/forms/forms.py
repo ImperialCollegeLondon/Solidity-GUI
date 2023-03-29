@@ -164,7 +164,7 @@ class Form:
         for name, field in self._iter_ordered_field_items():
             if isinstance(field, BaseField):
                 field_info = cast(FieldInfo, form_info.fields[name])
-                if not field_info.disabled:
+                if field_info.enabled:
                     data[name] = field.process(field_info.input)
             elif isinstance(field, NestedForm):
                 # note validation is skipped for nested forms, this will be done
