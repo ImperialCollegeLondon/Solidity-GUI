@@ -222,5 +222,3 @@ class SingleChoiceNestedForm(NestedForm):
     nested FormInfo object to be set to True. It is then the responsibility of the
     renderer to handle disabling/enabling of individual fields.
     """
-
-    pass
