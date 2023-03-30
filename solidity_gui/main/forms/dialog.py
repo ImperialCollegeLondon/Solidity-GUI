@@ -5,8 +5,10 @@ from typing import Any, Callable, Dict, Optional, Type
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
+    QGroupBox,
     QLabel,
     QLayout,
+    QRadioButton,
     QVBoxLayout,
     QWidget,
 )
@@ -20,6 +22,93 @@ def _create_named_label(text: str, object_name: str) -> QLabel:
     label = QLabel(text)
     label.setObjectName(object_name)
     return label
+
+
+def default_field_renderer(
+    field_info: FieldInfo,
+    level: int,
+    include_header: bool = True,
+) -> QLayout:
+    """Render an individual field within a form.
+
+    Args:
+      field_info: the field to render
+      level: the level of nesting for the form containing this field
+      include_header: whether to render field_info.header in a QLabel
+    """
+    layout = QVBoxLayout()
+    if include_header and field_info.header:
+        layout.addWidget(
+            _create_named_label(f"{field_info.header.capitalize()}:", f"header-{level}")
+        )
+    if field_info.description:
+        layout.addWidget(_create_named_label(field_info.description, "description"))
+
+    for i, input_ in enumerate(field_info.input):
+        if isinstance(field_info.errors, dict):
+            if errors := field_info.errors.get(i, None):
+                for error in errors:
+                    layout.addWidget(_create_named_label(error, "error"))
+        layout.addWidget(input_)
+    if isinstance(field_info.errors, list):
+        for error in field_info.errors:
+            layout.addWidget(_create_named_label(error, "error"))
+    return layout
+
+
+def single_choice_field_renderer(
+    field_info: FieldInfo, level: int, checked: bool = False
+) -> QLayout:
+    """Return layout of a form field with an associated radio button.
+
+    Rather than using a QLabel for the header a radio button is used instead. The
+    disabled attribute of the field_info object is set according to the checked status
+    of the radio button.
+    """
+    layout = QVBoxLayout()
+    radio = QRadioButton(field_info.header)
+
+    field_info.enabled = checked
+    field_layout = default_field_renderer(field_info, level, include_header=False)
+
+    # set up signal handler that controls whether field input widgets are disabled
+    def _toggled_handler(checked: bool) -> None:
+        field_info.enabled = checked
+
+    radio.toggled.connect(_toggled_handler)  # type: ignore[attr-defined]
+
+    radio.setChecked(checked)
+    layout.addWidget(radio)
+    layout.addLayout(field_layout)
+    return layout
+
+
+def single_choice_form_renderer(form_info: FormInfo, level: int = 0) -> QLayout:
+    """Render a FormInfo instance such that only a single field may be completed.
+
+    This is used to present the user with a choice between data to provide. Practically
+    this is achieved via the use of a QGroupBox widget with exclusive radio buttons for
+    each field in `form_info`.
+
+    The presence of nested forms is not currently supported.
+    """
+    layout = QVBoxLayout()
+    group_box = QGroupBox()
+    layout.addWidget(group_box)
+    box_layout = QVBoxLayout()
+    group_box.setLayout(box_layout)
+
+    for i, (name, field_info) in enumerate(form_info.fields.items()):
+        if isinstance(field_info, FormInfo):
+            raise ValueError(
+                "Nesting forms within a SingleChoiceNestedForm is not supported."
+            )
+        box_layout.addLayout(
+            single_choice_field_renderer(field_info, level, checked=not i)
+        )
+    for error in form_info.schema_errors:
+        layout.addWidget(_create_named_label(error, "error"))
+    return layout
 
 
 def default_form_renderer(form_info: FormInfo, level: int = 0) -> QLayout:
@@ -46,23 +135,7 @@ def default_form_renderer(form_info: FormInfo, level: int = 0) -> QLayout:
 
     for info in form_info.fields.values():
         if isinstance(info, FieldInfo):
-            if info.header:
-                layout.addWidget(
-                    _create_named_label(
-                        f"{info.header.capitalize()}:", f"header-{level}"
-                    )
-                )
-            if info.description:
-                layout.addWidget(_create_named_label(info.description, "description"))
-            for i, input_ in enumerate(info.input):
-                if isinstance(info.errors, dict):
-                    if errors := info.errors.get(i, None):
-                        for error in errors:
-                            layout.addWidget(_create_named_label(error, "error"))
-                layout.addWidget(input_)
-            if isinstance(info.errors, list):
-                for error in info.errors:
-                    layout.addWidget(_create_named_label(error, "error"))
+            layout.addLayout(default_field_renderer(info, level))
         elif isinstance(info, FormInfo):
             if info.header:
                 layout.addWidget(
@@ -70,10 +143,13 @@ def default_form_renderer(form_info: FormInfo, level: int = 0) -> QLayout:
                         f"{info.header.capitalize()}:", f"header-{level}"
                     )
                 )
-            nested_layout = default_form_renderer(info, level + 1)
-            # add to left margin to indent nested forms a bit
-            margins = nested_layout.getContentsMargins()
-            nested_layout.setContentsMargins(margins[0] + 20, *margins[1:])
+            if info.single_choice:
+                nested_layout = single_choice_form_renderer(info, level + 1)
+            else:
+                nested_layout = default_form_renderer(info, level + 1)
+                # add to left margin to indent nested forms a bit
+                margins = nested_layout.getContentsMargins()
+                nested_layout.setContentsMargins(margins[0] + 20, *margins[1:])
             layout.addLayout(nested_layout)
 
     for error in form_info.schema_errors:
