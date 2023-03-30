@@ -125,6 +125,7 @@ class Form:
         errors: FormErrorsType = {},
         schema_errors: List[str] = [],
         header: Optional[str] = None,
+        single_choice: bool = False,
     ) -> FormInfo:
         """Return a FormInfo object for this Form."""
         fields: Dict[str, FieldInfo | FormInfo] = {}
@@ -138,6 +139,7 @@ class Form:
                     errors=cast(FormErrorsType, nested_errors),
                     schema_errors=cast(List[str], nested_errors.get("_schema", [])),
                     header=field.display_name if field.display_name else name,
+                    single_choice=isinstance(field, SingleChoiceNestedForm),
                 )
             else:
                 fields[name] = field.field_info(
@@ -145,7 +147,12 @@ class Form:
                     data.get(name, None),
                     errors=cast(Dict[int, List[str]], errors.get(name, dict())),
                 )
-        return FormInfo(fields=fields, schema_errors=schema_errors, header=header)
+        return FormInfo(
+            fields=fields,
+            schema_errors=schema_errors,
+            header=header,
+            single_choice=single_choice,
+        )
 
     def _extract_data(self, form_info: FormInfo) -> Dict[str, Any]:
         """Extract form data from the provide FormInfo object.
@@ -156,9 +163,9 @@ class Form:
         data = {}
         for name, field in self._iter_ordered_field_items():
             if isinstance(field, BaseField):
-                data[name] = field.process(
-                    cast(FieldInfo, form_info.fields[name]).input
-                )
+                field_info = cast(FieldInfo, form_info.fields[name])
+                if field_info.enabled:
+                    data[name] = field.process(field_info.input)
             elif isinstance(field, NestedForm):
                 # note validation is skipped for nested forms, this will be done
                 # all at once when the top level schema is validated
@@ -205,3 +212,13 @@ class NestedForm:
         """
         self.form_class = form_class
         self.display_name = display_name
+
+
+class SingleChoiceNestedForm(NestedForm):
+    """Special Field Class denoting a nested form returning only a single field.
+
+    This class can be used in cases where the user must provide either A or B and must
+    choose between them. The use of this class causes the single_choice attribute of the
+    nested FormInfo object to be set to True. It is then the responsibility of the
+    renderer to handle disabling/enabling of individual fields.
+    """

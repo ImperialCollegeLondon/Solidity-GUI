@@ -1,7 +1,7 @@
 """Tests for forms module."""
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from marshmallow import Schema
@@ -10,13 +10,21 @@ from marshmallow import fields, validate
 from PySide6.QtWidgets import (
     QDialogButtonBox,
     QDoubleSpinBox,
+    QGroupBox,
     QLabel,
     QLineEdit,
+    QRadioButton,
     QSpinBox,
     QVBoxLayout,
 )
 
-from solidity_gui.main.forms.dialog import SimpleFormDialog, default_form_renderer
+from solidity_gui.main.forms.dialog import (
+    SimpleFormDialog,
+    default_field_renderer,
+    default_form_renderer,
+    single_choice_field_renderer,
+    single_choice_form_renderer,
+)
 from solidity_gui.main.forms.fields import (
     BoolField,
     FloatField,
@@ -24,7 +32,7 @@ from solidity_gui.main.forms.fields import (
     StrField,
     VectorField,
 )
-from solidity_gui.main.forms.forms import Form, NestedForm
+from solidity_gui.main.forms.forms import Form, NestedForm, SingleChoiceNestedForm
 from solidity_gui.main.forms.info import FieldInfo, FormInfo
 from solidity_gui.main.forms.widgets import (
     CheckBoxWidget,
@@ -392,6 +400,19 @@ def _check_label(layout, pos, text):
     return pos + 1
 
 
+def _check_field(layout, field_info, qwidget_class, check_header=True):
+    pos = 0
+    if field_info.header and check_header:
+        pos = _check_label(layout, pos, f"{field_info.header.capitalize()}:")
+    if field_info.description:
+        pos = _check_label(layout, pos, field_info.description)
+    if field_info.errors:
+        for error in field_info.errors[0]:
+            pos = _check_label(layout, pos, error)
+    input_ = layout.itemAt(pos).widget()
+    assert isinstance(input_, qwidget_class)
+
+
 @pytest.mark.parametrize(
     "kwargs",
     (
@@ -407,20 +428,12 @@ def _check_label(layout, pos, text):
         ),
     ),
 )
-def test_default_form_renderer_field(qtbot, kwargs):
+def test_default_field_renderer(qtbot, kwargs):
     """Check default_form_renderer function when passed a single field."""
-    form_info = FormInfo(fields=dict(a=FieldInfo(input=[QSpinBox()], **kwargs)))
-    layout = default_form_renderer(form_info)
-    pos = 0
-    if header := kwargs.get("header"):
-        pos = _check_label(layout, pos, f"{header.capitalize()}:")
-    if description := kwargs.get("description"):
-        pos = _check_label(layout, pos, description)
-    if errors := kwargs.get("errors"):
-        for error in errors[0]:
-            pos = _check_label(layout, pos, error)
-    input_ = layout.itemAt(pos).widget()
-    assert isinstance(input_, QSpinBox)
+    qwidget_class = QSpinBox
+    field_info = FieldInfo(input=[qwidget_class()], **kwargs)
+    layout = default_field_renderer(field_info, 0)
+    _check_field(layout, field_info, qwidget_class)
 
 
 @pytest.mark.parametrize(
@@ -439,20 +452,19 @@ def test_default_form_renderer_field(qtbot, kwargs):
         ),
     ),
 )
-def test_default_form_renderer_multiple_inputs(qtbot, kwargs):
+def test_default_field_renderer_multiple_inputs(qtbot, kwargs):
     """Check default_form_renderer function when passed a single composite field."""
     if "errors" not in kwargs:
         kwargs["errors"] = {}
 
-    field = FieldInfo(input=[QSpinBox(), QSpinBox()], **kwargs)
-    form_info = FormInfo(fields=dict(a=field))
-    layout = default_form_renderer(form_info)
+    field_info = FieldInfo(input=[QSpinBox(), QSpinBox()], **kwargs)
+    layout = default_field_renderer(field_info, level=0)
     pos = 0
     if header := kwargs.get("header"):
         pos = _check_label(layout, pos, f"{header.capitalize()}:")
     if description := kwargs.get("description"):
         pos = _check_label(layout, pos, description)
-    for i in range(len(field.input)):
+    for i in range(len(field_info.input)):
         if errors := kwargs.get("errors", {}).get(i, None):
             for error in errors:
                 pos = _check_label(layout, pos, error)
@@ -625,19 +637,22 @@ def test_default_form_renderer_nested_form(qtbot, kwargs):
     nested_layout = layout.itemAt(0).layout()
     assert isinstance(nested_layout, QVBoxLayout)
 
+    field_layout = nested_layout.itemAt(0).layout()
+    assert isinstance(field_layout, QVBoxLayout)
     pos = 0
     if header := kwargs.get("header"):
-        pos = _check_label(nested_layout, pos, f"{header.capitalize()}:")
+        pos = _check_label(field_layout, pos, f"{header.capitalize()}:")
     if description := kwargs.get("description"):
-        pos = _check_label(nested_layout, pos, description)
+        pos = _check_label(field_layout, pos, description)
     if errors := kwargs.get("errors"):
         for error in errors[0]:
-            pos = _check_label(nested_layout, pos, error)
+            pos = _check_label(field_layout, pos, error)
 
-    assert isinstance(nested_layout.itemAt(pos).widget(), QSpinBox)
+    assert isinstance(field_layout.itemAt(pos).widget(), QSpinBox)
 
-    _check_label(layout, 1, "Outer header:")
-    assert isinstance(layout.itemAt(2).widget(), QDoubleSpinBox)
+    field2_layout = layout.itemAt(1).layout()
+    _check_label(field2_layout, 0, "Outer header:")
+    assert isinstance(field2_layout.itemAt(1).widget(), QDoubleSpinBox)
 
 
 def test_nested_form_info(qtbot):
@@ -665,3 +680,94 @@ def test_nested_form_info(qtbot):
     assert form_info.fields["d"].input[0].value() == data["d"]
     assert nested_form_info.fields["a"].input[0].value() == data["c"]["a"]
     assert nested_form_info.fields["b"].input[0].value() == data["c"]["b"]
+
+
+def test_single_choice_process(qtbot):
+    """Check data is not retrieved for disabled fields."""
+
+    class TestNestedForm(Form):
+        a = FloatField()
+        b = IntField()
+
+    class TestForm(Form):
+        c = SingleChoiceNestedForm(TestNestedForm)
+        d = FloatField()
+
+    data = dict(c=dict(a=0.5, b=2), d=3.5)
+    form_info = TestForm().form_info(data=data)
+
+    # renderer is usually responsible for disabling fields
+    form_info.fields["c"].fields["a"].enabled = False
+
+    data["c"].pop("a")
+    assert TestForm().process(form_info) == data
+
+
+def test_single_choice_render_nested_form_not_supported(qtbot):
+    """Check that nesting forms inside a SingleChoiceNestedForm is not supported."""
+
+    class TestNestedNestedForm(Form):
+        pass
+
+    class TestNestedForm(Form):
+        b = NestedForm(TestNestedNestedForm)
+
+    class TestForm(Form):
+        a = SingleChoiceNestedForm(TestNestedForm)
+
+    with pytest.raises(ValueError, match="not supported"):
+        default_form_renderer(TestForm().form_info())
+
+
+@pytest.mark.parametrize("checked", (True, False))
+def test_single_choice_field_renderer(qtbot, checked):
+    """Check rendering of SingleChoiceNestedForm."""
+    qwidget_class = QSpinBox
+    field_info = FieldInfo(input=[qwidget_class()], header="header text", errors=dict())
+
+    level = 1
+    layout = single_choice_field_renderer(
+        field_info=field_info, level=level, checked=checked
+    )
+    radio_button = layout.itemAt(0).widget()
+    assert isinstance(radio_button, QRadioButton)
+    assert radio_button.text() == field_info.header
+
+    # check toggled signal handler
+    assert field_info.enabled == checked
+    radio_button.toggled.emit(not checked)
+    assert field_info.enabled == (not checked)
+
+    field_layout = layout.itemAt(1).layout()
+    _check_field(field_layout, field_info, qwidget_class, check_header=False)
+
+
+@patch("solidity_gui.main.forms.dialog.single_choice_field_renderer")
+@pytest.mark.parametrize("schema_errors", ([], ["error text"]))
+def test_single_choice_form_renderer(
+    field_renderer_mock: MagicMock, qtbot, schema_errors
+):
+    """Test layout created by single_choice_form_renderer method."""
+    field_renderer_mock.side_effect = lambda *args, **kwargs: QVBoxLayout()
+    a = FieldInfo(input=[QSpinBox()])
+    b = FieldInfo(input=[QLineEdit()])
+    form_info = FormInfo(
+        fields=dict(a=a, b=b), schema_errors=schema_errors, single_choice=True
+    )
+
+    layout = single_choice_form_renderer(form_info, level=0)
+
+    field_renderer_mock.assert_any_call(a, 0, checked=True)
+    field_renderer_mock.assert_called_with(b, 0, checked=False)
+
+    group_box = layout.itemAt(0).widget()
+    assert isinstance(group_box, QGroupBox)
+    box_layout = group_box.layout()
+    assert isinstance(box_layout, QVBoxLayout)
+
+    assert box_layout.count() == 2
+
+    if schema_errors:
+        error_label = layout.itemAt(1).widget()
+        assert isinstance(error_label, QLabel)
+        assert error_label.text() == schema_errors[0]
