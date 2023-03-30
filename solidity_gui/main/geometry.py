@@ -1,5 +1,6 @@
 """Creation and manipulation of system geometries."""
 
+import warnings
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
@@ -14,7 +15,7 @@ from pygmsh.common.dummy import Dummy
 from PySide6.QtCore import QThread, Signal
 
 from .forms import Form
-from .forms.fields import FloatField, VectorField
+from .forms.fields import FloatField, IntField, VectorField
 
 Vector = Tuple[float, float, float]
 
@@ -56,6 +57,22 @@ class Geometry(pygmsh.occ.Geometry):
     def add_surface(self, *args: Any, **kwargs: Any) -> Surface:
         """Add a new surface to the geometry."""
         return Surface(self.env, *args, **kwargs)
+
+    def boolean_union(
+        self,
+        entities: List[Dummy],
+        delete_first: bool = True,
+        delete_other: bool = True,
+    ) -> List[Dummy]:
+        """Perform a boolean union of geometric entities.
+
+        A thin wrapper around pygmsh.occ.Geometry that supresses warnings.
+        """
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=".*Specified mesh size.*", module=".*geometry"
+            )
+            return super().boolean_union(entities, delete_first, delete_other)
 
 
 @dataclass
@@ -129,6 +146,48 @@ def add_dome(
     return dome_volume
 
 
+def add_drill_bit(
+    geom: pygmsh.occ.Geometry,
+    insert_number: int,
+    x0: Vector,
+    axis: Vector,
+    face_height: float,
+    radius: float,
+    insert_radius: float,
+    insert_length: float,
+    insert_displacement: float,
+    mesh_size: float = 0.2,
+) -> Dummy:
+    """Add a drill bit shape for drillco systems."""
+    bit_base = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
+    top_axis = np.array(axis) / np.linalg.norm(axis) * face_height
+    top_base = np.array(x0) + np.array(axis)
+    bit_top = add_dome(
+        geom, x0=top_base, axis=top_axis, radius=radius, mesh_size=mesh_size
+    )
+    insert_axis = top_axis / np.linalg.norm(top_axis) * insert_length
+    inserts = [
+        add_dome(
+            geom,
+            x0=top_base
+            + np.array(
+                (
+                    0,
+                    insert_displacement * np.cos(i * 2 * np.pi / insert_number),
+                    insert_displacement * np.sin(i * 2 * np.pi / insert_number),
+                )
+            ),
+            axis=insert_axis,
+            radius=insert_radius,
+        )
+        for i in range(insert_number)
+    ]
+
+    bit = geom.boolean_union([bit_base, bit_top] + inserts)[0]
+    geom._SIZE_QUEUE.append((bit, mesh_size))
+    return bit
+
+
 @dataclass
 class Shape:
     """Definition of a shape.
@@ -145,6 +204,9 @@ class Shape:
     name: str
     method: Callable
     form: Type[Form]
+
+
+greater_than_zero = validate.Range(min=0, min_inclusive=False)
 
 
 class BoxForm(Form):
@@ -164,7 +226,7 @@ class BallForm(Form):
     center = VectorField(display_name="Center Coordinates")
     radius = FloatField(
         description="The radius of the ball.",
-        validators=[validate.Range(min=0, min_inclusive=False)],
+        validators=[greater_than_zero],
     )
 
 
@@ -188,7 +250,7 @@ class ConeForm(Form):
     )
     radius0 = FloatField(
         display_name="Base Radius",
-        validators=[validate.Range(min=0, min_inclusive=False)],
+        validators=[greater_than_zero],
     )
     radius1 = FloatField(
         display_name="Tip Radius",
@@ -208,11 +270,34 @@ class CylinderForm(Form):
     axis = VectorField(
         display_name="Axis Vector", vector_validators=[non_zero_magnitude]
     )
-    radius = FloatField(validators=[validate.Range(min=0, min_inclusive=False)])
+    radius = FloatField(validators=[greater_than_zero])
 
 
 class DomeForm(CylinderForm):
     """Form defining data required for dome shape creation."""
+
+
+class DrillBitForm(Form):
+    """Form defining data for drill bit shape creation."""
+
+    insert_number = IntField(
+        display_name="Insert Number", validators=[validate.Range(min=1)]
+    )
+    x0 = VectorField(display_name="Center Coordinates")
+    axis = VectorField(
+        display_name="Axis Vector", vector_validators=[non_zero_magnitude]
+    )
+    face_height = FloatField(display_name="Face Height", validators=[greater_than_zero])
+    radius = FloatField(validators=[greater_than_zero])
+    insert_radius = FloatField(
+        display_name="Insert Radius", validators=[greater_than_zero]
+    )
+    insert_length = FloatField(
+        display_name="Insert Length", validators=[greater_than_zero]
+    )
+    insert_displacement = FloatField(
+        display_name="Insert Displacement", validators=[greater_than_zero]
+    )
 
 
 SHAPES = dict(
@@ -223,6 +308,7 @@ SHAPES = dict(
         name="cylinder", method=pygmsh.occ.Geometry.add_cylinder, form=CylinderForm
     ),
     dome=Shape(name="dome", method=add_dome, form=DomeForm),
+    drillbit=Shape(name="drillbit", method=add_drill_bit, form=DrillBitForm),
 )
 """Library of supported shapes."""
 
