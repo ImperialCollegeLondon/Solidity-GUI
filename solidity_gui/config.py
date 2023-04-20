@@ -27,3 +27,9 @@ DEFAULT_ORIENTATION_VECTOR = (1, 0, 0)
 
 """Default up direction for camera."""
 DEFAULT_UP_VECTOR = (0, 1, 0)
+
+"""Solidity Y3D file name."""
+SOLIDITY_Y3D_FILE_NAME = "BST.Y3D"
+
+"""Solidity Y3D template file."""
+SOLIDITY_Y3D_TEMPLATE_FILE = "BST_template.Y3D"
