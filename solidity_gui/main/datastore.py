@@ -42,7 +42,7 @@ class Datastore(UserDict[KeyType, ValueType]):
         and corresponding value sent as data.
         """
         value = self.data[key]
-        del self.data[key]
+        super().__delitem__(key)
         pub.sendMessage(f"{self.name}.remove", key=key, value=value)
 
 
