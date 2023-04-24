@@ -11,7 +11,8 @@ class Y3DFileGenerator:
 
     def __init__(self) -> None:
         """Initializes a new instance of the Y3DFileGenerator class."""
-        template_path = Path("./solidity_gui/main/")
+        template_path = Path(__file__).absolute().parent
+        #template_path = Path("./solidity_gui/main/")
         self.template_file = Environment(
             loader=FileSystemLoader(str(template_path))
         ).get_template(config.SOLIDITY_Y3D_TEMPLATE_FILE)
