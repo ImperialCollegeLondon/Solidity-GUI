@@ -7,7 +7,7 @@ authors = [
     { name = "Alex Dewar", email = "a.dewar@imperial.ac.uk" },
     { name = "Imperial College London RSE Team", email = "ict-rse-team@imperial.ac.uk" }
 ]
-dependencies = ["jinja2", "marshmallow", "pygments>=2.14", "pygmsh", "pypubsub", "pyside6==6.3.2", "qtawesome",
+dependencies = ["jinja2", "marshmallow", "pygmsh", "pypubsub", "pyside6==6.3.2", "qtawesome",
 	        "vtk"]
 requires-python = ">=3.10"
 

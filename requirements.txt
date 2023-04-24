@@ -60,9 +60,7 @@ packaging==21.3
 pillow==9.3.0
     # via matplotlib
 pygments==2.15.1
-    # via
-    #   SolidityGUI (pyproject.toml)
-    #   rich
+    # via rich
 pygmsh==7.1.17
     # via SolidityGUI (pyproject.toml)
 pyparsing==3.0.9
