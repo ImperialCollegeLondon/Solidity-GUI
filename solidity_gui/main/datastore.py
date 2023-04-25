@@ -20,8 +20,8 @@ class Datastore(UserDict[KeyType, ValueType]):
           *args: passed to UserDict.__init__
           **kwargs: passed to UserDict.__init__
         """
-        super().__init__(*args, **kwargs)
         self.name = name
+        super().__init__(*args, **kwargs)
 
     def __setitem__(self, key: KeyType, value: ValueType) -> None:
         """Set an item in the datastore and signal via pubsub.
@@ -31,7 +31,7 @@ class Datastore(UserDict[KeyType, ValueType]):
         if it was. Both key and value are sent as data.
         """
         super().__setitem__(key, value)
-        pub.sendMessage(f"{self.name}.update", key=key, value=value)
+        pub.sendMessage(self.update_topic, key=key, value=value)
 
     def __delitem__(self, key: KeyType) -> None:
         """Remove an item from the datastore and signal via pubsub.
@@ -41,7 +41,17 @@ class Datastore(UserDict[KeyType, ValueType]):
         """
         value = self.data[key]
         super().__delitem__(key)
-        pub.sendMessage(f"{self.name}.remove", key=key, value=value)
+        pub.sendMessage(self.remove_topic, key=key, value=value)
+
+    @property
+    def update_topic(self) -> str:
+        """Message topic sent when adding items to Datastore."""
+        return f"{self.name}.update"
+
+    @property
+    def remove_topic(self) -> str:
+        """Message topic sent when removing items from Datastore."""
+        return f"{self.name}.remove"
 
 
 class MeshDatastore(Datastore[str, meshio.Mesh]):
