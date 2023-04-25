@@ -9,20 +9,31 @@ from tempfile import TemporaryDirectory
 from python_on_whales import docker
 
 
-def run(filepath1: str, filepath2: str, filepath3: str, filepath4: str) -> None:
-    """Run Solidity with the four required command-line arguments.
+def run(
+    y3d_file_path: str,
+    layout_file_path: str,
+    pellet_file_path: str,
+    materials_file_path: str,
+) -> None:
+    """Run Solidity with the required command-line arguments.
+
+    Descriptions of arguments are taken from the manual.
 
     Example:
         run("BST.Y3D", "layout.txt", "pellet.txt", "mat.txt")
 
-    Todo:
-        Find out what these arguments mean so that we can give them better names.
+    Args:
+        y3d_file_path: Path to Y3D file
+        layout_file_path: Path to file with format for elements and particles
+                          (layout.txt)
+        pellet_file_path: Path to file with elements and particles (pellet.txt)
+        materials_file_path: Path to materials file (mat.txt)
     """
     with TemporaryDirectory() as tmp:
-        shutil.copyfile(filepath1, os.path.join(tmp, "file1.Y3D"))
-        shutil.copyfile(filepath2, os.path.join(tmp, "file2.txt"))
-        shutil.copyfile(filepath3, os.path.join(tmp, "file3.txt"))
-        shutil.copyfile(filepath4, os.path.join(tmp, "file4.txt"))
+        shutil.copyfile(y3d_file_path, os.path.join(tmp, "file1.Y3D"))
+        shutil.copyfile(layout_file_path, os.path.join(tmp, "file2.txt"))
+        shutil.copyfile(pellet_file_path, os.path.join(tmp, "file3.txt"))
+        shutil.copyfile(materials_file_path, os.path.join(tmp, "file4.txt"))
 
         docker.run(
             "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS",
