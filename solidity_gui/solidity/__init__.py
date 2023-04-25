@@ -2,47 +2,60 @@
 
 It achieves this by using the docker image.
 """
-import os.path
-import shutil
+from pathlib import Path, PosixPath
 from tempfile import TemporaryDirectory
 
 from python_on_whales import docker
 
 
-def run(
-    y3d_file_path: str,
-    layout_file_path: str,
-    pellet_file_path: str,
-    materials_file_path: str,
-) -> None:
-    """Run Solidity with the required command-line arguments.
+class SolidityContainer:
+    """Provides a container for running the Solidity executable via docker.
 
-    Descriptions of arguments are taken from the manual.
-
-    Example:
-        run("BST.Y3D", "layout.txt", "pellet.txt", "mat.txt")
-
-    Args:
-        y3d_file_path: Path to Y3D file
-        layout_file_path: Path to file with format for elements and particles
-                          (layout.txt)
-        pellet_file_path: Path to file with elements and particles (pellet.txt)
-        materials_file_path: Path to materials file (mat.txt)
+    Before run() is called, the Y3D file, layout file, pellet file and materials file
+    must all have been saved into input_files_path.
     """
-    with TemporaryDirectory() as tmp:
-        shutil.copyfile(y3d_file_path, os.path.join(tmp, "file1.Y3D"))
-        shutil.copyfile(layout_file_path, os.path.join(tmp, "file2.txt"))
-        shutil.copyfile(pellet_file_path, os.path.join(tmp, "file3.txt"))
-        shutil.copyfile(materials_file_path, os.path.join(tmp, "file4.txt"))
 
+    Y3D_FILE_NAME = "BST.Y3D"
+    LAYOUT_FILE_NAME = "layout.txt"
+    PELLET_FILE_NAME = "pellet.txt"
+    MATERIALS_FILE_NAME = "materials.txt"
+
+    def __init__(self) -> None:
+        """Create a new SolidityContainer."""
+        self._tmp_dir = TemporaryDirectory(ignore_cleanup_errors=True)
+        self.input_files_path = Path(self._tmp_dir.name)
+
+    @property
+    def y3d_file_path(self) -> Path:
+        """Path to Y3D file (BST.Y3D)."""
+        return self.input_files_path / self.Y3D_FILE_NAME
+
+    @property
+    def layout_file_path(self) -> Path:
+        """Path to file with format for elements and particles (layout.txt)."""
+        return self.input_files_path / self.LAYOUT_FILE_NAME
+
+    @property
+    def pellet_file_path(self) -> Path:
+        """Path to file with elements and particles (pellet.txt)."""
+        return self.input_files_path / self.PELLET_FILE_NAME
+
+    @property
+    def materials_file_path(self) -> Path:
+        """Path to materials file (mat.txt)."""
+        return self.input_files_path / self.MATERIALS_FILE_NAME
+
+    def run(self) -> None:
+        """Run Solidity using the files in input_files_path as inputs."""
+        path_on_container = PosixPath("/home/software/solidity/run")
         docker.run(
             "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS",
             [
                 "DEMPlus",
-                "/home/software/solidity/run/file1.Y3D",
-                "/home/software/solidity/run/file2.txt",
-                "/home/software/solidity/run/file3.txt",
-                "/home/software/solidity/run/file4.txt",
+                str(path_on_container / self.Y3D_FILE_NAME),
+                str(path_on_container / self.LAYOUT_FILE_NAME),
+                str(path_on_container / self.PELLET_FILE_NAME),
+                str(path_on_container / self.MATERIALS_FILE_NAME),
             ],
-            volumes=[(tmp, "/home/software/solidity/run")],
+            volumes=[(self.input_files_path, str(path_on_container))],
         )
