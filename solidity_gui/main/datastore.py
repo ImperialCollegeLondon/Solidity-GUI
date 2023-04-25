@@ -75,5 +75,5 @@ class IndexDatastore(Datastore[int, ValueType]):
         to or greater than 1.
         """
         if key < 0:
-            raise ValueError()
+            raise ValueError("Key value must be greater than or equal to 0.")
         super().__setitem__(key, value)
