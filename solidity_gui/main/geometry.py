@@ -67,7 +67,7 @@ class Geometry(pygmsh.occ.Geometry):
     ) -> List[Dummy]:
         """Perform a boolean union of geometric entities.
 
-        A thin wrapper around pygmsh.occ.Geometry that supresses warnings.
+        A thin wrapper around pygmsh.occ.Geometry that suppresses warnings.
         """
         with warnings.catch_warnings():
             warnings.filterwarnings(
