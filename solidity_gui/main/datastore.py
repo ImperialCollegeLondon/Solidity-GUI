@@ -30,10 +30,8 @@ class Datastore(UserDict[KeyType, ValueType]):
         '{self.name}.add' if the key was not previously present and '{self.name}.update'
         if it was. Both key and value are sent as data.
         """
-        action = "update" if key in self else "add"
-
         super().__setitem__(key, value)
-        pub.sendMessage(f"{self.name}.{action}", key=key, value=value)
+        pub.sendMessage(f"{self.name}.update", key=key, value=value)
 
     def __delitem__(self, key: KeyType) -> None:
         """Remove an item from the datastore and signal via pubsub.
