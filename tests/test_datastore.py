@@ -1,5 +1,14 @@
 """Tests covering the Datastore datastructures used in the codebase."""
+from meshio import Mesh
+
 from solidity_gui.main.datastore import Datastore
+from solidity_gui.main.material import (
+    Material,
+    MaterialAssignment,
+    material_assignment_datastore,
+    material_datastore,
+)
+from solidity_gui.main.meshes import mesh_datastore
 
 
 def test_datastore_setitem(send_message_mock):
@@ -100,3 +109,38 @@ def test_datastore_clear(send_message_mock):
 
     for key, value in data:
         send_message_mock.assert_any_call(datastore.remove_topic, key=key, value=value)
+
+
+def _setup_assignments_sync_test():
+    """Common logic for tests of material_assignment_datastore sync behaviour."""
+    material = Material(name="foo")
+    material_id = material_datastore.add(material)
+
+    cell_set_name = "cell_set_name"
+    mesh = Mesh(points=[], cells={"line": []}, cell_sets={cell_set_name: [[]]})
+    mesh_id = mesh_datastore.add(mesh)
+
+    assignment = MaterialAssignment(
+        material_id=material_id, cell_set_name=cell_set_name
+    )
+    material_assignment_datastore.add(assignment)
+    return material_id, mesh_id
+
+
+def test_sync_assignments_material_removed():
+    """Check sync of material_assignment_datastore when a material is deleted."""
+    material_id, _ = _setup_assignments_sync_test()
+    assert len(material_assignment_datastore) == 1
+
+    del material_datastore[material_id]
+
+    assert len(material_assignment_datastore) == 0
+
+
+def test_sync_assignments_mesh_removed():
+    """Check sync of material_assignment_datastore when a mesh is deleted."""
+    _, mesh_id = _setup_assignments_sync_test()
+
+    del mesh_datastore[mesh_id]
+
+    assert len(material_assignment_datastore) == 0

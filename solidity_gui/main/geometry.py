@@ -14,6 +14,7 @@ from pubsub import pub
 from pygmsh.common.dummy import Dummy
 from PySide6.QtCore import QThread, Signal
 
+from .datastore import Datastore
 from .forms import Form
 from .forms.fields import FloatField, IntField, VectorField
 
@@ -451,3 +452,6 @@ class MeshGenerator:
         """
         pub.sendMessage(f"{topic}.meshing.begin")
         self._in_queue.put((topic, components, resolution))
+
+
+component_datastore: Datastore[str, Component] = Datastore("components")

@@ -17,7 +17,8 @@ from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
 from .custom_interactor_style import CustomInteractorStyle
-from .geometry import Component, MeshGenerator, Vector
+from .geometry import Component, MeshGenerator, Vector, component_datastore
+from .meshes import mesh_datastore
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
@@ -84,8 +85,6 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.inter_style = CustomInteractorStyle()
         self.iren.SetInteractorStyle(self.inter_style)
         self.iren.Initialize()
-        self.meshes: List[Mesh] = []
-        self.components: List[Component] = []
         self.ugrids: List[vtk.vtkUnstructuredGrid] = []
         self.reset_camera()
 
@@ -109,28 +108,29 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
     def _add_component_to_geometry_begin(self, component: Component) -> None:
         """Add a new geometric component and render and display its rough mesh."""
-        self.components.append(component)
+        component_datastore[component.label] = component
         self.mesh_generator.start_mesh_generation(
             "geometry", [component], resolution=0.2
         )
 
     def _add_component_to_geometry_end(self, mesh: Mesh) -> None:
-        self.meshes.append(mesh)
+        mesh_datastore.add(mesh)
         self.render_mesh(mesh)
         pub.sendMessage("geometry.updated", mesh=mesh)
 
     def _create_mesh_from_geometry_begin(self) -> None:
         """Generate and display a high quality mesh from the current geometry."""
-        if not self.components:
+        if not component_datastore:
             return
 
         self.ugrids = []
         self.mesh_generator.start_mesh_generation(
-            "mesh", self.components, resolution=0.05
+            "mesh", list(component_datastore.values()), resolution=0.05
         )
 
     def _create_mesh_from_geometry_end(self, mesh: Mesh) -> None:
-        self.meshes = [mesh]
+        mesh_datastore.clear()
+        mesh_datastore.add(mesh)
         for actor in self.ren.GetActors():
             self.ren.RemoveActor(actor)
         self.render_mesh(mesh)
@@ -182,7 +182,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
     def _colour_mesh_selection(self, selection_name: str) -> None:
         """Update rendered mesh colours based on selected element."""
-        for mesh, ugrid in zip(self.meshes, self.ugrids):
+        for mesh, ugrid in zip(mesh_datastore.values(), self.ugrids):
             point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
             try:
                 surface_point_ids = np.unique(
