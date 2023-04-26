@@ -52,7 +52,5 @@ class MenuBar(QMenuBar):
         geometry_menu.addAction(drill_action)
 
         export_bst_action = QAction("&Export BST", self)
-        export_bst_action.triggered.connect(  # type: ignore[attr-defined]
-            generate_y3d_file
-        )
+        export_bst_action.triggered.connect(generate_y3d_file)
         file_menu.addAction(export_bst_action)
