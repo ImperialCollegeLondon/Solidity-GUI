@@ -1,20 +1,19 @@
 """This module provides functionality to generate an input file for Solidity."""
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 
 from .. import config
 
 
-def render_template(template_file, data) -> str:
+def render_template(template_file: Template, data: dict) -> str:
     """Renders the Jinja2 template."""
     rendered_template = template_file.render(data)
     return rendered_template
 
 
-def write_file(rendered_template, output_file) -> None:
+def write_file(rendered_template: str, output_file: str) -> None:
     """Generates the Y3D file."""
-
     try:
         with open(output_file, "w") as f:
             f.write(rendered_template)
@@ -22,9 +21,8 @@ def write_file(rendered_template, output_file) -> None:
         raise Exception(f"An error occurred while writing to the output file: {e}")
 
 
-def generate_y3d_file():
+def generate_y3d_file() -> None:
     """Generates a Solidity input file based on a Jinja2 template."""
-
     template_path = Path(__file__).absolute().parent.parent / "templates"
     template_file = Environment(
         loader=FileSystemLoader(str(template_path))
