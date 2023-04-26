@@ -9,7 +9,6 @@ from .menu_bar import MenuBar
 from .uncaught_exceptions import set_uncaught_exception_handler
 from .visualisation_toolbar import VisualisationToolbar
 from .vtk_window import VTKWindow
-from .y3d_file_generator import Y3DFileGenerator
 
 
 class MainWindow(QMainWindow):
@@ -31,9 +30,6 @@ class MainWindow(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, visualisation_toolbar)
 
         self.setCentralWidget(self.main_frame)
-
-        input_file_generator = Y3DFileGenerator()
-        input_file_generator.generate_y3d_file()
 
     def create_main_frame(self) -> None:
         """Create the main frame of the window.
