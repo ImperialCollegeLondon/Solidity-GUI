@@ -17,7 +17,7 @@ def write_file(rendered_template: str, output_file: str) -> None:
         with open(output_file, "w") as f:
             f.write(rendered_template)
     except Exception as e:
-        raise Exception(f"An error occurred while writing to the output file: {e}")
+        raise Exception(f"An error occurred while writing to the output file: {e}") from e
 
 
 def generate_y3d_file() -> None:
