@@ -8,8 +8,7 @@ from .. import config
 
 def render_template(template_file: Template, data: dict) -> str:
     """Renders the Jinja2 template."""
-    rendered_template = template_file.render(data)
-    return rendered_template
+    return template_file.render(data)
 
 
 def write_file(rendered_template: str, output_file: str) -> None:
