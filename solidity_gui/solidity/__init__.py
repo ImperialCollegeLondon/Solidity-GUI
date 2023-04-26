@@ -57,5 +57,5 @@ class SolidityContainer:
                 str(path_on_container / self.PELLET_FILE_NAME),
                 str(path_on_container / self.MATERIALS_FILE_NAME),
             ],
-            volumes=[(self.input_files_path, str(path_on_container))],
+            volumes=[(self.input_files_path, path_on_container)],
         )
