@@ -7,6 +7,7 @@ import pytest
 from PySide6.QtWidgets import QDialogButtonBox
 
 from solidity_gui.main.assign_properties_dialog import AssignPropertiesDialog
+from solidity_gui.main.material import MaterialAssignment, material_assignment_datastore
 
 
 @pytest.fixture
@@ -36,45 +37,18 @@ def test_assign_properties(qtbot, handler_mocks, subscribe_mock):
     button_box.rejected.emit()
     handler_mocks.close.assert_called()
 
-    subscribe_mock.assert_any_call(dialog._set_components, "geometry.updated")
-    subscribe_mock.assert_any_call(dialog._add_material, "materials.add")
-    subscribe_mock.assert_any_call(dialog._remove_material, "materials.remove")
-
-
-def test_assign_add_material(qtbot):
-    """Test the _add_material method of the AssignPropertiesDialog class."""
-    dialog = AssignPropertiesDialog()
-
-    assert dialog.select_material_combo.count() == 0
-
-    dialog._add_material("test")
-
-    assert dialog.select_material_combo.count() == 1
-
-
-def test_assign_remove_material(qtbot):
-    """Test the _remove_material method of the AssignPropertiesDialog class."""
-    dialog = AssignPropertiesDialog()
-
-    dialog.select_material_combo.addItem("test")
-    dialog.assigned_materials["test"] = "test"
-
-    assert dialog.select_material_combo.count() == 1
-    assert dialog.assigned_materials == {"test": "test"}
-
-    dialog._remove_material("test")
-
-    assert dialog.select_material_combo.count() == 0
-    assert dialog.assigned_materials == {}
-
 
 def test_assign_save_clicked(qtbot):
     """Test the _save_clicked method of the AssignPropertiesDialog class."""
     dialog = AssignPropertiesDialog()
 
-    dialog.select_component_combo.addItem("test")
-    dialog.select_material_combo.addItem("test")
+    cell_set_name = "component"
+    material_id = 0
+    dialog.select_component_combo.addItem(cell_set_name)
+    dialog.select_material_combo.addItem("material_name", userData=material_id)
 
     dialog._save_clicked()
 
-    assert dialog.assigned_materials == {"test": "test"}
+    assert material_assignment_datastore == {
+        0: MaterialAssignment(material_id=material_id, cell_set_name=cell_set_name)
+    }

@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from solidity_gui.main.geometry import Component, generate_mesh
+from solidity_gui.main.geometry import Component, component_datastore, generate_mesh
+from solidity_gui.main.meshes import mesh_datastore
 from solidity_gui.main.vtk_window import VTKWindow
 
 
@@ -27,7 +28,6 @@ def test_vtk_window_init(vtk_window, subscribe_mock):
     """Test VTKWindow is initialised correctly."""
     assert vtk_window.ren
     assert vtk_window.iren
-    assert vtk_window.meshes == []
 
     subscribe_mock.assert_any_call(
         vtk_window._add_component_to_geometry_begin, "geometry.update"
@@ -42,7 +42,6 @@ def test_vtk_window_render_mesh(vtk_window):
     """Test render_mesh method of VTKWindow."""
     mesh = generate_mesh([component_factory()], resolution=0.2)
 
-    assert vtk_window.meshes == []
     assert vtk_window.ugrids == []
     vtk_window.render_mesh(mesh)
 
@@ -57,7 +56,7 @@ def test_add_component_to_geometry_begin(vtk_window):
     """Test _add_component_to_geometry_begin method of VTKWindow."""
     component = component_factory()
     vtk_window._add_component_to_geometry_begin(component)
-    assert vtk_window.components == [component]
+    assert component_datastore == {component.label: component}
     vtk_window.mesh_generator.start_mesh_generation.assert_called_once_with(
         "geometry", [component], resolution=0.2
     )
@@ -66,28 +65,28 @@ def test_add_component_to_geometry_begin(vtk_window):
 def test_add_component_to_geometry_end(vtk_window, send_message_mock):
     """Test _add_component_to_geometry_end method of VTKWindow."""
     mesh = MagicMock()
+    assert len(mesh_datastore) == 0
     vtk_window._add_component_to_geometry_end(mesh)
-    assert len(vtk_window.meshes) == 1
+    assert mesh_datastore[0] == mesh
     assert len(vtk_window.ugrids) == 1
-    send_message_mock.assert_called_once_with(
-        "geometry.updated", mesh=vtk_window.meshes[0]
-    )
+    send_message_mock.assert_called_with("geometry.updated", mesh=mesh_datastore[0])
 
 
 def test_create_mesh_from_geometry_begin(vtk_window):
     """Test _create_mesh_from_geometry_begin method of VTKWindow."""
     # create 2 component meshes so we can check we end up with one
+    assert len(mesh_datastore) == 0
     vtk_window._add_component_to_geometry_begin(component_factory())
     vtk_window._add_component_to_geometry_end(MagicMock())
     vtk_window._add_component_to_geometry_begin(component_factory(label="sphere2"))
     vtk_window._add_component_to_geometry_end(MagicMock())
-    assert len(vtk_window.meshes) == 2
+    assert len(mesh_datastore) == 2
     vtk_window.mesh_generator.reset_mock()
 
     vtk_window._create_mesh_from_geometry_begin()
     assert len(vtk_window.ugrids) == 0
     vtk_window.mesh_generator.start_mesh_generation.assert_called_once_with(
-        "mesh", vtk_window.components, resolution=0.05
+        "mesh", list(component_datastore.values()), resolution=0.05
     )
 
 
@@ -96,6 +95,6 @@ def test_create_mesh_from_geometry_end(vtk_window, send_message_mock):
     vtk_window._create_mesh_from_geometry_end(MagicMock())
 
     assert len(list(vtk_window.ren.GetActors())) == 1
-    assert len(vtk_window.meshes) == 1
+    assert len(mesh_datastore) == 1
     assert len(vtk_window.ugrids) == 1
-    send_message_mock.assert_called_with("mesh.updated", mesh=vtk_window.meshes[0])
+    send_message_mock.assert_called_with("mesh.updated", mesh=mesh_datastore[0])

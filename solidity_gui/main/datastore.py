@@ -2,7 +2,6 @@
 from collections import UserDict
 from typing import Any, TypeVar
 
-import meshio
 from pubsub import pub
 
 KeyType = TypeVar("KeyType")
@@ -54,9 +53,27 @@ class Datastore(UserDict[KeyType, ValueType]):
         return f"{self.name}.remove"
 
 
-class MeshDatastore(Datastore[str, meshio.Mesh]):
-    """Example DataStore subclass with concretised types."""
+class IndexDatastore(Datastore[int, ValueType]):
+    """A Datastore subclass with auto-incremented integer keys."""
 
+    def next_key(self) -> int:
+        """Get the key value that will be used for the next added item."""
+        return max(self.keys(), default=-1) + 1
 
-mesh_datastore = MeshDatastore("geometry_meshes")
-"""Example datastore instance"""
+    def add(self, value: ValueType) -> int:
+        """Add a new item to the datastore returning the auto-generated key."""
+        key = self.next_key()
+        self[key] = value
+        return key
+
+    def __setitem__(self, key: int, value: ValueType) -> None:
+        """Set an item in the datastore and signal via pubsub.
+
+        Once the item has been set a pubsub message is sent. The message topic is
+        '{self.name}.add' if the key was not previously present and '{self.name}.update'
+        if it was. Both key and value are sent as data. The value of key must be equal
+        to or greater than 1.
+        """
+        if key < 0:
+            raise ValueError("Key value must be greater than or equal to 0.")
+        super().__setitem__(key, value)
