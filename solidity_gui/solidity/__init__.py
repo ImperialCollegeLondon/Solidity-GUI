@@ -2,7 +2,7 @@
 
 It achieves this by using the docker image.
 """
-from pathlib import Path, PosixPath
+from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
 
 from python_on_whales import docker
@@ -48,7 +48,7 @@ def run_solidity(
         if not p.is_file():
             raise RuntimeError(f"File {p} does not exist")
 
-    path_on_container = PosixPath("/home/software/solidity/run")
+    path_on_container = PurePosixPath("/home/software/solidity/run")
     docker.run(
         "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS",
         [

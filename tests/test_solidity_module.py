@@ -1,5 +1,5 @@
 """Tests for the Solidity module."""
-from pathlib import Path, PosixPath
+from pathlib import Path, PurePosixPath
 from unittest.mock import Mock, patch
 
 import pytest
@@ -33,7 +33,7 @@ def test_run_solidity_no_error(docker_mock: Mock) -> None:
             f"{RUN_DIR}/pellet.txt",
             f"{RUN_DIR}/mat.txt",
         ],
-        volumes=[(INPUT_DIR, PosixPath(RUN_DIR))],
+        volumes=[(INPUT_DIR, PurePosixPath(RUN_DIR))],
     )
 
 
