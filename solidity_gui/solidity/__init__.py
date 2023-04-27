@@ -7,55 +7,101 @@ from tempfile import TemporaryDirectory
 
 from python_on_whales import docker
 
+DEFAULT_Y3D_FILE_NAME = "BST.Y3D"
+DEFAULT_LAYOUT_FILE_NAME = "layout.txt"
+DEFAULT_PELLET_FILE_NAME = "pellet.txt"
+DEFAULT_MATERIALS_FILE_NAME = "mat.txt"
 
-class SolidityContainer:
+
+def run_solidity(
+    y3d_file_path: Path,
+    layout_file_path: Path,
+    pellet_file_path: Path,
+    materials_file_path: Path,
+) -> None:
+    """Run Solidity using the specified input files.
+
+    All the input files must be in the same directory as one another.
+
+    Args:
+        y3d_file_path: Path to Y3D file (BST.Y3D)
+        layout_file_path: Path to file with format for elements and particles
+                          (layout.txt)
+        pellet_file_path: Path to file with elements and particles (pellet.txt)
+        materials_file_path: Path to materials file (mat.txt)
+
+    Raises:
+        ValueError: If input files are not in same directory
+        RuntimeError: If any of the input files do not exist
+    """
+    input_files_path = y3d_file_path.parent
+    if not all(
+        p.parent.samefile(input_files_path)
+        for p in (layout_file_path, pellet_file_path, materials_file_path)
+    ):
+        raise ValueError("All input files must be in the same directory")
+
+    # Solidity will exit if any of the input files do not exist, but let's help our
+    # users out by raising an error at this stage, so they don't have to wade through
+    # the logs to find this out
+    for p in (y3d_file_path, layout_file_path, pellet_file_path, materials_file_path):
+        if not p.is_file():
+            raise RuntimeError(f"File {p} does not exist")
+
+    path_on_container = PosixPath("/home/software/solidity/run")
+    docker.run(
+        "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS",
+        [
+            "DEMPlus",
+            str(path_on_container / y3d_file_path.name),
+            str(path_on_container / layout_file_path.name),
+            str(path_on_container / pellet_file_path.name),
+            str(path_on_container / materials_file_path.name),
+        ],
+        volumes=[(input_files_path, path_on_container)],
+    )
+
+
+class SolidityContainer(TemporaryDirectory):
     """Provides a container for running the Solidity executable via docker.
 
     Before run() is called, the Y3D file, layout file, pellet file and materials file
-    must all have been saved into input_files_path.
+    must all have been saved into the correct paths.
     """
-
-    Y3D_FILE_NAME = "BST.Y3D"
-    LAYOUT_FILE_NAME = "layout.txt"
-    PELLET_FILE_NAME = "pellet.txt"
-    MATERIALS_FILE_NAME = "materials.txt"
 
     def __init__(self) -> None:
         """Create a new SolidityContainer."""
-        self._tmp_dir = TemporaryDirectory(ignore_cleanup_errors=True)
-        self.input_files_path = Path(self._tmp_dir.name)
+        super().__init__(ignore_cleanup_errors=True)
+        self._input_files_path = Path(self.name)
+
+    def _file_path(self, filename: str) -> Path:
+        return self._input_files_path / filename
 
     @property
     def y3d_file_path(self) -> Path:
         """Path to Y3D file (BST.Y3D)."""
-        return self.input_files_path / self.Y3D_FILE_NAME
+        return self._file_path(DEFAULT_Y3D_FILE_NAME)
 
     @property
     def layout_file_path(self) -> Path:
         """Path to file with format for elements and particles (layout.txt)."""
-        return self.input_files_path / self.LAYOUT_FILE_NAME
+        return self._file_path(DEFAULT_LAYOUT_FILE_NAME)
 
     @property
     def pellet_file_path(self) -> Path:
         """Path to file with elements and particles (pellet.txt)."""
-        return self.input_files_path / self.PELLET_FILE_NAME
+        return self._file_path(DEFAULT_PELLET_FILE_NAME)
 
     @property
     def materials_file_path(self) -> Path:
         """Path to materials file (mat.txt)."""
-        return self.input_files_path / self.MATERIALS_FILE_NAME
+        return self._file_path(DEFAULT_MATERIALS_FILE_NAME)
 
     def run(self) -> None:
-        """Run Solidity using the files in input_files_path as inputs."""
-        path_on_container = PosixPath("/home/software/solidity/run")
-        docker.run(
-            "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS",
-            [
-                "DEMPlus",
-                str(path_on_container / self.Y3D_FILE_NAME),
-                str(path_on_container / self.LAYOUT_FILE_NAME),
-                str(path_on_container / self.PELLET_FILE_NAME),
-                str(path_on_container / self.MATERIALS_FILE_NAME),
-            ],
-            volumes=[(self.input_files_path, path_on_container)],
+        """Invoke Solidity with the input files."""
+        run_solidity(
+            self.y3d_file_path,
+            self.layout_file_path,
+            self.pellet_file_path,
+            self.materials_file_path,
         )
