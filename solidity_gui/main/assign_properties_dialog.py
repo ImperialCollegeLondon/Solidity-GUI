@@ -1,9 +1,12 @@
 """Module for the AssignPropertiesDialog class."""
-from typing import Dict
-
-from meshio import Mesh
-from pubsub import pub
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QVBoxLayout
+
+from .material import (
+    MaterialAssignment,
+    material_assignment_datastore,
+    material_datastore,
+)
+from .meshes import mesh_datastore
 
 
 class AssignPropertiesDialog(QDialog):
@@ -13,8 +16,6 @@ class AssignPropertiesDialog(QDialog):
         """Initialise a new dialog."""
         super().__init__()
         self.setWindowTitle("Assign Properties")
-
-        self.assigned_materials: Dict[str, str] = {}
 
         component_label = QLabel("Component:")
         self.select_component_combo = QComboBox()
@@ -38,29 +39,24 @@ class AssignPropertiesDialog(QDialog):
 
         layout.addWidget(self.button_box)
 
-        pub.subscribe(self._set_components, "geometry.updated")
-        pub.subscribe(self._add_material, "materials.add")
-        pub.subscribe(self._remove_material, "materials.remove")
-
-    def _set_components(self, mesh: Mesh) -> None:
         self.select_component_combo.addItems(
-            [key for key, value in mesh.cell_sets.items() if value[2] is not None]
+            [
+                key
+                for mesh in mesh_datastore.values()
+                for key, value in mesh.cell_sets.items()
+                if value[2] is not None
+            ]
         )
-
-    def _add_material(self, material: str) -> None:
-        self.select_material_combo.addItem(material)
-
-    def _remove_material(self, material: str) -> None:
-        self.select_material_combo.removeItem(
-            self.select_material_combo.findText(material)
-        )
-        self.assigned_materials.pop(material, None)
+        for key, material in material_datastore.items():
+            self.select_material_combo.addItem(material.name, userData=key)
 
     def _save_clicked(self) -> None:
         selected_component_value = self.select_component_combo.currentText()
-        selected_material_value = self.select_material_combo.currentText()
-        if not (selected_component_value and selected_material_value):
+        selected_material_value = self.select_material_combo.currentData()
+        if not selected_component_value or selected_material_value is None:
             return
-
-        self.assigned_materials[selected_component_value] = selected_material_value
+        assignment = MaterialAssignment(
+            material_id=selected_material_value, cell_set_name=selected_component_value
+        )
+        material_assignment_datastore.add(assignment)
         self.close()

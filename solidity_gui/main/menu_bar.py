@@ -38,10 +38,9 @@ class MenuBar(QMenuBar):
         )
         self.materials_menu.addAction(materials_manager_action)
 
-        self.assign_properties_dialog = AssignPropertiesDialog()
         assign_properties_action = QAction("&Assign Properties", self)
         assign_properties_action.triggered.connect(  # type: ignore[attr-defined]
-            self.assign_properties_dialog.open
+            lambda: AssignPropertiesDialog().exec_()
         )
         self.materials_menu.addAction(assign_properties_action)
 
