@@ -11,14 +11,13 @@ env = Environment(
 
 
 def write_file(file_content: str, output_file: Path | str) -> None:
-    """Write the contents of file_content to file."""
-    try:
-        with open(output_file, "w") as f:
-            f.write(file_content)
-    except IOError as e:
-        raise Exception(
-            f"An error occurred while writing to the output file: {e}"
-        ) from e
+    """Write the contents of file_content to file.
+
+    Raises:
+        IOError: If there is a problem writing to the output file.
+    """
+    with open(output_file, "w") as f:
+        f.write(file_content)
 
 
 def create_y3d_template() -> str:
