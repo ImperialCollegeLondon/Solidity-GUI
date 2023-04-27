@@ -423,7 +423,7 @@ class MeshGenerator:
         self._listener.mesh_received.connect(self._send_meshing_end)
         self._listener.start()
 
-    def __del__(self) -> None:
+    def stop_thread(self) -> None:
         """Stop background QThread."""
         # None is used as a sentinel value to signal that the thread should stop
         self._out_queue.put(None)

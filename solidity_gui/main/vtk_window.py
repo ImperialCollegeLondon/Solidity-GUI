@@ -91,6 +91,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self._create_orientation_marker()
 
         self.mesh_generator = MeshGenerator()
+        pub.subscribe(self.mesh_generator.stop_thread, "window.close")
 
         pub.subscribe(self._add_component_to_geometry_begin, "geometry.update")
         pub.subscribe(self._add_component_to_geometry_end, "geometry.meshing.end")
