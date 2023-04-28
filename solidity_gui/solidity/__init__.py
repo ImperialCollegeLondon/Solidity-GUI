@@ -4,6 +4,7 @@ It achieves this by using the docker image.
 """
 from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
+from typing import Any
 
 from python_on_whales import docker
 
@@ -73,9 +74,13 @@ class SolidityContainer(TemporaryDirectory):
     must all have been saved into the correct paths.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Create a new SolidityContainer."""
-        super().__init__(ignore_cleanup_errors=True)
+        # By default, ignore errors when trying to delete temporary files
+        if "ignore_cleanup_errors" not in kwargs:
+            kwargs["ignore_cleanup_errors"] = True
+
+        super().__init__(*args, **kwargs)
         self._input_files_path = Path(self.name)
 
     def _file_path(self, filename: str) -> Path:
