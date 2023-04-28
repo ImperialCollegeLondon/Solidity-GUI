@@ -7,10 +7,12 @@ from tempfile import TemporaryDirectory
 
 from python_on_whales import docker
 
-DEFAULT_Y3D_FILE_NAME = "BST.Y3D"
-DEFAULT_LAYOUT_FILE_NAME = "layout.txt"
-DEFAULT_PELLET_FILE_NAME = "pellet.txt"
-DEFAULT_MATERIALS_FILE_NAME = "mat.txt"
+from ..config import (
+    SOLIDITY_LAYOUT_FILE_NAME,
+    SOLIDITY_MATERIALS_FILE_NAME,
+    SOLIDITY_PELLET_FILE_NAME,
+    SOLIDITY_Y3D_FILE_NAME,
+)
 
 
 def run_solidity(
@@ -80,22 +82,22 @@ class SolidityContainer(TemporaryDirectory):
     @property
     def y3d_file_path(self) -> Path:
         """Path to Y3D file (BST.Y3D)."""
-        return self._file_path(DEFAULT_Y3D_FILE_NAME)
+        return self._file_path(SOLIDITY_Y3D_FILE_NAME)
 
     @property
     def layout_file_path(self) -> Path:
         """Path to file with format for elements and particles (layout.txt)."""
-        return self._file_path(DEFAULT_LAYOUT_FILE_NAME)
+        return self._file_path(SOLIDITY_LAYOUT_FILE_NAME)
 
     @property
     def pellet_file_path(self) -> Path:
         """Path to file with elements and particles (pellet.txt)."""
-        return self._file_path(DEFAULT_PELLET_FILE_NAME)
+        return self._file_path(SOLIDITY_PELLET_FILE_NAME)
 
     @property
     def materials_file_path(self) -> Path:
         """Path to materials file (mat.txt)."""
-        return self._file_path(DEFAULT_MATERIALS_FILE_NAME)
+        return self._file_path(SOLIDITY_MATERIALS_FILE_NAME)
 
     def run(self) -> None:
         """Invoke Solidity with the input files."""
