@@ -41,13 +41,20 @@ def create_y3d_template() -> str:
     # We want to popoulate this list with the material index assigned to each tetra cell
     tetra_cells_material_index = []
     for mesh in mesh_datastore.values():
-        for assignment in material_assignment_datastore.values():
-            subset_mesh = mesh.subset(assignment.cell_set_name, cell_type="tetra")
-            # cell_set = mesh.cell_sets.get(assignment.cell_set_name)
-            print(subset_mesh)
-            # tetra_indices = cell_set["tetra"]
-            for cell in subset_mesh:
-                tetra_cells_material_index.append(assignment.material_index)
+        cells = mesh.get_cells_type("tetra")
+        for cell in cells:
+            vertex_index = cell[0]
+            material_id = -1
+            for cell_set_name, cell_set in mesh.cell_sets.items():
+                for found_cells in cell_set:
+                    if found_cells is not None and vertex_index in found_cells:
+                        tetra_cell_set_name = cell_set_name
+                        for assignment in material_assignment_datastore.values():
+                            if tetra_cell_set_name == assignment.cell_set_name:
+                                material_id = assignment.material_id
+                                break
+                        break
+            tetra_cells_material_index.append(material_id)
 
     data = {
         "num_timesteps": 2000000,
@@ -55,6 +62,7 @@ def create_y3d_template() -> str:
         "nelem": total_tetra,
         "melno": points_per_tetra + 1,
         "nelno": points_per_tetra,
+        "elemsMat": tetra_cells_material_index,
     }
 
     return template.render(data)
