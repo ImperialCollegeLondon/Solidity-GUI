@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 from python_on_whales import docker
 
 from ..config import (
+    SOLIDITY_DOCKER_IMAGE,
     SOLIDITY_LAYOUT_FILE_NAME,
     SOLIDITY_MATERIALS_FILE_NAME,
     SOLIDITY_PELLET_FILE_NAME,
@@ -20,6 +21,7 @@ def run_solidity(
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
+    docker_image: str = SOLIDITY_DOCKER_IMAGE,
 ) -> None:
     """Run Solidity using the specified input files.
 
@@ -52,7 +54,7 @@ def run_solidity(
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
     docker.run(
-        "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS",
+        docker_image,
         [
             "DEMPlus",
             str(path_on_container / y3d_file_path.name),
