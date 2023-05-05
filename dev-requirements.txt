@@ -192,7 +192,7 @@ pycodestyle==2.8.0
     # via flake8
 pydocstyle==6.1.1
     # via flake8-docstrings
-pyflakes==2.4.0
+pyflakes==3.0.1
     # via flake8
 pygments==2.14.0
     # via
