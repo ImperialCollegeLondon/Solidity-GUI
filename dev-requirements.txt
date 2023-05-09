@@ -186,7 +186,7 @@ platformdirs==2.6.2
     #   virtualenv
 pluggy==1.0.0
     # via pytest
-pre-commit==2.20.0
+pre-commit==3.3.1
     # via SolidityGUI (pyproject.toml)
 pycodestyle==2.8.0
     # via flake8
