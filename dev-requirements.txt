@@ -162,7 +162,7 @@ numpy==1.23.4
     #   pygmsh
     #   scikit-learn
     #   scipy
-packaging==21.3
+packaging==23.1
     # via
     #   build
     #   marshmallow
@@ -193,7 +193,9 @@ pycodestyle==2.8.0
 pydocstyle==6.1.1
     # via flake8-docstrings
 pyflakes==2.4.0
-    # via flake8
+    # via
+    #   SolidityGUI (pyproject.toml)
+    #   flake8
 pygments==2.14.0
     # via
     #   mkdocs-material
