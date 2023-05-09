@@ -52,7 +52,7 @@ numpy==1.23.4
     #   matplotlib
     #   meshio
     #   pygmsh
-packaging==21.3
+packaging==23.1
     # via
     #   marshmallow
     #   matplotlib
