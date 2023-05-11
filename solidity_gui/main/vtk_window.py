@@ -119,14 +119,14 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.render_mesh(mesh)
         pub.sendMessage("geometry.updated", mesh=mesh)
 
-    def _create_mesh_from_geometry_begin(self) -> None:
+    def _create_mesh_from_geometry_begin(self, size: float) -> None:
         """Generate and display a high quality mesh from the current geometry."""
         if not component_datastore:
             return
 
         self.ugrids = []
         self.mesh_generator.start_mesh_generation(
-            "mesh", list(component_datastore.values()), resolution=0.05
+            "mesh", list(component_datastore.values()), resolution=size
         )
 
     def _create_mesh_from_geometry_end(self, mesh: Mesh) -> None:
