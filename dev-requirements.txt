@@ -10,7 +10,7 @@ black==23.3.0
     # via SolidityGUI (pyproject.toml)
 build==0.10.0
     # via pip-tools
-certifi==2022.12.7
+certifi==2023.5.7
     # via requests
 cfgv==3.3.1
     # via pre-commit
@@ -23,15 +23,11 @@ click==8.1.3
     #   pip-tools
 colorama==0.4.6
     # via
-    #   build
-    #   click
     #   griffe
-    #   mkdocs
     #   mkdocs-material
-    #   pytest
 contourpy==1.0.7
     # via matplotlib
-coverage[toml]==7.2.3
+coverage[toml]==7.2.5
     # via pytest-cov
 cycler==0.11.0
     # via matplotlib
@@ -48,15 +44,15 @@ flake8==4.0.1
     #   pytest-flake8
 flake8-docstrings==1.7.0
     # via SolidityGUI (pyproject.toml)
-fonttools==4.39.3
+fonttools==4.39.4
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
 gmsh==4.11.1
     # via pygmsh
-griffe==0.27.1
+griffe==0.27.5
     # via mkdocstrings-python
-identify==2.5.23
+identify==2.5.24
     # via pre-commit
 idna==3.4
     # via requests
@@ -99,7 +95,7 @@ mergedeep==1.3.4
     # via mkdocs
 meshio==5.3.4
     # via pygmsh
-mkdocs==1.4.2
+mkdocs==1.4.3
     # via
     #   SolidityGUI (pyproject.toml)
     #   mkdocs-autorefs
@@ -110,11 +106,11 @@ mkdocs==1.4.2
     #   mkdocstrings
 mkdocs-autorefs==0.4.1
     # via mkdocstrings
-mkdocs-gen-files==0.4.0
+mkdocs-gen-files==0.5.0
     # via SolidityGUI (pyproject.toml)
 mkdocs-literate-nav==0.6.0
     # via SolidityGUI (pyproject.toml)
-mkdocs-material==9.1.8
+mkdocs-material==9.1.11
     # via SolidityGUI (pyproject.toml)
 mkdocs-material-extensions==1.1.1
     # via mkdocs-material
@@ -124,15 +120,15 @@ mkdocstrings==0.21.2
     # via
     #   SolidityGUI (pyproject.toml)
     #   mkdocstrings-python
-mkdocstrings-python==0.9.0
+mkdocstrings-python==1.0.0
     # via SolidityGUI (pyproject.toml)
-mypy==1.2.0
+mypy==1.3.0
     # via SolidityGUI (pyproject.toml)
 mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
-nodeenv==1.7.0
+nodeenv==1.8.0
     # via pre-commit
 numpy==1.24.3
     # via
@@ -153,26 +149,26 @@ packaging==23.1
     #   qtpy
 pathspec==0.11.1
     # via black
-pefile==2023.2.7
-    # via pyinstaller
 pillow==9.5.0
     # via matplotlib
 pip-tools==6.13.0
     # via SolidityGUI (pyproject.toml)
-platformdirs==3.4.0
+platformdirs==3.5.1
     # via
     #   black
     #   virtualenv
 pluggy==1.0.0
     # via pytest
-pre-commit==3.2.2
+pre-commit==3.3.1
     # via SolidityGUI (pyproject.toml)
 pycodestyle==2.8.0
     # via flake8
 pydocstyle==6.3.0
     # via flake8-docstrings
 pyflakes==2.4.0
-    # via flake8
+    # via
+    #   SolidityGUI (pyproject.toml)
+    #   flake8
 pygments==2.15.1
     # via
     #   mkdocs-material
@@ -181,7 +177,7 @@ pygmsh==7.1.17
     # via SolidityGUI (pyproject.toml)
 pyinstaller==5.10.1
     # via SolidityGUI (pyproject.toml)
-pyinstaller-hooks-contrib==2023.2
+pyinstaller-hooks-contrib==2023.3
     # via pyinstaller
 pymdown-extensions==9.11
     # via
@@ -220,8 +216,6 @@ python-dateutil==2.8.2
     # via
     #   ghp-import
     #   matplotlib
-pywin32-ctypes==0.2.0
-    # via pyinstaller
 pyyaml==6.0
     # via
     #   mkdocs
@@ -234,11 +228,11 @@ qtawesome==1.2.3
     # via SolidityGUI (pyproject.toml)
 qtpy==2.3.1
     # via qtawesome
-regex==2023.3.23
+regex==2023.5.5
     # via mkdocs-material
-requests==2.29.0
+requests==2.30.0
     # via mkdocs-material
-rich==13.3.4
+rich==13.3.5
     # via meshio
 scikit-learn==1.2.2
     # via SolidityGUI (pyproject.toml)
@@ -265,9 +259,9 @@ tomli==2.0.1
     #   pytest
 typing-extensions==4.5.0
     # via mypy
-urllib3==1.26.15
+urllib3==2.0.2
     # via requests
-virtualenv==20.22.0
+virtualenv==20.23.0
     # via pre-commit
 vtk==9.2.6
     # via SolidityGUI (pyproject.toml)

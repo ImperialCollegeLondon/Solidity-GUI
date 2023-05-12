@@ -8,7 +8,7 @@ contourpy==1.0.7
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-fonttools==4.39.3
+fonttools==4.39.4
     # via matplotlib
 gmsh==4.11.1
     # via pygmsh
@@ -63,7 +63,7 @@ qtawesome==1.2.3
     # via SolidityGUI (pyproject.toml)
 qtpy==2.3.1
     # via qtawesome
-rich==13.3.4
+rich==13.3.5
     # via meshio
 shiboken6==6.5.0
     # via
