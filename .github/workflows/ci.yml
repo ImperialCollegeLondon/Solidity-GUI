@@ -39,7 +39,7 @@ jobs:
         sudo apt-get install -y libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 \
             x11-utils libegl1 libglu1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
-            libxcb-render-util0 libxkbcommon-x11-0
+            libxcb-render-util0 libxkbcommon-x11-0 libxcb-cursor0
       if: matrix.os == 'ubuntu-latest'
 
     - name: Setup XServer and Window Manager (Linux)
