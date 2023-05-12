@@ -24,6 +24,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       DISPLAY: ":99.0"
+      QT_DEBUG_PLUGINS: 1 # adds some verbosity but helpful to debug QT issues
     strategy:
       fail-fast: false
       matrix:
