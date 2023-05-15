@@ -77,7 +77,7 @@ pyparsing==3.0.9
     # via matplotlib
 pypubsub==4.0.3
     # via SolidityGUI (pyproject.toml)
-pyside6==6.3.2
+pyside6==6.5.0
     # via SolidityGUI (pyproject.toml)
 pyside6-addons==6.3.2
     # via pyside6
