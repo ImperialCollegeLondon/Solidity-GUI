@@ -153,7 +153,8 @@ def test_dome():
                 label=label,
             )
         ],
-        RESOLUTION,
+        # use smaller resolution to get more points so PCA analysis is more robust
+        RESOLUTION / 2,
     )
 
     # use principle component analysis to find orientation of primary axis

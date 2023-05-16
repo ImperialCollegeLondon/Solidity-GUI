@@ -33,5 +33,19 @@ DEFAULT_UP_VECTOR = (0, 1, 0)
 SOLIDITY_Y3D_FILE_NAME = "BST.Y3D"
 """Solidity Y3D file name."""
 
+SOLIDITY_LAYOUT_FILE_NAME = "layout.txt"
+"""Solidity layout file name, which provides format for elements and particles."""
+
+SOLIDITY_PELLET_FILE_NAME = "pellet.txt"
+"""Solidity file name for elements and particles file."""
+
+SOLIDITY_MATERIALS_FILE_NAME = "mat.txt"
+"""Solidity materials file name."""
+
 SOLIDITY_Y3D_TEMPLATE_FILE = "BST.Y3D.jinja"
 """Solidity Y3D template file."""
+
+SOLIDITY_DOCKER_IMAGE = (
+    "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS"
+)
+"""The name of the Docker image to use when running Solidity."""

@@ -1,6 +1,6 @@
 """Tests for VTKWindow GUI component."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -10,7 +10,8 @@ from solidity_gui.main.vtk_window import VTKWindow
 
 
 @pytest.fixture
-def vtk_window(qtbot, subscribe_mock):
+@patch("solidity_gui.main.vtk_window.MeshGenerator")
+def vtk_window(mesh_generator_mock, qtbot, subscribe_mock):
     """An AddShapeDialog instance initialised with the shape fixture."""
     window = VTKWindow()
     window.mesh_generator = MagicMock()
