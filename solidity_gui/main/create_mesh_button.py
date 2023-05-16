@@ -9,6 +9,8 @@ from meshio import Mesh
 from pubsub import pub
 from PySide6.QtWidgets import QPushButton
 
+from .mesh_size_dialog import MeshSizeDialog
+
 
 class CreateMeshButton(QPushButton):
     """Button that triggers mesh generation."""
@@ -22,8 +24,8 @@ class CreateMeshButton(QPushButton):
         pub.subscribe(self._enable, "geometry.updated")
 
     def _click_handler(self) -> None:
-        """Send 'mesh.create' signal via pubsub."""
-        pub.sendMessage("mesh.create")
+        """Display a MeshSizeDialog to the user."""
+        MeshSizeDialog().exec_()
 
     def _disable(self, mesh: Mesh = None) -> None:
         self.setDisabled(True)

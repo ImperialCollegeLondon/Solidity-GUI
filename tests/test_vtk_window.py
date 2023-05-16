@@ -84,10 +84,11 @@ def test_create_mesh_from_geometry_begin(vtk_window):
     assert len(mesh_datastore) == 2
     vtk_window.mesh_generator.reset_mock()
 
-    vtk_window._create_mesh_from_geometry_begin()
+    mesh_size = 0.05
+    vtk_window._create_mesh_from_geometry_begin(size=mesh_size)
     assert len(vtk_window.ugrids) == 0
     vtk_window.mesh_generator.start_mesh_generation.assert_called_once_with(
-        "mesh", list(component_datastore.values()), resolution=0.05
+        "mesh", list(component_datastore.values()), resolution=mesh_size
     )
 
 
