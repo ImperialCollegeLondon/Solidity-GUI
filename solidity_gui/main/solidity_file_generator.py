@@ -1,12 +1,12 @@
 """This module provides functionality to generate an input file for Solidity."""
 from pathlib import Path
 
+import numpy as np
 from jinja2 import Environment, FileSystemLoader
+
+from .. import config
 from .material import material_assignment_datastore
 from .meshes import mesh_datastore
-from .. import config
-
-import numpy as np
 
 env = Environment(
     loader=FileSystemLoader(str(Path(__file__).absolute().parent.parent / "templates"))
