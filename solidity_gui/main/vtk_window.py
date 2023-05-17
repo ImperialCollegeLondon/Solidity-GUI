@@ -91,6 +91,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self._create_orientation_marker()
 
         self.mesh_generator = MeshGenerator()
+        pub.subscribe(self.mesh_generator.stop_thread, "window.close")
 
         pub.subscribe(self._add_component_to_geometry_begin, "geometry.update")
         pub.subscribe(self._add_component_to_geometry_end, "geometry.meshing.end")
@@ -118,14 +119,14 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.render_mesh(mesh)
         pub.sendMessage("geometry.updated", mesh=mesh)
 
-    def _create_mesh_from_geometry_begin(self) -> None:
+    def _create_mesh_from_geometry_begin(self, size: float) -> None:
         """Generate and display a high quality mesh from the current geometry."""
         if not component_datastore:
             return
 
         self.ugrids = []
         self.mesh_generator.start_mesh_generation(
-            "mesh", list(component_datastore.values()), resolution=0.05
+            "mesh", list(component_datastore.values()), resolution=size
         )
 
     def _create_mesh_from_geometry_end(self, mesh: Mesh) -> None:

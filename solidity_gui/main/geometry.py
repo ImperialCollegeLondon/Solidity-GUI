@@ -67,7 +67,7 @@ class Geometry(pygmsh.occ.Geometry):
     ) -> List[Dummy]:
         """Perform a boolean union of geometric entities.
 
-        A thin wrapper around pygmsh.occ.Geometry that supresses warnings.
+        A thin wrapper around pygmsh.occ.Geometry that suppresses warnings.
         """
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -424,6 +424,10 @@ class MeshGenerator:
         self._listener.start()
 
     def __del__(self) -> None:
+        """Stop background QThread."""
+        self.stop_thread()
+
+    def stop_thread(self) -> None:
         """Stop background QThread."""
         # None is used as a sentinel value to signal that the thread should stop
         self._out_queue.put(None)
