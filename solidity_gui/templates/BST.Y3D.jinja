@@ -31,6 +31,8 @@ ICHPRM 1
 /YD/YDE/I1ELCF 0
 /YD/YDE/I1ELBE 0
 /YD/YDE/I1ELPR {{nelem}}
-{% for element in elemsMat %}
-    {{ element }}
+{{ elemsMat|join(' ') }}
+/YD/YDE/I2ELTO 21 {{nelno ~ ' ' ~ nelem}}
+{% for element in elemsConec %}
+{{ element|join(' ') }}
 {% endfor %}
