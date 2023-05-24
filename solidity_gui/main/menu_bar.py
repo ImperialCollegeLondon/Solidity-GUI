@@ -8,6 +8,7 @@ from .assign_properties_dialog import AssignPropertiesDialog
 from .drillco_dialog import DrillCoDialog
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_file_generator import generate_y3d_file
+from .run_solidity_dialog import run_solidity_dialog
 
 
 class MenuBar(QMenuBar):
@@ -25,7 +26,7 @@ class MenuBar(QMenuBar):
         self.addMenu("&Step")
         self.addMenu("&Conditions")
         self.addMenu("&Interaction")
-        self.addMenu("&Job")
+        job_menu = self.addMenu("&Job")
         self.addMenu("&Results")
         self.addMenu("&Tools")
         self.addMenu("&View")
@@ -53,3 +54,7 @@ class MenuBar(QMenuBar):
         export_bst_action = QAction("&Export BST", self)
         export_bst_action.triggered.connect(generate_y3d_file)
         file_menu.addAction(export_bst_action)
+
+        run_solidity_action = QAction("&Run Solidity", self)
+        run_solidity_action.triggered.connect(run_solidity_dialog)
+        job_menu.addAction(run_solidity_action)
