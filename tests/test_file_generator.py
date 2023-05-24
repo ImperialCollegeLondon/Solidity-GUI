@@ -1,9 +1,9 @@
 """Tests for solidity_gui.main.solidity_file_generator module."""
 
 import tempfile
+from unittest.mock import patch
 
 from solidity_gui.main.solidity_file_generator import write_file
-from unittest.mock import patch
 
 
 @patch("solidity_gui.main.vtk_window.MeshGenerator")
