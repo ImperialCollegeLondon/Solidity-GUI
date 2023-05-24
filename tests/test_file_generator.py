@@ -3,10 +3,11 @@
 import tempfile
 
 from solidity_gui.main.solidity_file_generator import write_file
+from unittest.mock import patch
 
 
 @patch("solidity_gui.main.vtk_window.MeshGenerator")
-def test_write_file():
+def test_write_file(mesh_generator_mock):
     """Test write_file function outputs the correct file content."""
     # Create a temporary file for testing
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
