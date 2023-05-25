@@ -4,22 +4,15 @@ import subprocess
 
 
 def run_solidity_dialog():
-    file_dialog = QFileDialog()
-    file_dialog.setFileMode(QFileDialog.ExistingFiles)
-    if file_dialog.exec_():
-        file_paths = file_dialog.selectedFiles()
-        print(file_paths)
-        if len(file_paths) == 4:
-            subprocess.run(
-                [
-                    "python",
-                    "-m",
-                    "solidity_gui.solidity",
-                    file_paths[0],
-                    file_paths[1],
-                    file_paths[2],
-                    file_paths[3],
-                ]
-            )
+    file_paths = []
+    file_names = ["BST.Y3D", "layout.txt", "pellet.txt", "mat.txt"]
+    for i in range(4):
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.ExistingFiles)
+        file_dialog.setWindowTitle("Select " + file_names[i])
+        if file_dialog.exec_():
+            file_paths.append(file_dialog.selectedFiles()[0])
         else:
-            QMessageBox.warning("Error", "Please select 4 files.")
+            QMessageBox.warning(None, "Error", "Please select a file.")
+            return
+    subprocess.run(["python", "-m", "solidity_gui.solidity"] + file_paths)
