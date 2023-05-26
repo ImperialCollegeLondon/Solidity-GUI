@@ -7,8 +7,8 @@ from PySide6.QtWidgets import QMenuBar
 from .assign_properties_dialog import AssignPropertiesDialog
 from .drillco_dialog import DrillCoDialog
 from .materials_manager_dialog import MaterialsManagerDialog
-from .solidity_file_generator import generate_y3d_file
 from .run_solidity_dialog import run_solidity_dialog
+from .solidity_file_generator import generate_y3d_file
 
 
 class MenuBar(QMenuBar):
