@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from solidity_gui.solidity import run_solidity
 
 
-def run_solidity_dialog():
+def get_file_paths():
     file_paths = []
     file_names = ["BST.Y3D", "layout.txt", "pellet.txt", "mat.txt"]
     for i in range(4):
@@ -17,4 +17,9 @@ def run_solidity_dialog():
         else:
             QMessageBox.warning(None, "Error", "Please select a file.")
             return
+    return file_paths
+
+
+def run_solidity_dialog():
+    file_paths = get_file_paths()
     run_solidity(*file_paths)
