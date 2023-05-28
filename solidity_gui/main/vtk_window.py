@@ -97,6 +97,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
         pub.subscribe(self.reorient_camera, "camera.reorient")
         pub.subscribe(self.reset_camera, "camera.reset")
+        pub.subscribe(self._colour_mesh_selection, "mesh.select_highlight")
 
         # Set the mouse cursor to busy during meshing
         pub.subscribe(_set_cursor_to_busy, "mesh.meshing.begin")
@@ -158,18 +159,19 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.iren.ReInitialize()
         pub.sendMessage("mesh.rendered", mesh=mesh)
 
-    def _colour_mesh_selection(self, selection_name: str) -> None:
+    def _colour_mesh_selection(self, cell_set_name: str | None) -> None:
         """Update rendered mesh colours based on selected element."""
         for mesh_name, mesh in mesh_datastore.items():
             point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
-            try:
-                point_ids = np.unique(
-                    self.get_point_ids_for_cell_set(selection_name, mesh)
-                )
-                point_colours[point_ids] = self.selected_lookup_value
-                self.iren.ReInitialize()
-            except KeyError:
-                pass
+            if cell_set_name:
+                try:
+                    point_ids = np.unique(
+                        self.get_point_ids_for_cell_set(cell_set_name, mesh)
+                    )
+                    point_colours[point_ids] = self.selected_lookup_value
+                    self.iren.ReInitialize()
+                except KeyError:
+                    pass
 
             self.ugrids[mesh_name].GetPointData().SetScalars(
                 numpy_support.numpy_to_vtk(point_colours)

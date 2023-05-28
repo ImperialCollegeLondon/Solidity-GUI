@@ -6,7 +6,6 @@ from pubsub import pub
 from PySide6.QtWidgets import QPushButton, QVBoxLayout
 
 from .add_shape_button import AddShapeButton
-from .colour_select_widget import ColourSelectWidget
 from .create_mesh_button import CreateMeshButton
 
 
@@ -20,7 +19,6 @@ class ControlPanel(QVBoxLayout):
         reset_button.clicked.connect(partial(pub.sendMessage, "camera.reset"))
 
         self.addWidget(reset_button)
-        self.addWidget(ColourSelectWidget())
         self.addWidget(AddShapeButton("ball"))
         self.addWidget(AddShapeButton("box"))
         self.addWidget(AddShapeButton("cone"))
