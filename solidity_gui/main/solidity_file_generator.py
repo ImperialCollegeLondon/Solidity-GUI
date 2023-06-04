@@ -56,24 +56,28 @@ def create_y3d_template() -> str:
             )
         if cell_materials_list:
             cell_materials = np.concatenate(cell_materials_list, axis=0)
-        # We need to add to cell_materials all the cells that are not assigned to any material
-        all_tetra_cells = mesh.cells_dict["tetra"]
-        tetra_cells_not_assigned = np.setdiff1d(all_tetra_cells, cell_materials[:, 0])
-        # Now we have a list of unassigned cells, we can give them a material value = -1
-        # and concatenate them to the cell_materials array
-        cell_materials = np.concatenate(
-            [
-                cell_materials,
-                np.array(
+
+        # We need to add to cell_materials all the cells that are not assigned to any
+        # material. We can give them a material value = -1
+        for cell_set in mesh.cell_sets_dict.items():
+            if "tetra" in cell_set:
+                tetra_cells_not_assigned = np.setdiff1d(
+                    cell_set["tetra"], cell_materials[:, 0]
+                )
+                print(tetra_cells_not_assigned)
+                np.concatenate(
                     [
-                        tetra_cells_not_assigned,
-                        np.full_like(tetra_cells_not_assigned, -1),
-                    ]
-                ).T,
-            ],
-            axis=0,
-        )
-        np.set_printoptions(threshold=np.inf)
+                        cell_materials,
+                        np.array(
+                            [
+                                tetra_cells_not_assigned,
+                                np.full_like(tetra_cells_not_assigned, -1),
+                            ]
+                        ).T,
+                    ],
+                    axis=0,
+                )
+
         cell_materials_sorted = cell_materials[cell_materials[:, 0].argsort()]
 
         print(cell_materials_sorted)
@@ -84,7 +88,7 @@ def create_y3d_template() -> str:
         "nelem": total_tetra,
         "melno": points_per_tetra + 1,
         "nelno": points_per_tetra,
-        # "elemsMat": tetra_cells_material_index,
+        "elemsMat": cell_materials_sorted[:, 1],
         # "elemsConec": elemsConec,
     }
 
