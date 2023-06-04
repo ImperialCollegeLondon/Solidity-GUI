@@ -42,13 +42,6 @@ def create_y3d_template() -> str:
 
     for mesh in mesh_datastore.values():
         cell_materials_list = []
-        all_cells = mesh.cells
-        all_cell_sets = mesh.cell_sets
-        all_tetra_cells_get = mesh.get_cells_type("tetra")
-        all_cells_dict = mesh.cells_dict
-        all_cell_sets_dict = mesh.cell_sets_dict
-        cells_surface = mesh.cell_sets_dict["ball1_surface_0"]
-        cells_volume = mesh.cell_sets_dict["ball1_volume"]
         for assignment in material_assignment_datastore.values():
             cell_ids = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
             cell_materials_list.append(
