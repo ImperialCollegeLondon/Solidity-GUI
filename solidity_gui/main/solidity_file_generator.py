@@ -40,42 +40,43 @@ def create_y3d_template() -> str:
                 points_per_tetra = tetra_cell.data[0].size
                 break
 
-    # This dictionary will contain the cell set names and the corresponding cell set ids
-    # These ids are used in the I2ELTO section of the input file
-    cell_set_ids = {}
     for mesh in mesh_datastore.values():
-        for id, (cell_set_name, cell_set) in enumerate(mesh.cell_sets.items()):
-            cell_set_ids[cell_set_name] = id
+        cell_materials_list = []
+        all_cells = mesh.cells
+        all_cell_sets = mesh.cell_sets
+        all_tetra_cells_get = mesh.get_cells_type("tetra")
+        all_cells_dict = mesh.cells_dict
+        all_cell_sets_dict = mesh.cell_sets_dict
+        cells_surface = mesh.cell_sets_dict["ball1_surface_0"]
+        cells_volume = mesh.cell_sets_dict["ball1_volume"]
+        for assignment in material_assignment_datastore.values():
+            cell_ids = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
+            cell_materials_list.append(
+                np.array([cell_ids, np.full_like(cell_ids, assignment.material_id)]).T
+            )
+        if cell_materials_list:
+            cell_materials = np.concatenate(cell_materials_list, axis=0)
+        # We need to add to cell_materials all the cells that are not assigned to any material
+        all_tetra_cells = mesh.cells_dict["tetra"]
+        tetra_cells_not_assigned = np.setdiff1d(all_tetra_cells, cell_materials[:, 0])
+        # Now we have a list of unassigned cells, we can give them a material value = -1
+        # and concatenate them to the cell_materials array
+        cell_materials = np.concatenate(
+            [
+                cell_materials,
+                np.array(
+                    [
+                        tetra_cells_not_assigned,
+                        np.full_like(tetra_cells_not_assigned, -1),
+                    ]
+                ).T,
+            ],
+            axis=0,
+        )
+        np.set_printoptions(threshold=np.inf)
+        cell_materials_sorted = cell_materials[cell_materials[:, 0].argsort()]
 
-    # This list is populated with the material index assigned to each tetra cell
-    tetra_cells_material_index = []
-    # This list is populated with the cell set ids assigned to each tetra cell
-    tetra_cell_part_ids = []
-    tetra_cells_node_ids = []
-    for mesh in mesh_datastore.values():
-        tetra_cells = mesh.cells_dict["tetra"]
-        for tetra_cell in tetra_cells:
-            tetra_cells_node_ids.append(tetra_cell)
-            material_id = -1
-            tetra_cell_part_id = -1
-            for cell_set_name, cell_set in mesh.cell_sets.items():
-                if cell_set[2] is not None and all(
-                    vertex in cell_set[2] for vertex in tetra_cell
-                ):
-                    tetra_cell_part_id = cell_set_ids[cell_set_name]
-                    tetra_cell_set_name = cell_set_name
-                    for assignment in material_assignment_datastore.values():
-                        if tetra_cell_set_name == assignment.cell_set_name:
-                            material_id = assignment.material_id
-                            break
-            tetra_cells_material_index.append(material_id)
-            tetra_cell_part_ids.append(tetra_cell_part_id)
-
-    # It's easier to join the two lists here than in the template
-    elemsConec = [
-        np.append(tetra_cells_node_ids[i], tetra_cell_part_ids[i])
-        for i in range(len(tetra_cells_node_ids))
-    ]
+        print(cell_materials_sorted)
 
     data = {
         "num_timesteps": 2000000,
@@ -83,8 +84,8 @@ def create_y3d_template() -> str:
         "nelem": total_tetra,
         "melno": points_per_tetra + 1,
         "nelno": points_per_tetra,
-        "elemsMat": tetra_cells_material_index,
-        "elemsConec": elemsConec,
+        # "elemsMat": tetra_cells_material_index,
+        # "elemsConec": elemsConec,
     }
 
     return template.render(data)
