@@ -3,7 +3,7 @@
 import warnings
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import gmsh
 import numpy as np
@@ -385,20 +385,6 @@ class ShapeFactory:
         return shape
 
 
-def generate_mesh(components: Iterable[Component], resolution: float) -> Mesh:
-    """Generate a meshio.Mesh from simple geometric components.
-
-    Args:
-      components: to include in the system geometry
-      resolution: resolution to use for mesh
-    """
-    with Geometry() as geom:
-        factory = ShapeFactory(geom)
-        for component in components:
-            factory.add_component(component, resolution=resolution)
-        return geom.generate_mesh()
-
-
 class MeshGenerator:
     """A class for communicating with gmsh on a separate process.
 
@@ -422,6 +408,7 @@ class MeshGenerator:
         """Receives generated meshes and raises a signal when they arrive."""
         self._listener.mesh_received.connect(self._send_meshing_end)
         self._listener.start()
+        pub.subscribe(self.stop_thread, "window.close")
 
     def __del__(self) -> None:
         """Stop background QThread."""
@@ -434,28 +421,51 @@ class MeshGenerator:
         self._listener.wait()
 
     def _generate_mesh(self) -> None:
-        topic, components, resolution = self._in_queue.get()
-        self._out_queue.put((topic, generate_mesh(components, resolution)))
+        topic, *args = self._in_queue.get()
+        gmsh.model.mesh.clear()
+        if "geom" in topic:
+            component, resolution = args
+            self.shape_factory.add_component(component, resolution=resolution)
+            mesh = self.shape_factory.geom.generate_mesh()
+        else:
+            resolution = args[0]
+            # override the previously set mesh size for each component
+            self.shape_factory.geom._SIZE_QUEUE = [
+                (sq[0], resolution) for sq in self.shape_factory.geom._SIZE_QUEUE
+            ]
+            mesh = self.shape_factory.geom.generate_mesh()
+        self._out_queue.put((topic, mesh))
 
     def _run_mesh_generation(self) -> None:
+        geometry = Geometry()
+        gmsh.initialize([])
+        gmsh.model.add("model")
+        # shape_factory uses geometry so must be initialised here in the meshing process
+        self.shape_factory = ShapeFactory(geometry)
         while True:
             self._generate_mesh()
 
     def _send_meshing_end(self, name: str, mesh: Mesh) -> None:
         pub.sendMessage(f"{name}.meshing.end", mesh=mesh)
 
-    def start_mesh_generation(
-        self, topic: str, components: Iterable[Component], resolution: float
-    ) -> Mesh:
+    def start_mesh_generation(self, topic: str, resolution: float) -> Mesh:
         """Generate a meshio.Mesh from simple geometric components.
 
         Args:
             topic: the top-level topic name to send messages on
-            components: to include in the system geometry
             resolution: resolution to use for mesh
         """
         pub.sendMessage(f"{topic}.meshing.begin")
-        self._in_queue.put((topic, components, resolution))
+        self._in_queue.put((topic, resolution))
+
+    def add_component(self, component: Component) -> None:
+        """Add a new component to the geometry.
+
+        Args:
+            component: to add to the system
+        """
+        pub.sendMessage("geometry.meshing.begin")
+        self._in_queue.put(("geometry", component, 0.1))
 
 
-component_datastore: Datastore[str, Component] = Datastore("components")
+mesh_generator_datastore: Datastore[str, MeshGenerator] = Datastore("mesh_generator")
