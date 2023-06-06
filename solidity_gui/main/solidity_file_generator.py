@@ -1,12 +1,13 @@
 """This module provides functionality to generate an input file for Solidity."""
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from .. import config
 
 env = Environment(
-    loader=FileSystemLoader(str(Path(__file__).absolute().parent.parent / "templates"))
+    loader=FileSystemLoader(str(Path(__file__).absolute().parent.parent / "templates")),
+    undefined=StrictUndefined,
 )
 
 
