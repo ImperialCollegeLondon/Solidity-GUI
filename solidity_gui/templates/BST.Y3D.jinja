@@ -17,3 +17,16 @@
 /YD/YDC/ICOUTF 1000
 /YD/YDC/ICOUTI     0
 /YD/YDC/IWFAST     1
+
+/YD/YDN/MNODIM 4
+/YD/YDN/NNODIM 3
+/YD/YDN/MNOPO {{ num_nodes + 1 }}
+/YD/YDN/NNOPO {{ num_nodes }}
+/YD/YDN/D2NCC 21 3 {{ num_nodes }}
+{%- for node in nodes %}
+{{ "%20.10e"|format(node.0) }} {{ "%20.10e"|format(node.1) }} {{ "%20.10e"|format(node.2) }}
+{%- endfor %}
+/YD/YDN/D2NCI 21 3 {{ num_nodes}}
+{%- for node in nodes %}
+{{ "%20.10e"|format(node.0) }} {{ "%20.10e"|format(node.1) }} {{ "%20.10e"|format(node.2) }}
+{%- endfor %}
