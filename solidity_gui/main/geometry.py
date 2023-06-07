@@ -399,6 +399,7 @@ class MeshGenerator:
         """Queue containing the parameters for components to be meshed."""
         self._out_queue: Queue = Queue()
         """Queue containing the generated meshes."""
+        self._sync_out_queue: Queue = Queue()
 
         self._process = Process(target=self._run_mesh_generation, daemon=True)
         """Background process for running gmsh."""
@@ -422,19 +423,31 @@ class MeshGenerator:
 
     def _generate_mesh(self) -> None:
         topic, *args = self._in_queue.get()
-        gmsh.model.mesh.clear()
         if "geom" in topic:
+            gmsh.model.mesh.clear()
             component, resolution = args
             self.shape_factory.add_component(component, resolution=resolution)
             mesh = self.shape_factory.geom.generate_mesh()
+            self._out_queue.put((topic, mesh))
+        elif "surface" in topic:
+            surface_nodes = (
+                np.sort(
+                    np.unique(
+                        (gmsh.model.mesh.getNodes(2, -1, includeBoundary=True)[0])
+                    )
+                )
+                - 1
+            )
+            self._sync_out_queue.put(surface_nodes)
         else:
+            gmsh.model.mesh.clear()
             resolution = args[0]
             # override the previously set mesh size for each component
             self.shape_factory.geom._SIZE_QUEUE = [
                 (sq[0], resolution) for sq in self.shape_factory.geom._SIZE_QUEUE
             ]
             mesh = self.shape_factory.geom.generate_mesh()
-        self._out_queue.put((topic, mesh))
+            self._out_queue.put((topic, mesh))
 
     def _run_mesh_generation(self) -> None:
         geometry = Geometry()
@@ -466,6 +479,11 @@ class MeshGenerator:
         """
         pub.sendMessage("geometry.meshing.begin")
         self._in_queue.put(("geometry", component, 0.1))
+
+    def get_surface_nodes(self) -> np.ndarray:
+        """Get the indices of the surface nodes of the mesh."""
+        self._in_queue.put(("surface",))
+        return self._sync_out_queue.get()
 
 
 mesh_generator_datastore: Datastore[str, MeshGenerator] = Datastore("mesh_generator")

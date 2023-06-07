@@ -30,3 +30,9 @@
 {%- for node in nodes %}
 {{ "%20.10e"|format(node.0) }} {{ "%20.10e"|format(node.1) }} {{ "%20.10e"|format(node.2) }}
 {%- endfor %}
+
+/YD/YDN/D2NVC  21 0 0
+/YD/YDN/I1NOBF {{ num_nodes }}
+{%- for surface_flag in surface_node_flags %}
+{{ surface_flag }}
+{%- endfor %}

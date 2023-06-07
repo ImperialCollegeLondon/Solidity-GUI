@@ -5,6 +5,7 @@ import numpy as np
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from .. import config
+from .geometry import mesh_generator_datastore
 from .meshes import mesh_datastore
 
 env = Environment(
@@ -32,7 +33,22 @@ def create_y3d_template() -> str:
 
     all_nodes = np.concatenate([mesh.points for mesh in meshes], axis=0)
 
-    data = dict(num_timesteps=2000000, num_nodes=num_nodes, nodes=all_nodes)
+    all_surface_nodes = np.array([])
+    incr = 0
+    for mesh, mesh_generator in zip(meshes, mesh_generator_datastore.values()):
+        surface_nodes = mesh_generator.get_surface_nodes() + incr
+        all_surface_nodes = np.concatenate([all_surface_nodes, surface_nodes])
+        incr += mesh.points.shape[0]
+
+    surface_node_flags = np.zeros((num_nodes,), dtype="uint64")
+    surface_node_flags[all_surface_nodes.astype("uint64")] = 1
+
+    data = dict(
+        num_timesteps=2000000,
+        num_nodes=num_nodes,
+        nodes=all_nodes,
+        surface_node_flags=surface_node_flags,
+    )
 
     return template.render(data)
 
