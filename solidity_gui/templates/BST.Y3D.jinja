@@ -34,5 +34,5 @@ ICHPRM 1
 {{ elemsMat|join(' ') }}
 /YD/YDE/I2ELTO 21 {{nelno ~ ' ' ~ nelem}}
 {% for element in elemsConec -%}
-{{ element|join(' ') }}
-{% endfor -%}
+{% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
+{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}

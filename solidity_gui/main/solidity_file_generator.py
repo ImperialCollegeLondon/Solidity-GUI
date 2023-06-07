@@ -40,6 +40,9 @@ def create_y3d_template() -> str:
                 points_per_tetra = tetra_cell.data[0].size
                 break
 
+    node_ids = []
+    node_id_offset = 0
+
     for mesh in mesh_datastore.values():
         cell_materials_list = []
         for assignment in material_assignment_datastore.values():
@@ -49,31 +52,45 @@ def create_y3d_template() -> str:
             )
         if cell_materials_list:
             cell_materials = np.concatenate(cell_materials_list, axis=0)
+        else:
+            cell_materials = np.empty((0, 2), dtype=int)
 
         # We need to add to cell_materials all the cells that are not assigned to any
         # material. We can give them a material value = -1
-        for cell_set in mesh.cell_sets_dict.items():
-            if "tetra" in cell_set:
-                tetra_cells_not_assigned = np.setdiff1d(
-                    cell_set["tetra"], cell_materials[:, 0]
-                )
-                print(tetra_cells_not_assigned)
-                np.concatenate(
+        # First lets get a list of all the tetra cell IDs. There may be a more elegant
+        # way of doing this
+        all_tetra_cell_ids = []
+        for cell_set in mesh.cell_sets_dict.keys():
+            if "tetra" in mesh.cell_sets_dict[cell_set]:
+                all_tetra_cell_ids.extend(mesh.cell_sets_dict[cell_set]["tetra"])
+
+        # We can diff the all_tetra_cell_ids list with list of assigned cell ids to get
+        # all the unassigned tetra cell ids
+        tetra_cells_not_assigned = np.setdiff1d(
+            all_tetra_cell_ids, cell_materials[:, 0]
+        )
+        cell_materials = np.concatenate(
+            [
+                cell_materials,
+                np.array(
                     [
-                        cell_materials,
-                        np.array(
-                            [
-                                tetra_cells_not_assigned,
-                                np.full_like(tetra_cells_not_assigned, -1),
-                            ]
-                        ).T,
-                    ],
-                    axis=0,
-                )
+                        tetra_cells_not_assigned,
+                        np.full_like(tetra_cells_not_assigned, -1, dtype=int),
+                    ]
+                ).T,
+            ],
+            axis=0,
+        )
 
         cell_materials_sorted = cell_materials[cell_materials[:, 0].argsort()]
 
-        print(cell_materials_sorted)
+        # We can now get the node ids for each cell, offset by the accumulated number of
+        # nodes from previous meshes
+        node_ids.extend(
+            node_id + node_id_offset for node_id in mesh.cells_dict["tetra"]
+        )
+
+        node_id_offset += mesh.points.shape[0]
 
     data = {
         "num_timesteps": 2000000,
@@ -82,7 +99,7 @@ def create_y3d_template() -> str:
         "melno": points_per_tetra + 1,
         "nelno": points_per_tetra,
         "elemsMat": cell_materials_sorted[:, 1],
-        # "elemsConec": elemsConec,
+        "elemsConec": node_ids,
     }
 
     return template.render(data)
