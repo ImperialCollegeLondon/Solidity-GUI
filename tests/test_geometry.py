@@ -1,26 +1,13 @@
 """Tests for geometry module."""
 
 from random import random
-from sys import platform
-from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
 from sklearn.decomposition import PCA
 
-from solidity_gui.main.geometry import Component, Geometry, MeshGenerator, ShapeFactory
+from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
 
 RESOLUTION = 0.2
-
-
-@pytest.fixture()
-@patch("solidity_gui.main.geometry.Process")
-@patch("solidity_gui.main.geometry.GmshListener.start")
-def mesh_generator(mock1, mock2):
-    """Create a MeshGenerator with Process and QThread monkeypatched."""
-    mesh_gen = MeshGenerator()
-    mock2.assert_called_once()
-    return mesh_gen
 
 
 def component_factory(
@@ -33,37 +20,10 @@ def component_factory(
 def generate_mesh(components, resolution):
     """Helper function to generate meshes from one or more Components."""
     with Geometry() as geom:
-        factory = ShapeFactory(geom)
+        wrapper = GeometryWrapper(geom)
         for component in components:
-            factory.add_component(component, resolution=resolution)
-
-        return geom.generate_mesh()
-
-
-@pytest.mark.skipif(
-    platform == "darwin", reason="Queue.qsize() is not implemented on macOS"
-)
-@patch("solidity_gui.main.geometry.gmsh")
-def test_mesh_generator(gmsh_mock, mesh_generator: MeshGenerator, send_message_mock):
-    """Test the basic functionality of MeshGenerator."""
-    assert mesh_generator._in_queue.qsize() == 0
-    assert mesh_generator._out_queue.qsize() == 0
-
-    mesh_generator.start_mesh_generation("hello", RESOLUTION)
-    send_message_mock.assert_called_once_with("hello.meshing.begin")
-    assert mesh_generator._in_queue.qsize() == 1
-    assert mesh_generator._out_queue.qsize() == 0
-
-    shape_factory_mock = MagicMock()
-    shape_factory_mock.geom.generate_mesh.return_value = ""
-    mesh_generator.shape_factory = shape_factory_mock
-    mesh_generator._generate_mesh()
-    assert mesh_generator._in_queue.qsize() == 0
-    assert mesh_generator._out_queue.qsize() == 1
-
-    mesh_generator._listener._receive_mesh()
-    assert mesh_generator._in_queue.qsize() == 0
-    assert mesh_generator._out_queue.qsize() == 0
+            wrapper.add_component(component, resolution=resolution)
+        return wrapper.generate_mesh(RESOLUTION)
 
 
 def check_mesh_cell_sets(mesh, no_surfaces, label):

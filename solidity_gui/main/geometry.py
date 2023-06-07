@@ -2,19 +2,15 @@
 
 import warnings
 from dataclasses import dataclass
-from multiprocessing import Process, Queue
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, List, Tuple, Type
 
 import gmsh
 import numpy as np
 import pygmsh
 from marshmallow import ValidationError, validate
 from meshio import Mesh
-from pubsub import pub
 from pygmsh.common.dummy import Dummy
-from PySide6.QtCore import QThread, Signal
 
-from .datastore import Datastore
 from .forms import Form
 from .forms.fields import FloatField, IntField, VectorField
 
@@ -314,44 +310,7 @@ SHAPES = dict(
 """Library of supported shapes."""
 
 
-class GmshListener(QThread):
-    """A class to listen for generated meshes produced in the separate gmsh process.
-
-    We use a separate thread so that the main thread isn't blocked waiting for meshes to
-    be received. Qt's signal/slot mechanism is used to pass this mesh back to the main
-    thread, which invokes PyPubsub's sendMessage() function. This needs to be run on the
-    main thread in case listeners want to modify the GUI (all GUI operations have to be
-    on the main thread).
-    """
-
-    mesh_received = Signal(str, Mesh)
-    """Signal for when a new mesh has been generated."""
-
-    def __init__(self, queue: Queue) -> None:
-        """Create a new GmshListener."""
-        super().__init__()
-        self._queue = queue
-
-    def _receive_mesh(self) -> bool:
-        """Read a new mesh from the queue.
-
-        Returns:
-            False if thread is being stopped, True if item was retrieved successfully
-        """
-        item: Optional[Tuple[str, Mesh]] = self._queue.get()
-        if not item:
-            return False
-
-        self.mesh_received.emit(*item)
-        return True
-
-    def run(self) -> None:
-        """Read received meshes forever and broadcast via a signal."""
-        while self._receive_mesh():
-            pass
-
-
-class ShapeFactory:
+class GeometryWrapper:
     """An adapter to pygmsh.occ.Geometry for creation of simple geometries."""
 
     def __init__(self, geom: pygmsh.occ.Geometry):
@@ -363,7 +322,7 @@ class ShapeFactory:
         self.geom = geom
         self.function_map = {name: shape.method for name, shape in SHAPES.items()}
 
-    def add_component(self, component: Component, resolution: float) -> None:
+    def add_component(self, component: Component, resolution: float) -> Mesh:
         """Add a component to the system geometry.
 
         Args:
@@ -382,108 +341,29 @@ class ShapeFactory:
         self.geom.add_physical(shape, f"{component.label}_volume")
         for i, tag in enumerate(surface_tags[0]):
             self.geom.add_physical(Dummy(2, int(tag)), f"{component.label}_surface_{i}")
-        return shape
+        return self._generate_mesh()
 
+    def _generate_mesh(self) -> Mesh:
+        # we have to manually clear out some of the mesh and phsical group info
+        # before we can generate a new mesh
+        gmsh.model.mesh.clear()
+        for dim_tag in gmsh.model.get_physical_groups():
+            gmsh.model.remove_physical_name(gmsh.model.get_physical_name(*dim_tag))
+        gmsh.model.remove_physical_groups()
+        return self.geom.generate_mesh()
 
-class MeshGenerator:
-    """A class for communicating with gmsh on a separate process.
-
-    Using the gmsh module seemingly only works on the main thread of the Python process,
-    so in order to be able to run gmsh operations in the background, it is necessary to
-    spin up a separate process for this.
-    """
-
-    def __init__(self) -> None:
-        """Create a new MeshGenerator."""
-        self._in_queue: Queue = Queue()
-        """Queue containing the parameters for components to be meshed."""
-        self._out_queue: Queue = Queue()
-        """Queue containing the generated meshes."""
-        self._sync_out_queue: Queue = Queue()
-
-        self._process = Process(target=self._run_mesh_generation, daemon=True)
-        """Background process for running gmsh."""
-        self._process.start()
-
-        self._listener = GmshListener(self._out_queue)
-        """Receives generated meshes and raises a signal when they arrive."""
-        self._listener.mesh_received.connect(self._send_meshing_end)
-        self._listener.start()
-        pub.subscribe(self.stop_thread, "window.close")
-
-    def __del__(self) -> None:
-        """Stop background QThread."""
-        self.stop_thread()
-
-    def stop_thread(self) -> None:
-        """Stop background QThread."""
-        # None is used as a sentinel value to signal that the thread should stop
-        self._out_queue.put(None)
-        self._listener.wait()
-
-    def _generate_mesh(self) -> None:
-        topic, *args = self._in_queue.get()
-        if "geom" in topic:
-            gmsh.model.mesh.clear()
-            component, resolution = args
-            self.shape_factory.add_component(component, resolution=resolution)
-            mesh = self.shape_factory.geom.generate_mesh()
-            self._out_queue.put((topic, mesh))
-        elif "surface" in topic:
-            surface_nodes = (
-                np.sort(
-                    np.unique(
-                        (gmsh.model.mesh.getNodes(2, -1, includeBoundary=True)[0])
-                    )
-                )
-                - 1
-            )
-            self._sync_out_queue.put(surface_nodes)
-        else:
-            gmsh.model.mesh.clear()
-            resolution = args[0]
-            # override the previously set mesh size for each component
-            self.shape_factory.geom._SIZE_QUEUE = [
-                (sq[0], resolution) for sq in self.shape_factory.geom._SIZE_QUEUE
-            ]
-            mesh = self.shape_factory.geom.generate_mesh()
-            self._out_queue.put((topic, mesh))
-
-    def _run_mesh_generation(self) -> None:
-        geometry = Geometry()
-        gmsh.initialize([])
-        gmsh.model.add("model")
-        # shape_factory uses geometry so must be initialised here in the meshing process
-        self.shape_factory = ShapeFactory(geometry)
-        while True:
-            self._generate_mesh()
-
-    def _send_meshing_end(self, name: str, mesh: Mesh) -> None:
-        pub.sendMessage(f"{name}.meshing.end", mesh=mesh)
-
-    def start_mesh_generation(self, topic: str, resolution: float) -> Mesh:
-        """Generate a meshio.Mesh from simple geometric components.
+    def generate_mesh(self, resolution: float) -> Mesh:
+        """Generate a new system mesh at the specified resolution.
 
         Args:
-            topic: the top-level topic name to send messages on
-            resolution: resolution to use for mesh
+            resolution: desired mesh resolution
         """
-        pub.sendMessage(f"{topic}.meshing.begin")
-        self._in_queue.put((topic, resolution))
-
-    def add_component(self, component: Component) -> None:
-        """Add a new component to the geometry.
-
-        Args:
-            component: to add to the system
-        """
-        pub.sendMessage("geometry.meshing.begin")
-        self._in_queue.put(("geometry", component, 0.1))
+        self.geom._SIZE_QUEUE = [(sq[0], resolution) for sq in self.geom._SIZE_QUEUE]
+        return self._generate_mesh()
 
     def get_surface_nodes(self) -> np.ndarray:
-        """Get the indices of the surface nodes of the mesh."""
-        self._in_queue.put(("surface",))
-        return self._sync_out_queue.get()
-
-
-mesh_generator_datastore: Datastore[str, MeshGenerator] = Datastore("mesh_generator")
+        """Get the indices of the mesh nodes that are on the system surface."""
+        return (
+            np.sort(np.unique(gmsh.model.mesh.getNodes(2, -1, includeBoundary=True)[0]))
+            - 1
+        )
