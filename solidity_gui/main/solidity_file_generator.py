@@ -1,5 +1,6 @@
 """This module provides functionality to generate an input file for Solidity."""
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from jinja2 import Environment, FileSystemLoader
@@ -40,7 +41,7 @@ def create_y3d_template() -> str:
                 points_per_tetra = tetra_cell.data[0].size
                 break
 
-    node_ids = []
+    node_ids: List[int] = []
     node_id_offset = 0
 
     for mesh in mesh_datastore.values():
