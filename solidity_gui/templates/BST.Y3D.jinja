@@ -36,3 +36,42 @@
 {%- for surface_flag in surface_node_flags %}
 {{ surface_flag }}
 {%- endfor %}
+
+/YD/YDP/MPROP  200 {{ num_materials + 1 }}
+/YD/YDP/NPROP  200 {{ num_materials }}
+/YD/YDP/D1PEKS  {{ num_materials }}
+{% for material in materials -%}0 {% endfor %}
+/YD/YDP/D1PELA  0 # to calc
+/YD/YDP/D1PEMU  0 # to calc
+/YD/YDP/D1PEPE  {{ num_materials }}
+{% for material in materials -%}2.0e+10 {% endfor %}
+/YD/YDP/D1PERO  {{ num_materials }}
+{% for material in materials -%}{% if material.properties.density.enabled %}2.34e+10{% else %}0{% endif %} {% endfor %}
+/YD/YDP/D1PEGFN  {{ num_materials }}
+{% for material in materials -%}50.0 {% endfor %}
+/YD/YDP/D1PEGFS  {{ num_materials }}
+{% for material in materials -%}50.0 {% endfor %}
+/YD/YDP/D1PEFT  {{ num_materials }}
+{% for material in materials -%}1.0e+7 {% endfor %}
+/YD/YDP/D1PCOH  {{ num_materials }}
+{% for material in materials -%}3.5e+7 {% endfor %}
+/YD/YDP/D1PICF  {{ num_materials }}
+{% for material in materials -%}0.577 {% endfor %}
+/YD/YDP/D1PEFR  {{ num_materials }}
+{% for material in materials -%}0.6 {% endfor %}
+/YD/YDP/D1PESF  {{ num_materials }}
+{% for material in materials -%}0 {% endfor %}
+/YD/YDP/D1PEPSF {{ num_materials }}
+{% for material in materials -%}0 {% endfor %}
+/YD/YDP/D1PEVF  {{ num_materials }}
+{% for material in materials -%}0 {% endfor %}
+/YD/YDP/D1PEPF  {{ num_materials }}
+{% for material in materials -%}1 {% endfor %}
+/YD/YDP/I1PTYP  {{ num_materials }}
+{% for material in materials -%}13 {% endfor %}
+/YD/YDP/I1PEJP  {{ num_materials }}
+{% for material in materials -%}0 {% endfor %}
+/YD/YDP/I1PEMN  {{ num_materials }}
+{% for material in materials -%}0 {% endfor %}
+/YD/YDP/I1PSDE  {{ num_materials }}
+{% for material in materials -%}0 {% endfor %}

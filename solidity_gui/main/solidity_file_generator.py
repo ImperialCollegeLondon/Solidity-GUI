@@ -8,6 +8,7 @@ from meshio import Mesh
 
 from .. import config
 from .gmsh_process import gmsh_process_datastore
+from .material import material_datastore
 from .meshes import mesh_datastore
 
 env = Environment(
@@ -67,6 +68,12 @@ def create_y3d_template() -> str:
         surface_nodes[mesh_name] = mesh_surface_nodes
 
     data = get_template_data(mesh_datastore, surface_nodes)
+
+    data.update(
+        dict(
+            materials=material_datastore.values(), num_materials=len(material_datastore)
+        )
+    )
     return template.render(data)
 
 
