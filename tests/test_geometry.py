@@ -2,13 +2,13 @@
 
 from random import random
 from sys import platform
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 from sklearn.decomposition import PCA
 
-from solidity_gui.main.geometry import Component, MeshGenerator, generate_mesh
+from solidity_gui.main.geometry import Component, Geometry, MeshGenerator, ShapeFactory
 
 RESOLUTION = 0.2
 
@@ -30,19 +30,33 @@ def component_factory(
     return Component(shape=shape, label=label, kwargs=kwargs)
 
 
+def generate_mesh(components, resolution):
+    """Helper function to generate meshes from one or more Components."""
+    with Geometry() as geom:
+        factory = ShapeFactory(geom)
+        for component in components:
+            factory.add_component(component, resolution=resolution)
+
+        return geom.generate_mesh()
+
+
 @pytest.mark.skipif(
     platform == "darwin", reason="Queue.qsize() is not implemented on macOS"
 )
-def test_mesh_generator(mesh_generator: MeshGenerator, send_message_mock):
+@patch("solidity_gui.main.geometry.gmsh")
+def test_mesh_generator(gmsh_mock, mesh_generator: MeshGenerator, send_message_mock):
     """Test the basic functionality of MeshGenerator."""
     assert mesh_generator._in_queue.qsize() == 0
     assert mesh_generator._out_queue.qsize() == 0
 
-    mesh_generator.start_mesh_generation("hello", [component_factory()], RESOLUTION)
+    mesh_generator.start_mesh_generation("hello", RESOLUTION)
     send_message_mock.assert_called_once_with("hello.meshing.begin")
     assert mesh_generator._in_queue.qsize() == 1
     assert mesh_generator._out_queue.qsize() == 0
 
+    shape_factory_mock = MagicMock()
+    shape_factory_mock.geom.generate_mesh.return_value = ""
+    mesh_generator.shape_factory = shape_factory_mock
     mesh_generator._generate_mesh()
     assert mesh_generator._in_queue.qsize() == 0
     assert mesh_generator._out_queue.qsize() == 1

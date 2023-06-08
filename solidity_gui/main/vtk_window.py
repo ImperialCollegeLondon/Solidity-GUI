@@ -1,7 +1,7 @@
 """Code to display a mesh within a VTK window."""
 import os
 from tempfile import NamedTemporaryFile
-from typing import Any, List
+from typing import Any, Optional
 
 import numpy as np
 import vtk
@@ -17,8 +17,8 @@ from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
 from .custom_interactor_style import CustomInteractorStyle
-from .geometry import Component, MeshGenerator, Vector, component_datastore
-from .meshes import mesh_datastore
+from .geometry import Vector
+from .meshes import current_mesh, mesh_datastore
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
@@ -85,18 +85,11 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.inter_style = CustomInteractorStyle()
         self.iren.SetInteractorStyle(self.inter_style)
         self.iren.Initialize()
-        self.ugrids: List[vtk.vtkUnstructuredGrid] = []
         self.reset_camera()
+        self.ugrid: Optional[vtk.vtkUnstructuredGrid] = None
 
         self._create_orientation_marker()
 
-        self.mesh_generator = MeshGenerator()
-        pub.subscribe(self.mesh_generator.stop_thread, "window.close")
-
-        pub.subscribe(self._add_component_to_geometry_begin, "geometry.update")
-        pub.subscribe(self._add_component_to_geometry_end, "geometry.meshing.end")
-        pub.subscribe(self._create_mesh_from_geometry_begin, "mesh.create")
-        pub.subscribe(self._create_mesh_from_geometry_end, "mesh.meshing.end")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
         pub.subscribe(self.reorient_camera, "camera.reorient")
         pub.subscribe(self.reset_camera, "camera.reset")
@@ -107,35 +100,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
         pub.subscribe(_restore_cursor, "mesh.meshing.end")
         pub.subscribe(_restore_cursor, "geometry.meshing.end")
 
-    def _add_component_to_geometry_begin(self, component: Component) -> None:
-        """Add a new geometric component and render and display its rough mesh."""
-        component_datastore[component.label] = component
-        self.mesh_generator.start_mesh_generation(
-            "geometry", [component], resolution=0.2
-        )
-
-    def _add_component_to_geometry_end(self, mesh: Mesh) -> None:
-        mesh_datastore.add(mesh)
-        self.render_mesh(mesh)
-        pub.sendMessage("geometry.updated", mesh=mesh)
-
-    def _create_mesh_from_geometry_begin(self, size: float) -> None:
-        """Generate and display a high quality mesh from the current geometry."""
-        if not component_datastore:
-            return
-
-        self.ugrids = []
-        self.mesh_generator.start_mesh_generation(
-            "mesh", list(component_datastore.values()), resolution=size
-        )
-
-    def _create_mesh_from_geometry_end(self, mesh: Mesh) -> None:
-        mesh_datastore.clear()
-        mesh_datastore.add(mesh)
-        for actor in self.ren.GetActors():
-            self.ren.RemoveActor(actor)
-        self.render_mesh(mesh)
-        pub.sendMessage("mesh.updated", mesh=mesh)
+        pub.subscribe(self.render_mesh, "geometry.meshing.end")
+        pub.subscribe(self.render_mesh, "mesh.meshing.end")
 
     def render_mesh(self, mesh: Mesh) -> None:
         """Render a mesh within the VTKWindow.
@@ -160,7 +126,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
             # Delete the file now that we've finished with it
             os.unlink(filename)
 
-        self.ugrids.append(ugrid)
+        self.ugrid = ugrid
         # Create the LUT for scalars to colors
         lut = vtk.vtkLookupTable()
         lut.SetNumberOfTableValues(2)
@@ -174,27 +140,33 @@ class VTKWindow(QVTKRenderWindowInteractor):
         mapper.UseLookupTableScalarRangeOn()
         mapper.SetLookupTable(lut)
 
+        for actor in self.ren.GetActors():
+            self.ren.RemoveActor(actor)
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
         self.ren.AddActor(actor)
 
         self.ren.ResetCamera()
         self.iren.ReInitialize()
+        pub.sendMessage("mesh.rendered", mesh=mesh)
 
     def _colour_mesh_selection(self, selection_name: str) -> None:
         """Update rendered mesh colours based on selected element."""
-        for mesh, ugrid in zip(mesh_datastore.values(), self.ugrids):
-            point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
-            try:
-                surface_point_ids = np.unique(
-                    self.get_point_ids_in_surface(selection_name, mesh)
-                )
-                point_colours[surface_point_ids] = self.selected_lookup_value
-                self.iren.ReInitialize()
-            except KeyError:
-                pass
+        if not self.ugrid:
+            return
 
-            ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
+        mesh = mesh_datastore[current_mesh]
+        point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
+        try:
+            surface_point_ids = np.unique(
+                self.get_point_ids_in_surface(selection_name, mesh)
+            )
+            point_colours[surface_point_ids] = self.selected_lookup_value
+            self.iren.ReInitialize()
+        except KeyError:
+            pass
+
+        self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
         self.iren.ReInitialize()
 
     def reset_camera(self) -> None:

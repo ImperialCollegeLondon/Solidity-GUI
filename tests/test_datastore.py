@@ -161,13 +161,14 @@ def _setup_assignments_sync_test():
 
     cell_set_name = "cell_set_name"
     mesh = Mesh(points=[], cells={"line": []}, cell_sets={cell_set_name: [[]]})
-    mesh_id = mesh_datastore.add(mesh)
+    mesh_name = "default"
+    mesh_datastore[mesh_name] = mesh
 
     assignment = MaterialAssignment(
         material_id=material_id, cell_set_name=cell_set_name
     )
     material_assignment_datastore.add(assignment)
-    return material_id, mesh_id
+    return material_id, mesh_name
 
 
 def test_sync_assignments_material_removed():
@@ -182,8 +183,8 @@ def test_sync_assignments_material_removed():
 
 def test_sync_assignments_mesh_removed():
     """Check sync of material_assignment_datastore when a mesh is deleted."""
-    _, mesh_id = _setup_assignments_sync_test()
+    _, mesh_name = _setup_assignments_sync_test()
 
-    del mesh_datastore[mesh_id]
+    del mesh_datastore[mesh_name]
 
     assert len(material_assignment_datastore) == 0
