@@ -36,39 +36,22 @@ def fetch_material_assignments(mesh: Mesh) -> np.ndarray:
     if cell_materials_list:
         cell_materials = np.concatenate(cell_materials_list, axis=0)
     else:
-        cell_materials = np.empty((0, 2), dtype=int)
+        cell_materials = np.empty((0, 2), dtype=np.uint64)
 
     return cell_materials
 
 
-def fetch_unassigned_cells(cell_materials: np.ndarray, mesh: Mesh) -> np.ndarray:
-    """Fetches the unassigned cells for a given mesh."""
-    # First lets get a list of all the tetra cell IDs. There may be a more elegant
-    # way of doing this
+def check_unassigned_cells(cell_materials: np.ndarray, mesh: Mesh) -> bool:
+    """Checks if there are any unassigned cells in the mesh."""
+
     all_tetra_cell_ids = []
     for cell_set in mesh.cell_sets_dict.keys():
         if "tetra" in mesh.cell_sets_dict[cell_set]:
             all_tetra_cell_ids.extend(mesh.cell_sets_dict[cell_set]["tetra"])
 
-    # We can diff the all_tetra_cell_ids list with list of assigned cell ids to get
-    # all the unassigned tetra cell ids
-    tetra_cells_not_assigned = np.setdiff1d(all_tetra_cell_ids, cell_materials[:, 0])
-    # Finally, we can add these unassigned cells to the cell_materials array with a
-    # material index = -1
-    cell_materials = np.concatenate(
-        [
-            cell_materials,
-            np.array(
-                [
-                    tetra_cells_not_assigned,
-                    np.full_like(tetra_cells_not_assigned, -1, dtype=int),
-                ]
-            ).T,
-        ],
-        axis=0,
+    return np.setdiff1d(all_tetra_cell_ids, cell_materials[:, 0]) or np.setdiff1d(
+        cell_materials[:, 0], all_tetra_cell_ids
     )
-
-    return cell_materials
 
 
 def generate_elements_data() -> tuple[np.ndarray, List[int]]:
@@ -76,12 +59,20 @@ def generate_elements_data() -> tuple[np.ndarray, List[int]]:
     node_ids: List[int] = []
     node_id_offset = 0
 
-    cell_materials_sorted = np.empty((0, 2), dtype=int)
+    cell_materials_sorted = np.empty((0, 2), dtype=np.uint64)
     cell_id_offset = 0
 
     for mesh in mesh_datastore.values():
         cell_materials = fetch_material_assignments(mesh)
-        cell_materials = fetch_unassigned_cells(cell_materials, mesh)
+        if check_unassigned_cells():
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setText("Error")
+            msg_box.setInformativeText(
+                "One or more tetrahedra have unassigned materials!"
+            )
+            msg_box.setWindowTitle("Error")
+            msg_box.exec_()
 
         cell_materials_sorted = (
             cell_materials[cell_materials[:, 0].argsort()] + cell_id_offset
