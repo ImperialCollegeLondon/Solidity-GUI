@@ -3,7 +3,7 @@
 import numpy as np
 
 from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
-from solidity_gui.main.solidity_file_generator import get_template_data
+from solidity_gui.main.solidity_file_generator import generate_nodes_data
 
 
 def _get_mesh_and_surface_nodes(component):
@@ -14,8 +14,8 @@ def _get_mesh_and_surface_nodes(component):
     return mesh, surface_nodes
 
 
-def test_get_template_data():
-    """Test get_template_data function."""
+def test_generate_nodes_data():
+    """Test generate_nodes_data function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
         Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
     )
@@ -26,9 +26,8 @@ def test_get_template_data():
     meshes = dict(a=mesh_a, b=mesh_b)
     surface_nodes = dict(a=surface_nodes_a, b=surface_nodes_b)
 
-    data = get_template_data(meshes, surface_nodes)
+    data = generate_nodes_data(meshes, surface_nodes)
 
-    assert data["num_timesteps"] == 2000000
     assert data["num_nodes"] == mesh_a.points.shape[0] + mesh_b.points.shape[0]
     assert data["nodes"].shape == (data["num_nodes"], 3)
     assert np.all(
