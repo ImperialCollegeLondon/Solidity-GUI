@@ -20,19 +20,19 @@
 ICHPRM 1
 
      /*   Elements     */
-/YD/YDE/MELEM {{melem}}
-/YD/YDE/NELEM {{nelem}}
+/YD/YDE/MELEM {{num_tetra+1}}
+/YD/YDE/NELEM {{num_tetra}}
 /YD/YDE/MELST     2
 /YD/YDE/NELST     2
-/YD/YDE/MELNO     {{melno}}
-/YD/YDE/NELNO     {{nelno}}
+/YD/YDE/MELNO     {{points_per_tetra+1}}
+/YD/YDE/NELNO     {{points_per_tetra}}
 /YD/YDE/D2ELST    21 0 0
 /YD/YDE/D1EMCT 0
 /YD/YDE/I1ELCF 0
 /YD/YDE/I1ELBE 0
-/YD/YDE/I1ELPR {{nelem}}
-{{ elemsMat|join(' ') }}
-/YD/YDE/I2ELTO 21 {{nelno ~ ' ' ~ nelem}}
-{% for element in elemsConec -%}
+/YD/YDE/I1ELPR {{num_tetra}}
+{{ cell_materials|join(' ') }}
+/YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
+{% for element in tetra_node_ids -%}
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
 {% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}

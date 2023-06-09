@@ -16,6 +16,12 @@ env = Environment(
 )
 
 
+class SystemValidationError(Exception):
+    """Raised when there is a problem with the system."""
+
+    pass
+
+
 def write_file(file_content: str, output_file: Path | str) -> None:
     """Write the contents of file_content to file.
 
@@ -42,9 +48,8 @@ def fetch_material_assignments(mesh: Mesh) -> np.ndarray:
     return cell_materials
 
 
-def check_unassigned_cells(cell_materials: np.ndarray, mesh: Mesh) -> bool:
+def check_unassigned_cells(cell_materials: np.ndarray, mesh: Mesh) -> None:
     """Checks if there are any unassigned cells in the mesh."""
-
     all_tetra_cell_ids = []
     for cell_set in mesh.cell_sets_dict.keys():
         if "tetra" in mesh.cell_sets_dict[cell_set]:
@@ -56,8 +61,17 @@ def check_unassigned_cells(cell_materials: np.ndarray, mesh: Mesh) -> bool:
             np.setdiff1d(cell_materials[:, 0], all_tetra_cell_ids).size != 0,
         ]
     ):
-        return True
-    return False
+        raise SystemValidationError("One or more tetrahedra have unassigned materials!")
+
+
+def error_message(message: str) -> None:
+    """Displays an error message to the user."""
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Critical)
+    msg_box.setText("Error")
+    msg_box.setInformativeText(message)
+    msg_box.setWindowTitle("Error")
+    msg_box.exec_()
 
 
 def generate_elements_data() -> tuple[np.ndarray, List[int]]:
@@ -70,16 +84,7 @@ def generate_elements_data() -> tuple[np.ndarray, List[int]]:
 
     for mesh in mesh_datastore.values():
         cell_materials = fetch_material_assignments(mesh)
-        if check_unassigned_cells(cell_materials, mesh):
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setText("Error")
-            msg_box.setInformativeText(
-                "One or more tetrahedra have unassigned materials!"
-            )
-            msg_box.setWindowTitle("Error")
-            msg_box.exec_()
-            return (None, None)
+        check_unassigned_cells(cell_materials, mesh)
 
         cell_materials_sorted = np.concatenate(
             (
@@ -108,24 +113,15 @@ def create_y3d_template() -> str:
         if cell.type == "tetra"
     )
 
-    for mesh in mesh_datastore.values():
-        for tetra_cell in mesh.cells:
-            if tetra_cell.type == "tetra":
-                points_per_tetra = tetra_cell.data[0].size
-                break
-
+    points_per_tetra = 4
     cell_materials_sorted, node_ids = generate_elements_data()
-    if cell_materials_sorted is None or node_ids is None:
-        return
 
     data = {
         "num_timesteps": 2000000,
-        "melem": total_tetra + 1,
-        "nelem": total_tetra,
-        "melno": points_per_tetra + 1,
-        "nelno": points_per_tetra,
-        "elemsMat": cell_materials_sorted[:, 1],
-        "elemsConec": node_ids,
+        "num_tetra": total_tetra,
+        "points_per_tetra": points_per_tetra,
+        "cell_materials": cell_materials_sorted[:, 1],
+        "tetra_node_ids": node_ids,
     }
 
     return template.render(data)
@@ -133,7 +129,8 @@ def create_y3d_template() -> str:
 
 def generate_y3d_file() -> None:
     """Generates a Solidity input file based on a Jinja2 template."""
-    file_content = create_y3d_template()
-    if file_content is None:
-        return
-    write_file(file_content, config.SOLIDITY_Y3D_FILE_NAME)
+    try:
+        file_content = create_y3d_template()
+        write_file(file_content, config.SOLIDITY_Y3D_FILE_NAME)
+    except SystemValidationError as e:
+        error_message(e.args[0])
