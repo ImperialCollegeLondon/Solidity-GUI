@@ -62,7 +62,7 @@ def check_unassigned_cells(cell_materials: np.ndarray, mesh: Mesh) -> bool:
 
 def generate_elements_data() -> tuple[np.ndarray, List[int]]:
     """Generates the elements section data for the Solidity input file."""
-    node_ids: List[int] = []
+    node_ids = np.empty((0, 4), dtype="uint64")
     node_id_offset = 0
 
     cell_materials_sorted = np.empty((0, 2), dtype="uint64")
@@ -79,18 +79,19 @@ def generate_elements_data() -> tuple[np.ndarray, List[int]]:
             )
             msg_box.setWindowTitle("Error")
             msg_box.exec_()
+            return (None, None)
 
-        cell_materials_sorted = (
-            cell_materials[cell_materials[:, 0].argsort()] + cell_id_offset
+        cell_materials_sorted = np.concatenate(
+            (
+                cell_materials_sorted,
+                cell_materials[cell_materials[:, 0].argsort()] + cell_id_offset,
+            )
         )
         cell_id_offset += cell_materials.shape[0]
 
         # We can now get the node ids for each cell, offset by the accumulated number of
         # nodes from previous meshes
-        node_ids.extend(
-            node_id + node_id_offset for node_id in mesh.cells_dict["tetra"]
-        )
-
+        node_ids = np.concatenate((node_ids, mesh.cells_dict["tetra"] + node_id_offset))
         node_id_offset += mesh.points.shape[0]
 
     return cell_materials_sorted, node_ids
