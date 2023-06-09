@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 from jinja2 import Environment, FileSystemLoader
 from meshio import Mesh
+from PySide6.QtWidgets import QMessageBox
 
 from .. import config
 from .material import material_assignment_datastore
@@ -36,7 +37,7 @@ def fetch_material_assignments(mesh: Mesh) -> np.ndarray:
     if cell_materials_list:
         cell_materials = np.concatenate(cell_materials_list, axis=0)
     else:
-        cell_materials = np.empty((0, 2), dtype=np.uint64)
+        cell_materials = np.empty((0, 2), dtype="uint64")
 
     return cell_materials
 
@@ -49,9 +50,14 @@ def check_unassigned_cells(cell_materials: np.ndarray, mesh: Mesh) -> bool:
         if "tetra" in mesh.cell_sets_dict[cell_set]:
             all_tetra_cell_ids.extend(mesh.cell_sets_dict[cell_set]["tetra"])
 
-    return np.setdiff1d(all_tetra_cell_ids, cell_materials[:, 0]) or np.setdiff1d(
-        cell_materials[:, 0], all_tetra_cell_ids
-    )
+    if any(
+        [
+            np.setdiff1d(all_tetra_cell_ids, cell_materials[:, 0]).size != 0,
+            np.setdiff1d(cell_materials[:, 0], all_tetra_cell_ids).size != 0,
+        ]
+    ):
+        return True
+    return False
 
 
 def generate_elements_data() -> tuple[np.ndarray, List[int]]:
@@ -59,12 +65,12 @@ def generate_elements_data() -> tuple[np.ndarray, List[int]]:
     node_ids: List[int] = []
     node_id_offset = 0
 
-    cell_materials_sorted = np.empty((0, 2), dtype=np.uint64)
+    cell_materials_sorted = np.empty((0, 2), dtype="uint64")
     cell_id_offset = 0
 
     for mesh in mesh_datastore.values():
         cell_materials = fetch_material_assignments(mesh)
-        if check_unassigned_cells():
+        if check_unassigned_cells(cell_materials, mesh):
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Critical)
             msg_box.setText("Error")
@@ -108,6 +114,8 @@ def create_y3d_template() -> str:
                 break
 
     cell_materials_sorted, node_ids = generate_elements_data()
+    if cell_materials_sorted is None or node_ids is None:
+        return
 
     data = {
         "num_timesteps": 2000000,
@@ -125,4 +133,6 @@ def create_y3d_template() -> str:
 def generate_y3d_file() -> None:
     """Generates a Solidity input file based on a Jinja2 template."""
     file_content = create_y3d_template()
+    if file_content is None:
+        return
     write_file(file_content, config.SOLIDITY_Y3D_FILE_NAME)
