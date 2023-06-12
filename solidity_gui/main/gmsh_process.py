@@ -49,6 +49,43 @@ class GmshListener(QThread):
             pass
 
 
+class GmshDaemon:
+    """Child process logic for forwarding calls to a GeometryWrapper instance..
+
+    This class works closely with the GmshProcess class that handles the parent process
+    logic for function call forwarding. Separation into separate classes minimises the
+    datastructures that need to be passed to the child process and avoids serialisation
+    issues on certain platforms.
+    """
+
+    def __init__(self) -> None:
+        """Create a new GmshDaemon."""
+        self._in_queue: Queue = Queue()
+        """Queue containing the parameters for components to be meshed."""
+        self._async_out_queue: Queue = Queue()
+        """Queue containing return values for asynchronous delivery."""
+        self._sync_out_queue: Queue = Queue()
+        """Queue containing return values for synchronous delivery."""
+
+    def run(self) -> None:
+        """Main loop function that runs on the child process."""
+        with Geometry() as geom:
+            self.geometry_wrapper = GeometryWrapper(geom)
+
+            while True:
+                self._call_function()
+
+    def _call_function(self) -> None:
+        function_call = self._in_queue.get()
+
+        obj = getattr(self.geometry_wrapper, function_call.name)(**function_call.kwargs)
+
+        if function_call.asynchronous:
+            self._async_out_queue.put((function_call.name, obj))
+        else:
+            self._sync_out_queue.put(obj)
+
+
 class GmshProcess:
     """A class for communicating with gmsh on a separate process.
 
@@ -56,7 +93,7 @@ class GmshProcess:
     so in order to be able to run gmsh operations in the background, it is necessary to
     spin up a separate process for this.
 
-    This class acts as an intermediate layer passing function calls to a GeometryWrapper
+    This class acts as an intermediate layer passing function calls to a GmshDaemon
     instance. Function calls may be run either synchronously or asynchronously, in which
     case the return value is injected into the GUI main loop (via a Pyside Signal on
     GmshListener) and broadcast using a pubsub message.
@@ -71,24 +108,19 @@ class GmshProcess:
         asynchronous: bool
 
     def __init__(self) -> None:
-        """Create a new MeshGenerator."""
-        self._in_queue: Queue = Queue()
-        """Queue containing the parameters for components to be meshed."""
-        self._async_out_queue: Queue = Queue()
-        """Queue containing return values for asynchronous delivery."""
-        self._sync_out_queue: Queue = Queue()
-        """Queue containing return values for synchronous delivery."""
-
-        self._process = Process(target=self._daemon, daemon=True)
+        """Create a new GmshProcess."""
+        self.daemon = GmshDaemon()
+        """"""
+        self._process = Process(target=self.daemon.run, daemon=True)
         """Background process for running gmsh."""
 
-        self._listener = GmshListener(self._async_out_queue)
+        self._listener = GmshListener(self.daemon._async_out_queue)
         """Receives generated meshes and raises a signal when they arrive."""
         self._listener.mesh_received.connect(self._function_call_end)
         pub.subscribe(self.stop_thread, "window.close")
 
     def start(self) -> None:
-        """Start the process and listener thread."""
+        """Start the process and thread running."""
         self._process.start()
         self._listener.start()
 
@@ -98,9 +130,9 @@ class GmshProcess:
 
     def stop_thread(self) -> None:
         """Stop background QThread."""
-        # None is used as a sentinel value to signal that the thread should stop
         if self._listener.isRunning():
-            self._async_out_queue.put(None)
+            # None is used as a sentinel value to signal that the thread should stop
+            self.daemon._async_out_queue.put(None)
             self._listener.wait()
 
     def call_function(self, function_name: str, **kwargs: Any) -> object:
@@ -110,10 +142,10 @@ class GmshProcess:
           function_name: name of the method to call
           kwargs: keyword arguments to pass into the method
         """
-        self._in_queue.put(
+        self.daemon._in_queue.put(
             self._FunctionCall(name=function_name, kwargs=kwargs, asynchronous=False)
         )
-        return self._sync_out_queue.get()
+        return self.daemon._sync_out_queue.get()
 
     def call_function_async(self, function_name: str, **kwargs: Any) -> None:
         """Call a GmshWrapper method without awaiting the result.
@@ -126,32 +158,13 @@ class GmshProcess:
           kwargs: keyword arguments to pass into the method
         """
         pub.sendMessage(f"{function_name}.start")
-        self._in_queue.put(
+        self.daemon._in_queue.put(
             self._FunctionCall(name=function_name, kwargs=kwargs, asynchronous=True)
         )
 
     def _function_call_end(self, function_name: str, obj: object) -> None:
         """Event handler called when the mesh_received Signal is sent."""
         pub.sendMessage(f"{function_name}.finish", obj=obj)
-
-    def _call_function(self) -> None:
-        function_call = self._in_queue.get()
-
-        obj = getattr(self.geometry_wrapper, function_call.name)(**function_call.kwargs)
-
-        if function_call.asynchronous:
-            self._async_out_queue.put((function_call.name, obj))
-        else:
-            self._sync_out_queue.put(obj)
-
-    def _daemon(self) -> None:
-        """The function executed by the background process."""
-        # initialise all gmsh related stuff once the process has been started
-        with Geometry() as geom:
-            self.geometry_wrapper = GeometryWrapper(geom)
-
-            while True:
-                self._call_function()
 
 
 gmsh_process_datastore: Datastore[str, GmshProcess] = Datastore("gmsh_process")
