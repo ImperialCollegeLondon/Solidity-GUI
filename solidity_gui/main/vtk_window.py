@@ -100,8 +100,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
         pub.subscribe(_restore_cursor, "mesh.meshing.end")
         pub.subscribe(_restore_cursor, "geometry.meshing.end")
 
-        pub.subscribe(self.render_mesh, "geometry.meshing.end")
-        pub.subscribe(self.render_mesh, "mesh.meshing.end")
+        pub.subscribe(self.render_mesh, "geometry.updated")
+        pub.subscribe(self.render_mesh, "mesh.updated")
 
     def render_mesh(self, mesh: Mesh) -> None:
         """Render a mesh within the VTKWindow.

@@ -17,7 +17,26 @@
 /YD/YDC/DCRMJT +0.00000000000e+00
 /YD/YDC/DCRMCT +0.00000000000e+00
 /YD/YDC/DCRMUT +0.00000000000e+00
-ICHPRM 1
+/YD/YDC/DCURELX +1.00000000000e+00
+
+/YD/YDN/MNODIM 4
+/YD/YDN/NNODIM 3
+/YD/YDN/MNOPO {{ num_nodes + 1 }}
+/YD/YDN/NNOPO {{ num_nodes }}
+/YD/YDN/D2NCC 21 3 {{ num_nodes }}
+{%- for node in nodes %}
+{{ "%20.10e"|format(node.0) }} {{ "%20.10e"|format(node.1) }} {{ "%20.10e"|format(node.2) }}
+{%- endfor %}
+/YD/YDN/D2NCI 21 3 {{ num_nodes}}
+{%- for node in nodes %}
+{{ "%20.10e"|format(node.0) }} {{ "%20.10e"|format(node.1) }} {{ "%20.10e"|format(node.2) }}
+{%- endfor %}
+
+/YD/YDN/D2NVC  21 0 0
+/YD/YDN/I1NOBF {{ num_nodes }}
+{%- for surface_flag in surface_node_flags %}
+{{ surface_flag }}
+{%- endfor %}
 
      /*   Elements     */
 /YD/YDE/MELEM {{num_tetra+1}}
@@ -36,3 +55,4 @@ ICHPRM 1
 {% for element in tetra_node_ids -%}
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
 {% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}
+

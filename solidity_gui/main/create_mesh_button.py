@@ -20,7 +20,7 @@ class CreateMeshButton(QPushButton):
         super().__init__("Generate mesh", *args, **kwargs)
         self.clicked.connect(self._click_handler)
         self.setDisabled(True)
-        pub.subscribe(self._disable, "mesh.meshing.begin")
+        pub.subscribe(self._disable, "generate_mesh.start")
         pub.subscribe(self._enable, "geometry.updated")
 
     def _click_handler(self) -> None:

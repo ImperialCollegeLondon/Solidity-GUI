@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from solidity_gui.main.geometry import Component, Geometry, ShapeFactory
+from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
 from solidity_gui.main.vtk_window import VTKWindow
 
 
@@ -18,11 +18,11 @@ def vtk_window(qtbot, subscribe_mock):
 def generate_mesh(components, resolution):
     """Helper function to generate meshes from one or more Components."""
     with Geometry() as geom:
-        factory = ShapeFactory(geom)
+        wrapper = GeometryWrapper(geom)
         for component in components:
-            factory.add_component(component, resolution=resolution)
+            wrapper.add_component(component, resolution=resolution)
 
-        return geom.generate_mesh()
+        return wrapper.generate_mesh(resolution)
 
 
 def component_factory(
