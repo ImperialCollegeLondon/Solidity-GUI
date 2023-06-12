@@ -36,3 +36,20 @@ ICHPRM 1
 {% for element in tetra_node_ids -%}
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
 {% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}
+     /*   Interactions     */
+/YD/YDI/MICOUP 10000000
+/YD/YDI/NICOUP 0
+/YD/YDI/IIECFF -2
+/YD/YDI/DIEDI +2e+02
+/YD/YDI/DIEZON {{min_length}}
+/YD/YDI/DRECT {{mean_length}}
+/YD/YDI/D1IESL 0
+/YD/YDI/I1STAT 0
+/YD/YDI/I1IECN 0
+/YD/YDI/I1IECT 0
+/YD/YDI/D1DELTAT1 0
+/YD/YDI/D1DELTAT2 0
+/YD/YDI/D1DELTAN 0
+/YD/YDI/D2NV 21 3 0 
+/YD/YDI/D2T1V 21 3 0 
+/YD/YDI/D2T2V 21 3 0
