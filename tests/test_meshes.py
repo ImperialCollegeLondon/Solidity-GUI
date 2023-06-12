@@ -1,8 +1,10 @@
 """Tests for the solidity_gui.main.meshes."""
 from unittest.mock import MagicMock, patch
 
-from solidity_gui.main.geometry import Component, mesh_generator_datastore
+from solidity_gui.main.geometry import Component
+from solidity_gui.main.gmsh_process import gmsh_process_datastore
 from solidity_gui.main.meshes import (
+    DEFAULT_RESOLUTION,
     _add_component_to_geometry_begin,
     _add_component_to_geometry_end,
     _create_mesh_from_geometry_begin,
@@ -19,13 +21,17 @@ def component_factory(
     return Component(shape=shape, label=label, kwargs=kwargs)
 
 
-@patch("solidity_gui.main.geometry.MeshGenerator.add_component")
-def test_add_component_to_geometry_begin(_):
+@patch("solidity_gui.main.meshes.GmshProcess")
+def test_add_component_to_geometry_begin(gmsh_process_mock):
     """Test _add_component_to_geometry_begin method of VTKWindow."""
     component = component_factory()
     _add_component_to_geometry_begin(component)
-    mesh_generator = mesh_generator_datastore[current_mesh]
-    mesh_generator.add_component.assert_called_once_with(component)
+    gmsh_process = gmsh_process_datastore[current_mesh]
+    assert gmsh_process == gmsh_process_mock()
+    gmsh_process.start.assert_called_once_with()
+    gmsh_process.call_function_async.assert_called_once_with(
+        "add_component", component=component, resolution=DEFAULT_RESOLUTION
+    )
 
 
 def test_add_component_to_geometry_end(send_message_mock):
@@ -39,13 +45,13 @@ def test_add_component_to_geometry_end(send_message_mock):
 
 def test_create_mesh_from_geometry_begin():
     """Test _create_mesh_from_geometry_begin method of VTKWindow."""
-    assert len(mesh_generator_datastore) == 0
-    mesh_generator_mock = MagicMock()
-    mesh_generator_datastore[current_mesh] = mesh_generator_mock
+    assert len(gmsh_process_datastore) == 0
+    gmsh_process_mock = MagicMock()
+    gmsh_process_datastore[current_mesh] = gmsh_process_mock
     mesh_size = 0.05
     _create_mesh_from_geometry_begin(size=mesh_size)
-    mesh_generator_mock.start_mesh_generation.assert_called_once_with(
-        "mesh", resolution=mesh_size
+    gmsh_process_mock.call_function_async.assert_called_once_with(
+        "generate_mesh", resolution=mesh_size
     )
 
 
