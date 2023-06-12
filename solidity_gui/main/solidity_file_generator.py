@@ -113,6 +113,7 @@ def generate_elements_data(
     meshes: Mapping[str, Mesh], material_assignments: Mapping[int, MaterialAssignment]
 ) -> Dict[str, object]:
     """Generates the elements section data for the Solidity input file."""
+    points_per_tetra = 4
     node_ids = np.empty((0, 4), dtype="uint64")
     node_id_offset = 0
 
@@ -142,9 +143,9 @@ def generate_elements_data(
 
     return dict(
         num_tetra=total_tetra,
+        points_per_tetra=points_per_tetra,
         cell_materials=cell_materials_sorted[:, 1],
         tetra_node_ids=node_ids,
-        points_per_tetra=4,
     )
 
 
@@ -164,6 +165,7 @@ def create_y3d_template() -> str:
     data.update(generate_elements_data(mesh_datastore, material_assignment_datastore))
     data.update(generate_nodes_data(mesh_datastore, surface_nodes))
 
+    # add materials template data
     data.update(
         dict(
             materials=material_datastore.values(), num_materials=len(material_datastore)
