@@ -4,8 +4,8 @@ import numpy as np
 
 from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
 from solidity_gui.main.solidity_file_generator import (
-    generate_nodes_data,
     generate_interactions_data,
+    generate_nodes_data,
     get_tetra_side_lengths,
 )
 

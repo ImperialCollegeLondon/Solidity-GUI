@@ -1,4 +1,5 @@
 """This module provides functionality to generate an input file for Solidity."""
+from itertools import combinations
 from pathlib import Path
 from typing import Any, Dict, Mapping
 
@@ -6,7 +7,6 @@ import numpy as np
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from meshio import Mesh
 from PySide6.QtWidgets import QMessageBox
-from itertools import combinations
 
 from .. import config
 from .gmsh_process import gmsh_process_datastore
@@ -151,6 +151,7 @@ def generate_elements_data(
 
 
 def get_tetra_side_lengths(meshes: Mapping[str, Mesh]) -> np.ndarray:
+    """Gets the side lengths of the tetrahedra in the mesh."""
     # this is only good for linear meshes
     # it is probably too memory/compute intensive for large meshes
     # gmsh will release a built in way to do this in the 4.12 release
@@ -194,7 +195,7 @@ def create_y3d_template() -> str:
 
     data = dict(num_timesteps=2000000)
     data.update(generate_elements_data(mesh_datastore, material_assignment_datastore))
-    data.update(generate_interactions_data())
+    data.update(generate_interactions_data(mesh_datastore))
     data.update(generate_nodes_data(mesh_datastore, surface_nodes))
 
     return template.render(data)
