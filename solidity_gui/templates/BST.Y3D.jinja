@@ -1,3 +1,4 @@
+     /*   Control     */
 /YD/YDC/MCSTEP {{ num_timesteps}}
 /YD/YDC/NCSTEP        0
 /YD/YDC/ISAVE  1000000
@@ -34,7 +35,7 @@
 /YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
 {% for element in tetra_node_ids -%}
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
-{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}
+{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
      /*   Interactions     */
 /YD/YDI/MICOUP 10000000
 /YD/YDI/NICOUP 0
@@ -52,6 +53,7 @@
 /YD/YDI/D2NV 21 3 0 
 /YD/YDI/D2T1V 21 3 0 
 /YD/YDI/D2T2V 21 3 0
+     /*   Nodes     */
 /YD/YDN/MNODIM 4
 /YD/YDN/NNODIM 3
 /YD/YDN/MNOPO {{ num_nodes + 1 }}
