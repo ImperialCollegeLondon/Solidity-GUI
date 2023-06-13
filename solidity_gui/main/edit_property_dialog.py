@@ -1,7 +1,7 @@
 """User interface elements for editing properties."""
 
 from .forms import SimpleFormDialog
-from .material import DensityForm, Property
+from .material import Property
 
 
 class EditPropertyDialog(SimpleFormDialog):
@@ -10,17 +10,18 @@ class EditPropertyDialog(SimpleFormDialog):
     Dialog contents are generated from the specified geometry.Shape.
     """
 
-    def __init__(self, property: Property):
+    def __init__(self, property_: Property):
         """Initialise a new dialog.
 
         Args:
-          property: Property which fields will be edited
+          property_: Property which fields will be edited
         """
-        super().__init__(DensityForm)
-        self.setWindowTitle(f"Edit {property.name}")
+        super().__init__(property_.attributes, initial_data=property_.data)
+        self.setWindowTitle(f"Edit {property_.name}")
+        self.material_property = property_
 
     def _ok_clicked(self) -> None:
         """Signal handler for clicking ok button."""
         if data := super()._ok_clicked():
-            print(data)
+            self.material_property.data = data
             self.close()

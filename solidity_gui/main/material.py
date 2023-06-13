@@ -1,7 +1,7 @@
 """Module containing definitions for bundling material and properties data."""
 
 from dataclasses import dataclass, field
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
 from meshio import Mesh
 from pubsub import pub
@@ -40,6 +40,7 @@ class Property:
     category: str
     enabled: bool
     attributes: Type[Form]
+    data: Optional[Dict[str, object]] = None
 
 
 Properties_Dict_Type = dict[str, Property]

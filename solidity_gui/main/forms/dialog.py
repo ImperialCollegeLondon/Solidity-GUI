@@ -194,6 +194,7 @@ class SimpleFormDialog(QDialog):
         self,
         form_class: Type[Form],
         form_renderer: Callable[[FormInfo], QLayout] = default_form_renderer,
+        initial_data: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ):
         """Initialise a new SimpleFormDialog.
@@ -201,10 +202,13 @@ class SimpleFormDialog(QDialog):
         Args:
           form_class: form to display
           form_renderer: renderer that creates GUI elements from a FormInfo instance
+          initial_data: data to pre-populate into the form
         """
         super().__init__(**kwargs)
         self.form_class = form_class
-        self.form_info = self.form_class().form_info()
+        self.form_info = self.form_class().form_info(
+            data=initial_data if initial_data is not None else dict()
+        )
         self.form_renderer = form_renderer
         contents = self._create_contents(self.form_info)
         self.setLayout(contents)
