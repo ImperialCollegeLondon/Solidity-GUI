@@ -1,20 +1,18 @@
 """Creation and manipulation of system geometries."""
 
+import warnings
 from dataclasses import dataclass
-from multiprocessing import Process, Queue
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, List, Tuple, Type
 
 import gmsh
 import numpy as np
 import pygmsh
 from marshmallow import ValidationError, validate
 from meshio import Mesh
-from pubsub import pub
 from pygmsh.common.dummy import Dummy
-from PySide6.QtCore import QThread, Signal
 
 from .forms import Form
-from .forms.fields import FloatField, VectorField
+from .forms.fields import FloatField, IntField, VectorField
 
 Vector = Tuple[float, float, float]
 
@@ -56,6 +54,22 @@ class Geometry(pygmsh.occ.Geometry):
     def add_surface(self, *args: Any, **kwargs: Any) -> Surface:
         """Add a new surface to the geometry."""
         return Surface(self.env, *args, **kwargs)
+
+    def boolean_union(
+        self,
+        entities: List[Dummy],
+        delete_first: bool = True,
+        delete_other: bool = True,
+    ) -> List[Dummy]:
+        """Perform a boolean union of geometric entities.
+
+        A thin wrapper around pygmsh.occ.Geometry that suppresses warnings.
+        """
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=".*Specified mesh size.*", module=".*geometry"
+            )
+            return super().boolean_union(entities, delete_first, delete_other)
 
 
 @dataclass
@@ -129,6 +143,48 @@ def add_dome(
     return dome_volume
 
 
+def add_drill_bit(
+    geom: pygmsh.occ.Geometry,
+    insert_number: int,
+    x0: Vector,
+    axis: Vector,
+    face_height: float,
+    radius: float,
+    insert_radius: float,
+    insert_length: float,
+    insert_displacement: float,
+    mesh_size: float = 0.2,
+) -> Dummy:
+    """Add a drill bit shape for drillco systems."""
+    bit_base = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
+    top_axis = np.array(axis) / np.linalg.norm(axis) * face_height
+    top_base = np.array(x0) + np.array(axis)
+    bit_top = add_dome(
+        geom, x0=top_base, axis=top_axis, radius=radius, mesh_size=mesh_size
+    )
+    insert_axis = top_axis / np.linalg.norm(top_axis) * insert_length
+    inserts = [
+        add_dome(
+            geom,
+            x0=top_base
+            + np.array(
+                (
+                    0,
+                    insert_displacement * np.cos(i * 2 * np.pi / insert_number),
+                    insert_displacement * np.sin(i * 2 * np.pi / insert_number),
+                )
+            ),
+            axis=insert_axis,
+            radius=insert_radius,
+        )
+        for i in range(insert_number)
+    ]
+
+    bit = geom.boolean_union([bit_base, bit_top] + inserts)[0]
+    geom._SIZE_QUEUE.append((bit, mesh_size))
+    return bit
+
+
 @dataclass
 class Shape:
     """Definition of a shape.
@@ -145,6 +201,9 @@ class Shape:
     name: str
     method: Callable
     form: Type[Form]
+
+
+greater_than_zero = validate.Range(min=0, min_inclusive=False)
 
 
 class BoxForm(Form):
@@ -164,7 +223,7 @@ class BallForm(Form):
     center = VectorField(display_name="Center Coordinates")
     radius = FloatField(
         description="The radius of the ball.",
-        validators=[validate.Range(min=0, min_inclusive=False)],
+        validators=[greater_than_zero],
     )
 
 
@@ -188,7 +247,7 @@ class ConeForm(Form):
     )
     radius0 = FloatField(
         display_name="Base Radius",
-        validators=[validate.Range(min=0, min_inclusive=False)],
+        validators=[greater_than_zero],
     )
     radius1 = FloatField(
         display_name="Tip Radius",
@@ -208,11 +267,34 @@ class CylinderForm(Form):
     axis = VectorField(
         display_name="Axis Vector", vector_validators=[non_zero_magnitude]
     )
-    radius = FloatField(validators=[validate.Range(min=0, min_inclusive=False)])
+    radius = FloatField(validators=[greater_than_zero])
 
 
 class DomeForm(CylinderForm):
     """Form defining data required for dome shape creation."""
+
+
+class DrillBitForm(Form):
+    """Form defining data for drill bit shape creation."""
+
+    insert_number = IntField(
+        display_name="Insert Number", validators=[validate.Range(min=1)]
+    )
+    x0 = VectorField(display_name="Center Coordinates")
+    axis = VectorField(
+        display_name="Axis Vector", vector_validators=[non_zero_magnitude]
+    )
+    face_height = FloatField(display_name="Face Height", validators=[greater_than_zero])
+    radius = FloatField(validators=[greater_than_zero])
+    insert_radius = FloatField(
+        display_name="Insert Radius", validators=[greater_than_zero]
+    )
+    insert_length = FloatField(
+        display_name="Insert Length", validators=[greater_than_zero]
+    )
+    insert_displacement = FloatField(
+        display_name="Insert Displacement", validators=[greater_than_zero]
+    )
 
 
 SHAPES = dict(
@@ -223,48 +305,12 @@ SHAPES = dict(
         name="cylinder", method=pygmsh.occ.Geometry.add_cylinder, form=CylinderForm
     ),
     dome=Shape(name="dome", method=add_dome, form=DomeForm),
+    drillbit=Shape(name="drillbit", method=add_drill_bit, form=DrillBitForm),
 )
 """Library of supported shapes."""
 
 
-class GmshListener(QThread):
-    """A class to listen for generated meshes produced in the separate gmsh process.
-
-    We use a separate thread so that the main thread isn't blocked waiting for meshes to
-    be received. Qt's signal/slot mechanism is used to pass this mesh back to the main
-    thread, which invokes PyPubsub's sendMessage() function. This needs to be run on the
-    main thread in case listeners want to modify the GUI (all GUI operations have to be
-    on the main thread).
-    """
-
-    mesh_received = Signal(str, Mesh)
-    """Signal for when a new mesh has been generated."""
-
-    def __init__(self, queue: Queue) -> None:
-        """Create a new GmshListener."""
-        super().__init__()
-        self._queue = queue
-
-    def _receive_mesh(self) -> bool:
-        """Read a new mesh from the queue.
-
-        Returns:
-            False if thread is being stopped, True if item was retrieved successfully
-        """
-        item: Optional[Tuple[str, Mesh]] = self._queue.get()
-        if not item:
-            return False
-
-        self.mesh_received.emit(*item)
-        return True
-
-    def run(self) -> None:
-        """Read received meshes forever and broadcast via a signal."""
-        while self._receive_mesh():
-            pass
-
-
-class ShapeFactory:
+class GeometryWrapper:
     """An adapter to pygmsh.occ.Geometry for creation of simple geometries."""
 
     def __init__(self, geom: pygmsh.occ.Geometry):
@@ -276,7 +322,7 @@ class ShapeFactory:
         self.geom = geom
         self.function_map = {name: shape.method for name, shape in SHAPES.items()}
 
-    def add_component(self, component: Component, resolution: float) -> None:
+    def add_component(self, component: Component, resolution: float) -> Mesh:
         """Add a component to the system geometry.
 
         Args:
@@ -295,73 +341,29 @@ class ShapeFactory:
         self.geom.add_physical(shape, f"{component.label}_volume")
         for i, tag in enumerate(surface_tags[0]):
             self.geom.add_physical(Dummy(2, int(tag)), f"{component.label}_surface_{i}")
-        return shape
+        return self._generate_mesh()
 
+    def _generate_mesh(self) -> Mesh:
+        # we have to manually clear out some of the mesh and phsical group info
+        # before we can generate a new mesh
+        gmsh.model.mesh.clear()
+        for dim_tag in gmsh.model.get_physical_groups():
+            gmsh.model.remove_physical_name(gmsh.model.get_physical_name(*dim_tag))
+        gmsh.model.remove_physical_groups()
+        return self.geom.generate_mesh()
 
-def generate_mesh(components: Iterable[Component], resolution: float) -> Mesh:
-    """Generate a meshio.Mesh from simple geometric components.
-
-    Args:
-      components: to include in the system geometry
-      resolution: resolution to use for mesh
-    """
-    with Geometry() as geom:
-        factory = ShapeFactory(geom)
-        for component in components:
-            factory.add_component(component, resolution=resolution)
-        return geom.generate_mesh()
-
-
-class MeshGenerator:
-    """A class for communicating with gmsh on a separate process.
-
-    Using the gmsh module seemingly only works on the main thread of the Python process,
-    so in order to be able to run gmsh operations in the background, it is necessary to
-    spin up a separate process for this.
-    """
-
-    def __init__(self) -> None:
-        """Create a new MeshGenerator."""
-        self._in_queue: Queue = Queue()
-        """Queue containing the parameters for components to be meshed."""
-        self._out_queue: Queue = Queue()
-        """Queue containing the generated meshes."""
-
-        self._process = Process(target=self._run_mesh_generation, daemon=True)
-        """Background process for running gmsh."""
-        self._process.start()
-
-        self._listener = GmshListener(self._out_queue)
-        """Receives generated meshes and raises a signal when they arrive."""
-        self._listener.mesh_received.connect(self._send_meshing_end)
-        self._listener.start()
-
-    def __del__(self) -> None:
-        """Stop background QThread."""
-        # None is used as a sentinel value to signal that the thread should stop
-        self._out_queue.put(None)
-        self._listener.wait()
-
-    def _generate_mesh(self) -> None:
-        topic, components, resolution = self._in_queue.get()
-        self._out_queue.put((topic, generate_mesh(components, resolution)))
-
-    def _run_mesh_generation(self) -> None:
-        while True:
-            self._generate_mesh()
-
-    def _send_meshing_end(self, name: str, mesh: Mesh) -> None:
-        pub.sendMessage(f"{name}.meshing.end", mesh=mesh)
-
-    def start_mesh_generation(
-        self, topic: str, components: Iterable[Component], resolution: float
-    ) -> Mesh:
-        """Generate a meshio.Mesh from simple geometric components.
+    def generate_mesh(self, resolution: float) -> Mesh:
+        """Generate a new system mesh at the specified resolution.
 
         Args:
-            topic: the top-level topic name to send messages on
-            components: to include in the system geometry
-            resolution: resolution to use for mesh
+            resolution: desired mesh resolution
         """
-        pub.sendMessage(f"{topic}.meshing.begin")
-        self._in_queue.put((topic, components, resolution))
+        self.geom._SIZE_QUEUE = [(sq[0], resolution) for sq in self.geom._SIZE_QUEUE]
+        return self._generate_mesh()
+
+    def get_surface_nodes(self) -> np.ndarray:
+        """Get the indices of the mesh nodes that are on the system surface."""
+        return (
+            np.sort(np.unique(gmsh.model.mesh.getNodes(2, -1, includeBoundary=True)[0]))
+            - 1
+        )

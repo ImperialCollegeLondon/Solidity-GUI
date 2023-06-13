@@ -1,8 +1,5 @@
 """Simple form for creating a new material."""
 
-from typing import Dict
-
-from pubsub import pub
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -13,13 +10,13 @@ from PySide6.QtWidgets import (
 )
 
 from .edit_material_dialog import EditMaterialDialog
-from .material import Material
+from .material import Material, MaterialDatastore, material_datastore
 
 
 class CreateMaterialDialog(QDialog):
     """Dialog for creating a material."""
 
-    def __init__(self, materials: Dict[str, Material]) -> None:
+    def __init__(self, materials: MaterialDatastore) -> None:
         """Initialise a new dialog."""
         super().__init__()
         self.setWindowTitle("Create new material")
@@ -59,11 +56,12 @@ class CreateMaterialDialog(QDialog):
             return
 
         if material_name.strip().lower() in [
-            name.strip().lower() for name in self.materials.keys()
+            material.name.strip().lower() for material in self.materials.values()
         ]:
             QMessageBox.warning(self, "Invalid input", "Name already exists!")
             return
 
-        pub.sendMessage("materials.add", material=material_name)
+        material = Material(name=material_name)
+        material_datastore.add(material)
         self.close()
-        EditMaterialDialog(self.materials[material_name]).exec()
+        EditMaterialDialog(material).exec()

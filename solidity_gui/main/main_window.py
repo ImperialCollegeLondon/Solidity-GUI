@@ -1,5 +1,7 @@
 """Code for the main window containing all the frames and menus of the GUI."""
+from pubsub import pub
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QTextEdit, QVBoxLayout
 
 from .. import config
@@ -30,6 +32,11 @@ class MainWindow(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, visualisation_toolbar)
 
         self.setCentralWidget(self.main_frame)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Send message when window is closed."""
+        super().closeEvent(event)
+        pub.sendMessage("window.close")
 
     def create_main_frame(self) -> None:
         """Create the main frame of the window.
@@ -67,5 +74,5 @@ class MainWindow(QMainWindow):
         self.model_tree = BaseModelTree(2)
         central_layout.addLayout(self.model_tree)
         central_layout.addLayout(self.control_panel)
-        central_layout.addLayout(self.vtk_window)
+        central_layout.addWidget(self.vtk_window)
         self.central_frame.setLayout(central_layout)

@@ -1,7 +1,7 @@
 """Code to display a mesh within a VTK window."""
 import os
 from tempfile import NamedTemporaryFile
-from typing import Any, List
+from typing import Any, Optional
 
 import numpy as np
 import vtk
@@ -9,14 +9,16 @@ from meshio import CellBlock, Mesh
 from numpy.typing import NDArray
 from pubsub import pub
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QVBoxLayout
+from PySide6.QtWidgets import QApplication
 from vtk.util import numpy_support
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
 from .. import config
-from .geometry import Component, MeshGenerator, Vector
+from .custom_interactor_style import CustomInteractorStyle
+from .geometry import Vector
+from .meshes import current_mesh, mesh_datastore
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
@@ -53,7 +55,7 @@ def _restore_cursor(mesh: Mesh = None) -> None:
     QApplication.restoreOverrideCursor()
 
 
-class VTKWindow(QVBoxLayout):
+class VTKWindow(QVTKRenderWindowInteractor):
     """A frame containing a VTK window."""
 
     unselected_lookup_value, selected_lookup_value = 0, 1
@@ -69,31 +71,25 @@ class VTKWindow(QVBoxLayout):
         surface_cell_ids = mesh.cell_sets[name][1]
         return triangles.data[surface_cell_ids]
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self) -> None:
         """Create new VTKWindow."""
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
-        vtkWidget = QVTKRenderWindowInteractor()
-        self.addWidget(vtkWidget)
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(*config.BACKGROUND_COLOUR)
 
-        vtkWidget.GetRenderWindow().AddRenderer(self.ren)
-        self.iren = vtkWidget.GetRenderWindow().GetInteractor()
+        self.GetRenderWindow().AddRenderer(self.ren)
+        self.iren = self.GetRenderWindow().GetInteractor()
+
+        # iren doesn't seem to hold a reference so we have to save this
+        self.inter_style = CustomInteractorStyle()
+        self.iren.SetInteractorStyle(self.inter_style)
         self.iren.Initialize()
-        self.meshes: List[Mesh] = []
-        self.components: List[Component] = []
-        self.ugrids: List[vtk.vtkUnstructuredGrid] = []
         self.reset_camera()
+        self.ugrid: Optional[vtk.vtkUnstructuredGrid] = None
 
         self._create_orientation_marker()
 
-        self.mesh_generator = MeshGenerator()
-
-        pub.subscribe(self._add_component_to_geometry_begin, "geometry.update")
-        pub.subscribe(self._add_component_to_geometry_end, "geometry.meshing.end")
-        pub.subscribe(self._create_mesh_from_geometry_begin, "mesh.create")
-        pub.subscribe(self._create_mesh_from_geometry_end, "mesh.meshing.end")
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
         pub.subscribe(self.reorient_camera, "camera.reorient")
         pub.subscribe(self.reset_camera, "camera.reset")
@@ -104,34 +100,8 @@ class VTKWindow(QVBoxLayout):
         pub.subscribe(_restore_cursor, "mesh.meshing.end")
         pub.subscribe(_restore_cursor, "geometry.meshing.end")
 
-    def _add_component_to_geometry_begin(self, component: Component) -> None:
-        """Add a new geometric component and render and display its rough mesh."""
-        self.components.append(component)
-        self.mesh_generator.start_mesh_generation(
-            "geometry", [component], resolution=0.2
-        )
-
-    def _add_component_to_geometry_end(self, mesh: Mesh) -> None:
-        self.meshes.append(mesh)
-        self.render_mesh(mesh)
-        pub.sendMessage("geometry.updated", mesh=mesh)
-
-    def _create_mesh_from_geometry_begin(self) -> None:
-        """Generate and display a high quality mesh from the current geometry."""
-        if not self.components:
-            return
-
-        self.ugrids = []
-        self.mesh_generator.start_mesh_generation(
-            "mesh", self.components, resolution=0.05
-        )
-
-    def _create_mesh_from_geometry_end(self, mesh: Mesh) -> None:
-        self.meshes = [mesh]
-        for actor in self.ren.GetActors():
-            self.ren.RemoveActor(actor)
-        self.render_mesh(mesh)
-        pub.sendMessage("mesh.updated", mesh=mesh)
+        pub.subscribe(self.render_mesh, "geometry.updated")
+        pub.subscribe(self.render_mesh, "mesh.updated")
 
     def render_mesh(self, mesh: Mesh) -> None:
         """Render a mesh within the VTKWindow.
@@ -156,7 +126,7 @@ class VTKWindow(QVBoxLayout):
             # Delete the file now that we've finished with it
             os.unlink(filename)
 
-        self.ugrids.append(ugrid)
+        self.ugrid = ugrid
         # Create the LUT for scalars to colors
         lut = vtk.vtkLookupTable()
         lut.SetNumberOfTableValues(2)
@@ -170,27 +140,33 @@ class VTKWindow(QVBoxLayout):
         mapper.UseLookupTableScalarRangeOn()
         mapper.SetLookupTable(lut)
 
+        for actor in self.ren.GetActors():
+            self.ren.RemoveActor(actor)
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
         self.ren.AddActor(actor)
 
         self.ren.ResetCamera()
         self.iren.ReInitialize()
+        pub.sendMessage("mesh.rendered", mesh=mesh)
 
     def _colour_mesh_selection(self, selection_name: str) -> None:
         """Update rendered mesh colours based on selected element."""
-        for mesh, ugrid in zip(self.meshes, self.ugrids):
-            point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
-            try:
-                surface_point_ids = np.unique(
-                    self.get_point_ids_in_surface(selection_name, mesh)
-                )
-                point_colours[surface_point_ids] = self.selected_lookup_value
-                self.iren.ReInitialize()
-            except KeyError:
-                pass
+        if not self.ugrid:
+            return
 
-            ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
+        mesh = mesh_datastore[current_mesh]
+        point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
+        try:
+            surface_point_ids = np.unique(
+                self.get_point_ids_in_surface(selection_name, mesh)
+            )
+            point_colours[surface_point_ids] = self.selected_lookup_value
+            self.iren.ReInitialize()
+        except KeyError:
+            pass
+
+        self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
         self.iren.ReInitialize()
 
     def reset_camera(self) -> None:

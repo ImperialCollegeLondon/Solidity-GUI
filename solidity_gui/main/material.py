@@ -3,13 +3,20 @@
 from dataclasses import dataclass, field
 from typing import Dict, Type
 
+from meshio import Mesh
+from pubsub import pub
+
+from .datastore import IndexDatastore
 from .forms import Form
 from .forms.fields import FloatField
+from .meshes import mesh_datastore
 
 Attributes_Dict_Type = Dict[str, Type[float] | bool]
 
 
 class DensityForm(Form):
+    """Form for collecting material density data."""
+
     density = FloatField()
 
 
@@ -71,10 +78,46 @@ class Material:
 
     Attributes:
         name: name of this material
-        id: unique id for this material
         properties: dictionary containing all properties for this Material
     """
 
     name: str
-    id: int
     properties: Properties_Dict_Type = field(default_factory=PROPERTIES)
+
+
+@dataclass(frozen=True)
+class MaterialAssignment:
+    """Simple datastructure recording the association of a cell_set and Material."""
+
+    material_id: int
+    cell_set_name: str
+
+
+class MaterialDatastore(IndexDatastore[Material]):
+    """Convenience IndexDatastore subclass with concretised type."""
+
+
+material_datastore = MaterialDatastore("materials")
+material_assignment_datastore: IndexDatastore[MaterialAssignment] = IndexDatastore(
+    "material_assignment"
+)
+
+
+def sync_assignments_material_removed(key: int, value: Material) -> None:
+    """Message handler sync assignment datastore when material datastore changes."""
+    for assignment_key, assignment in list(material_assignment_datastore.items()):
+        if assignment.material_id == key:
+            del material_assignment_datastore[assignment_key]
+
+
+def sync_assignments_mesh_removed(key: int, value: Mesh) -> None:
+    """Message handler sync assignment datastore when mesh datastore changes."""
+    for assignment_key, assignment in list(material_assignment_datastore.items()):
+        for cell_set_name in value.cell_sets:
+            if assignment.cell_set_name == cell_set_name:
+                del material_assignment_datastore[assignment_key]
+                break
+
+
+pub.subscribe(sync_assignments_material_removed, material_datastore.remove_topic)
+pub.subscribe(sync_assignments_mesh_removed, mesh_datastore.remove_topic)

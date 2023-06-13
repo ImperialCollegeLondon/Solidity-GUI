@@ -193,3 +193,27 @@ class CheckBoxWidget(Widget[QCheckBox, bool]):
           input_: QCheckBox instance containing data
         """
         return input_.isChecked()
+
+
+class TrueWidget(CheckBoxWidget):
+    """Widget that always provides a value of True."""
+
+    def create(self, data: Optional[bool], validators: Iterable[Callable]) -> QCheckBox:
+        """Return a QCheckBox instance that is not visible.
+
+        Args:
+          data: present for API consistency but ignored.
+          validators: marshmallow validators (passed by associated Field)
+        """
+        qt_input = super().create(True, validators)
+        qt_input.setVisible(False)
+        return qt_input
+
+    @staticmethod
+    def process(input_: QCheckBox) -> bool:
+        """Returns True.
+
+        Args:
+          input_: present for API consistency but ignored.
+        """
+        return True

@@ -9,6 +9,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    allow:  # attempt to only update direct dependencies from pyproject.toml
+      - dependency-name: "*"
+        dependency-type: "direct"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

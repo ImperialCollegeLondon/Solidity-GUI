@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.14
+      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
         name: Check links in markdown files
         with:
           use-quiet-mode: 'yes'
@@ -24,11 +24,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       DISPLAY: ":99.0"
+      QT_DEBUG_PLUGINS: 1 # adds some verbosity but helpful to debug QT issues
     strategy:
       fail-fast: false
       matrix:
         os: [ windows-latest, ubuntu-latest, macos-latest ]
-        python-version: [ "3.10" ]
+        python-version: [ "3.10", "3.11" ]
 
     steps:
     - uses: actions/checkout@v3
@@ -39,7 +40,7 @@ jobs:
         sudo apt-get install -y libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 \
             x11-utils libegl1 libglu1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
-            libxcb-render-util0 libxkbcommon-x11-0
+            libxcb-render-util0 libxkbcommon-x11-0 libxcb-cursor0
       if: matrix.os == 'ubuntu-latest'
 
     - name: Setup XServer and Window Manager (Linux)
@@ -61,15 +62,16 @@ jobs:
       if: matrix.os != 'windows-latest'
 
     - name: Run tests (windows)
-      # tests involving vtk_window do not work on Windows CI runners
-      run: pytest -k "not test_vtk_window"
+      # tests involving MainWindow and VTKWindow do not work on Windows CI runners
+      run: pytest -k "not test_main_window and not test_vtk_window"
       if: matrix.os == 'windows-latest'
 
     - name: Build executable
       run: pyinstaller Solidity-GUI.spec
+      if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10'
 
     - uses: actions/upload-artifact@v3
-      if: success()
+      if: github.ref == 'refs/heads/main' && success()
       with:
         name: Solidity-GUI-${{ matrix.os }}
         path: dist/*

@@ -2,7 +2,6 @@
 
 from typing import Dict, Set
 
-from pubsub import pub
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QDialog,
@@ -177,11 +176,7 @@ class EditMaterialDialog(QDialog):
 
     def _save_clicked(self) -> None:
         for property in self.toggled_properties:
-            pub.sendMessage(
-                "property.toggle_enabled",
-                material=self.material.name,
-                property=property,
-            )
+            self.material.properties[property].enabled ^= True
 
         self.close()
 
