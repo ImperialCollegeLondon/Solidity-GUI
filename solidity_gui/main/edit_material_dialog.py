@@ -186,9 +186,12 @@ class EditMaterialDialog(QDialog):
         dialog.exec_()
 
     def _edit_button_clicked(self) -> None:
-        from_tree = self.disabled_properties_tree
-        selected_property_index = from_tree.selectedIndexes()[0]
-        selected_property_text = from_tree.base_model.itemFromIndex(
+        tree = self.enabled_properties_tree
+        try:
+            selected_property_index = tree.selectedIndexes()[0]
+        except IndexError:
+            return
+        selected_property_text = tree.base_model.itemFromIndex(
             selected_property_index
         ).text()
         property = self.material.properties[selected_property_text]
