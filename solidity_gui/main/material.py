@@ -20,6 +20,13 @@ class DensityForm(Form):
     density = FloatField()
 
 
+class ElasticityForm(Form):
+    """Form for collecting material properties related to elasticity."""
+
+    lames_first_parameter = FloatField(display_name="Lame's First Parameter")
+    lames_second_parameter = FloatField(display_name="Lame's Second Parameter")
+
+
 @dataclass
 class Property:
     """Definition of a Property.
@@ -41,6 +48,7 @@ class Property:
     enabled: bool
     attributes: Type[Form]
     data: Optional[Dict[str, object]] = None
+    default_data: Dict[str, object] = field(default_factory=dict)
 
 
 Properties_Dict_Type = dict[str, Property]
@@ -50,26 +58,22 @@ def PROPERTIES() -> Properties_Dict_Type:
     """Define the dictionary of available properties for a Material."""
     return {
         "density": Property(
-            category="General", name="Density", enabled=False, attributes=DensityForm
+            category="General",
+            name="Density",
+            enabled=False,
+            attributes=DensityForm,
+            default_data=dict(density=2.34e10),
         ),
-        #        "mohr_coulomb": Property(
-        #            category="Mechanical",
-        #            name="Mohr-Coulomb",
-        #            enabled=False,
-        #            attributes=dict(specify_tension_cutoff=bool),
-        #        ),
-        #        "example_property_1": Property(
-        #            category="General",
-        #            name="Example Property 1",
-        #            enabled=False,
-        #            attributes=dict(example_setting=bool),
-        #        ),
-        #        "example_property_2": Property(
-        #            category="General",
-        #            name="Example Property 2",
-        #            enabled=False,
-        #            attributes=dict(example_setting=bool),
-        #        ),
+        "elasticity": Property(
+            category="Mechanical",
+            name="Elasticity",
+            enabled=False,
+            attributes=ElasticityForm,
+            default_data=dict(
+                lames_first_parameter=2.23325062035e10,
+                lames_second_parameter=2.41935483871e10,
+            ),
+        ),
     }
 
 
