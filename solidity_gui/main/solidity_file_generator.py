@@ -10,7 +10,11 @@ from PySide6.QtWidgets import QMessageBox
 
 from .. import config
 from .gmsh_process import gmsh_process_datastore
-from .material import MaterialAssignment, material_assignment_datastore
+from .material import (
+    MaterialAssignment,
+    material_assignment_datastore,
+    material_datastore,
+)
 from .meshes import mesh_datastore
 
 env = Environment(
@@ -56,7 +60,6 @@ def generate_nodes_data(
     surface_node_flags[combined_surface_nodes.astype("uint64")] = 1
 
     return dict(
-        num_timesteps=2000000,
         num_nodes=num_nodes,
         nodes=all_nodes,
         surface_node_flags=surface_node_flags,
@@ -109,21 +112,18 @@ def error_message(message: str) -> None:
 
 def generate_elements_data(
     meshes: Mapping[str, Mesh], material_assignments: Mapping[int, MaterialAssignment]
-) -> Dict[str, Any]:
+) -> Dict[str, object]:
     """Generates the elements section data for the Solidity input file."""
-    total_tetra = sum(
-        cell.data.shape[0]
-        for value in meshes.values()
-        for cell in value.cells_dict["tetra"]
-    )
-
     points_per_tetra = 4
-    # cell_materials_sorted, node_ids = generate_elements_data()
     node_ids = np.empty((0, 4), dtype="uint64")
     node_id_offset = 0
 
     cell_materials_sorted = np.empty((0, 2), dtype="uint64")
     cell_id_offset = 0
+
+    total_tetra = sum(
+        mesh.cells_dict["tetra"].data.shape[0] for mesh in meshes.values()
+    )
 
     for mesh in meshes.values():
         cell_materials = fetch_material_assignments(mesh, material_assignments)
@@ -193,11 +193,17 @@ def create_y3d_template() -> str:
             raise ValueError("Invalid datastructure.")
         surface_nodes[mesh_name] = mesh_surface_nodes
 
-    data = dict(num_timesteps=2000000)
+    data: Dict[str, object] = {"num_timesteps": 2000000}
     data.update(generate_elements_data(mesh_datastore, material_assignment_datastore))
     data.update(generate_interactions_data(mesh_datastore))
     data.update(generate_nodes_data(mesh_datastore, surface_nodes))
 
+    # add materials template data
+    data.update(
+        dict(
+            materials=material_datastore.values(), num_materials=len(material_datastore)
+        )
+    )
     return template.render(data)
 
 
