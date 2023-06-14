@@ -18,13 +18,6 @@ def _get_mesh_and_surface_nodes(component):
     return mesh, surface_nodes
 
 
-def _get_mesh(component):
-    with Geometry() as geom:
-        wrapper = GeometryWrapper(geom)
-        mesh = wrapper.add_component(component, 0.2)
-    return mesh
-
-
 def test_generate_nodes_data():
     """Test get_template_data function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
@@ -61,10 +54,10 @@ def test_generate_nodes_data():
 
 def test_generate_interactions_data():
     """Test generate_interactions_data function."""
-    mesh_a = _get_mesh(
+    mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
         Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
     )
-    mesh_b = _get_mesh(
+    mesh_b, surface_nodes_a = _get_mesh_and_surface_nodes(
         Component(shape="box", label="b", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1]))
     )
 
