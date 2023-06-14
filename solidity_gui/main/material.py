@@ -27,6 +27,14 @@ class ElasticityForm(Form):
     lames_second_parameter = FloatField(display_name="Lame's Second Parameter")
 
 
+class FractureForm(Form):
+    """Form for collecting properties related to fracturing."""
+
+    damage_delta_0 = FloatField(display_name="Damage Delta 0")
+    damage_delta_1 = FloatField(display_name="Damage Delta 1")
+    damage_threshold = FloatField(display_name="Damage Threshold")
+
+
 @dataclass
 class Property:
     """Definition of a Property.
@@ -72,6 +80,17 @@ def PROPERTIES() -> Properties_Dict_Type:
             default_data=dict(
                 lames_first_parameter=2.23325062035e10,
                 lames_second_parameter=2.41935483871e10,
+            ),
+        ),
+        "fracture": Property(
+            category="Mechanical",
+            name="Fracture",
+            enabled=False,
+            attributes=FractureForm,
+            default_data=dict(
+                damage_delta_0=0.005,
+                damage_delta_1=1,
+                damage_threshold=0.5,
             ),
         ),
     }
