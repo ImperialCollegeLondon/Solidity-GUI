@@ -51,6 +51,13 @@
 {% endfor %}
 {%- endmacro %}
 
+{%- macro render_flag_property(yd_code, property_name, true_value, false_value) -%}
+/YD/YDP/{{ yd_code }}  {{ num_materials }}
+{% for material in materials -%}
+{% if material.properties.get(property_name).enabled -%}{{ true_value }} {% else %}{{ false_value }} {% endif -%}
+{% endfor %}
+{%- endmacro %}
+
 /YD/YDP/MPROP  200 {{ num_materials + 1 }}
 /YD/YDP/NPROP  200 {{ num_materials }}
 {{ render_unimplemented_property("D1PEKS", 0) }}
@@ -68,13 +75,13 @@
 {{ render_unimplemented_property("D1PEPSF", 0) }}
 {{ render_unimplemented_property("D1PEVF", 0) }}
 {{ render_unimplemented_property("D1PEPF", 1) }}
-{{ render_unimplemented_property("I1PTYP", 13) }}
-{{ render_unimplemented_property("I1PEJP", 0) }}
-{{ render_unimplemented_property("I1PEMN", 0) }}
-{{ render_unimplemented_property("I1PSDE", 0) }}
 {{ render_property("D1PEM0", "fracture", "damage_delta_0") }}
 {{ render_property("D1PEMF", "fracture", "damage_delta_1") }}
 {{ render_property("D1PEDM", "fracture", "damage_threshold") }}
+{{ render_unimplemented_property("I1PTYP", 13) }}
+{{ render_flag_property("I1PEJP", "fracture", 3, 0) }}
+{{ render_flag_property("I1PEMN", "fracture", 3, 0) }}
+{{ render_unimplemented_property("I1PSDE", 0) }}
 
      /*   Elements     */
 /YD/YDE/MELEM {{num_tetra+1}}
