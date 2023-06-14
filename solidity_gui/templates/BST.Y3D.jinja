@@ -49,7 +49,7 @@
 {{ render_property("D1PEMU", 0) }}
 {{ render_property("D1PEPE", "2.0e+10") }}
 /YD/YDP/D1PERO  {{ num_materials }}
-{% for material in materials -%}{% if material.properties.density.enabled %}2.34e+10{% else %}0{% endif %} {% endfor %}
+{% for material in materials -%}{% if material.properties.density.enabled %}{{material.properties.density.data.density}}{% else %}2.34e+10{% endif %} {% endfor %}
 {{ render_property("D1PEGFN", 50.0) }}
 {{ render_property("D1PEGFS", 50.0) }}
 {{ render_property("D1PEFT", "1.0e+7") }}
