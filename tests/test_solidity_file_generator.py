@@ -3,7 +3,11 @@
 import numpy as np
 
 from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
-from solidity_gui.main.solidity_file_generator import generate_nodes_data
+from solidity_gui.main.solidity_file_generator import (
+    generate_interactions_data,
+    generate_nodes_data,
+    get_tetra_side_lengths,
+)
 
 
 def _get_mesh_and_surface_nodes(component):
@@ -45,3 +49,25 @@ def test_generate_nodes_data():
     assert surface_node_flags.shape == (data["num_nodes"],)
     assert np.all(surface_node_flags[surface_node_filter] == 1)
     assert np.all(surface_node_flags[np.logical_not(surface_node_filter)] == 0)
+
+
+def test_generate_interactions_data():
+    """Test generate_interactions_data function."""
+    mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
+        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+    )
+    mesh_b, surface_nodes_a = _get_mesh_and_surface_nodes(
+        Component(shape="box", label="b", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1]))
+    )
+
+    meshes = dict(a=mesh_a, b=mesh_b)
+
+    data = generate_interactions_data(meshes)
+
+    # Calculate expected values based on input meshes
+    tetra_side_lengths = get_tetra_side_lengths(meshes)
+    expected_min_length = np.min(tetra_side_lengths)
+    expected_mean_length = np.mean(tetra_side_lengths)
+
+    assert data["min_length"] == expected_min_length
+    assert data["mean_length"] == expected_mean_length

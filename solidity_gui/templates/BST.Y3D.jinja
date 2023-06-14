@@ -1,3 +1,4 @@
+     /*   Control     */
 /YD/YDC/MCSTEP {{ num_timesteps}}
 /YD/YDC/NCSTEP        0
 /YD/YDC/ISAVE  1000000
@@ -7,17 +8,52 @@
 /YD/YDC/DCSTEC +2.45000000000e-09
 /YD/YDC/DCTIME +0.00000000000e+00
 /YD/YDC/DCURELX +1.00000000000e+00
-/YD/YDC/INITER 0
-/YD/YDC/ICOUTF 1000
-/YD/YDC/ICOUTI 0
-/YD/YDC/IWFAST 1
 /YD/YDC/DCGRST +0.00000000000e+00
 /YD/YDC/DCRMPT +0.00000000000e+00
 /YD/YDC/DCSTDN +0.00000000000e+00
 /YD/YDC/DCRMJT +0.00000000000e+00
 /YD/YDC/DCRMCT +0.00000000000e+00
 /YD/YDC/DCRMUT +0.00000000000e+00
+/YD/YDC/INITER 0
+/YD/YDC/ICOUTF 1000
+/YD/YDC/ICOUTI 0
+/YD/YDC/IWFAST 1
 
+     /*   Elements     */
+/YD/YDE/MELEM {{num_tetra+1}}
+/YD/YDE/NELEM {{num_tetra}}
+/YD/YDE/MELST     2
+/YD/YDE/NELST     2
+/YD/YDE/MELNO     {{points_per_tetra+1}}
+/YD/YDE/NELNO     {{points_per_tetra}}
+/YD/YDE/D2ELST    21 0 0
+/YD/YDE/D1EMCT 0
+/YD/YDE/I1ELCF 0
+/YD/YDE/I1ELBE 0
+/YD/YDE/I1ELPR {{num_tetra}}
+{{ cell_materials|join(' ') }}
+/YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
+{% for element in tetra_node_ids -%}
+{% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
+{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
+     /*   Interactions     */
+/YD/YDI/MICOUP 10000000
+/YD/YDI/NICOUP 0
+/YD/YDI/IIECFF -2
+/YD/YDI/DIEDI +2e+02
+/YD/YDI/DIEZON {{min_length}}
+/YD/YDI/DRECT {{mean_length}}
+/YD/YDI/D1IESL 0
+/YD/YDI/I1STAT 0
+/YD/YDI/I1IECN 0
+/YD/YDI/I1IECT 0
+/YD/YDI/D1DELTAT1 0
+/YD/YDI/D1DELTAT2 0
+/YD/YDI/D1DELTAN 0
+/YD/YDI/D2NV 21 3 0 
+/YD/YDI/D2T1V 21 3 0 
+/YD/YDI/D2T2V 21 3 0
+     /*   Nodes     */
 /YD/YDN/MNODIM 4
 /YD/YDN/NNODIM 3
 /YD/YDN/MNOPO {{ num_nodes + 1 }}
@@ -64,22 +100,3 @@
 {{ render_property("I1PEJP", 0) }}
 {{ render_property("I1PEMN", 0) }}
 {{ render_property("I1PSDE", 0) }}
-
-     /*   Elements     */
-/YD/YDE/MELEM {{num_tetra+1}}
-/YD/YDE/NELEM {{num_tetra}}
-/YD/YDE/MELST     2
-/YD/YDE/NELST     2
-/YD/YDE/MELNO     {{points_per_tetra+1}}
-/YD/YDE/NELNO     {{points_per_tetra}}
-/YD/YDE/D2ELST    21 0 0
-/YD/YDE/D1EMCT 0
-/YD/YDE/I1ELCF 0
-/YD/YDE/I1ELBE 0
-/YD/YDE/I1ELPR {{num_tetra}}
-{{ cell_materials|join(' ') }}
-/YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
-{% for element in tetra_node_ids -%}
-{% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
-{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}
-

@@ -1,4 +1,5 @@
 """This module provides functionality to generate an input file for Solidity."""
+from itertools import combinations
 from pathlib import Path
 from typing import Any, Dict, Mapping
 
@@ -149,6 +150,37 @@ def generate_elements_data(
     )
 
 
+def get_tetra_side_lengths(meshes: Mapping[str, Mesh]) -> np.ndarray:
+    """Gets the side lengths of the tetrahedra in the mesh."""
+    # this is only good for linear meshes
+    # it is probably too memory/compute intensive for large meshes
+    # gmsh will release a built in way to do this in the 4.12 release
+    # https://gitlab.onelab.info/gmsh/gmsh/-/blob/0dacd204c5b936efdfb9341fd71cabbb06ebb9e2/api/gmsh.py#L2989
+
+    lengths = np.array([])
+    for mesh in meshes.values():
+        pairings = np.empty((0, 2), dtype="uint64")
+        for cell in mesh.cells_dict["tetra"]:
+            edges = np.array(list(combinations(cell, 2)))
+            pairings = np.concatenate([pairings, edges], axis=0)
+
+        pairings = np.unique(pairings, axis=0)
+
+        dist_vectors = mesh.points[pairings[:, 0]] - mesh.points[pairings[:, 1]]
+        lengths = np.concatenate((lengths, np.linalg.norm(dist_vectors, axis=1)))
+    return lengths
+
+
+def generate_interactions_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
+    """Generates the interactions section data for the Solidity input file."""
+    tetra_side_lengths = get_tetra_side_lengths(meshes)
+
+    min_length = np.min(tetra_side_lengths)
+    mean_length = np.mean(tetra_side_lengths)
+
+    return dict(mean_length=mean_length, min_length=min_length)
+
+
 def create_y3d_template() -> str:
     """Creates a Solidity input template using Jinja2."""
     template = env.get_template(config.SOLIDITY_Y3D_TEMPLATE_FILE)
@@ -163,6 +195,7 @@ def create_y3d_template() -> str:
 
     data: Dict[str, object] = {"num_timesteps": 2000000}
     data.update(generate_elements_data(mesh_datastore, material_assignment_datastore))
+    data.update(generate_interactions_data(mesh_datastore))
     data.update(generate_nodes_data(mesh_datastore, surface_nodes))
 
     # add materials template data
