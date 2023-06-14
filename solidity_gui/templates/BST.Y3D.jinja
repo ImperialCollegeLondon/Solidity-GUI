@@ -17,7 +17,6 @@
 /YD/YDC/DCRMJT +0.00000000000e+00
 /YD/YDC/DCRMCT +0.00000000000e+00
 /YD/YDC/DCRMUT +0.00000000000e+00
-/YD/YDC/DCURELX +1.00000000000e+00
 
 /YD/YDN/MNODIM 4
 /YD/YDN/NNODIM 3
@@ -37,6 +36,34 @@
 {%- for surface_flag in surface_node_flags %}
 {{ surface_flag }}
 {%- endfor %}
+
+{%- macro render_property(yd_code, value) -%}
+/YD/YDP/{{ yd_code }}  {{ num_materials }}
+{% for material in materials -%}{{ value }} {% endfor -%}
+{%- endmacro %}
+
+/YD/YDP/MPROP  200 {{ num_materials + 1 }}
+/YD/YDP/NPROP  200 {{ num_materials }}
+{{ render_property("D1PEKS", 0) }}
+{{ render_property("D1PELA", 0) }}
+{{ render_property("D1PEMU", 0) }}
+{{ render_property("D1PEPE", "2.0e+10") }}
+/YD/YDP/D1PERO  {{ num_materials }}
+{% for material in materials -%}{% if material.properties.density.enabled %}2.34e+10{% else %}0{% endif %} {% endfor %}
+{{ render_property("D1PEGFN", 50.0) }}
+{{ render_property("D1PEGFS", 50.0) }}
+{{ render_property("D1PEFT", "1.0e+7") }}
+{{ render_property("D1PCOH", "3.5e+7") }}
+{{ render_property("D1PICF", 0.577) }}
+{{ render_property("D1PEFR", 0.6) }}
+{{ render_property("D1PESF", 0) }}
+{{ render_property("D1PEPSF", 0) }}
+{{ render_property("D1PEVF", 0) }}
+{{ render_property("D1PEPF", 1) }}
+{{ render_property("I1PTYP", 13) }}
+{{ render_property("I1PEJP", 0) }}
+{{ render_property("I1PEMN", 0) }}
+{{ render_property("I1PSDE", 0) }}
 
      /*   Elements     */
 /YD/YDE/MELEM {{num_tetra+1}}
