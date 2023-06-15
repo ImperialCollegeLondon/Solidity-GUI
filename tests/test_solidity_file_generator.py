@@ -3,7 +3,11 @@
 import numpy as np
 
 from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
-from solidity_gui.main.solidity_file_generator import generate_nodes_data
+from solidity_gui.main.material import PROPERTIES, Material
+from solidity_gui.main.solidity_file_generator import (
+    generate_material_data,
+    generate_nodes_data,
+)
 
 
 def _get_mesh_and_surface_nodes(component):
@@ -45,3 +49,32 @@ def test_generate_nodes_data():
     assert surface_node_flags.shape == (data["num_nodes"],)
     assert np.all(surface_node_flags[surface_node_filter] == 1)
     assert np.all(surface_node_flags[np.logical_not(surface_node_filter)] == 0)
+
+
+def _integer_incrementer():
+    i = 0.0
+    while True:
+        yield i
+        i += 1
+
+
+def test_generate_material_data():
+    """Test generate_material_data function."""
+    material1 = Material(name="material_1")
+    material2 = Material(name="material_2")
+
+    counter = _integer_incrementer()
+    for property_ in material2.properties.values():
+        property_.enabled = True
+        property_.data = {key: next(counter) for key in property_.default_data}
+
+    data = generate_material_data({0: material1, 1: material2})
+
+    counter = _integer_incrementer()
+
+    assert data == {
+        property_label: {
+            key: [value, next(counter)] for key, value in property_.default_data.items()
+        }
+        for property_label, property_ in PROPERTIES().items()
+    }

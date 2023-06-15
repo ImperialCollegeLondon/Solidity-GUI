@@ -44,11 +44,7 @@
 
 {%- macro render_property(yd_code, property_name, key) -%}
 /YD/YDP/{{ yd_code }}  {{ num_materials }}
-{% for material in materials -%}
-{%- with property=material.properties.get(property_name) -%}
-{% if property.enabled %}{{property.data.get(key)}} {% else %}{{ property.default_data.get(key) }} {% endif %}
-{%- endwith -%}
-{% endfor %}
+{% for value in material_properties.get(property_name).get(key) -%}{{ value }} {% endfor %}
 {%- endmacro %}
 
 {%- macro render_flag_property(yd_code, property_name, true_value, false_value) -%}
