@@ -23,8 +23,8 @@ class DensityForm(Form):
 class ElasticityForm(Form):
     """Form for collecting material properties related to elasticity."""
 
-    lames_first_parameter = FloatField(display_name="Lame's First Parameter")
-    lames_second_parameter = FloatField(display_name="Lame's Second Parameter")
+    lames_first_parameter = FloatField(display_name="Lamé's First Parameter")
+    lames_second_parameter = FloatField(display_name="Lamé's Second Parameter")
 
 
 class FractureForm(Form):
