@@ -72,9 +72,14 @@ def test_generate_material_data():
 
     counter = _integer_incrementer()
 
-    assert data == {
+    target_data = {
         property_label: {
-            key: [value, next(counter)] for key, value in property_.default_data.items()
+            key: [value] + [next(counter)] * 2
+            for key, value in property_.default_data.items()
         }
         for property_label, property_ in PROPERTIES().items()
     }
+    target_data["_calculated"] = dict(is_joint=[13, 13, 15], is_fracture=[0, 3, 0])
+
+    assert data["num_materials"] == 3
+    assert data["material_properties"] == target_data
