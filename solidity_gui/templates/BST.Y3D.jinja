@@ -60,21 +60,21 @@
 
 /YD/YDP/MPROP  200 {{ num_materials + 1 }}
 /YD/YDP/NPROP  200 {{ num_materials }}
-{{ render_unimplemented_property("D1PEKS", 0) }}
+{{ render_property("D1PEKS", "other", "mass_damping_coefficient") }}
 {{ render_property("D1PELA", "elasticity", "lames_first_parameter") }}
 {{ render_property("D1PEMU", "elasticity", "lames_second_parameter") }}
-{{ render_unimplemented_property("D1PEPE", "2.0e+10") }}
+{{ render_property("D1PEPE", "other", "penalty_number") }}
 {{ render_property("D1PERO", "density", "density") }}
-{{ render_unimplemented_property("D1PEGFN", 50.0) }}
-{{ render_unimplemented_property("D1PEGFS", 50.0) }}
-{{ render_unimplemented_property("D1PEFT", "1.0e+7") }}
-{{ render_unimplemented_property("D1PCOH", "3.5e+7") }}
-{{ render_unimplemented_property("D1PICF", 0.577) }}
-{{ render_unimplemented_property("D1PEFR", 0.6) }}
-{{ render_unimplemented_property("D1PESF", 0) }}
-{{ render_unimplemented_property("D1PEPSF", 0) }}
-{{ render_unimplemented_property("D1PEVF", 0) }}
-{{ render_unimplemented_property("D1PEPF", 1) }}
+{{ render_property("D1PEGFN", "other", "energy_release_rate_mode_1") }}
+{{ render_property("D1PEGFS", "other", "energy_release_rate_mode_2") }}
+{{ render_property("D1PEFT", "other", "tensile_strength") }}
+{{ render_property("D1PCOH", "other", "cohesion") }}
+{{ render_property("D1PICF", "other", "internal_friction_coefficient") }}
+{{ render_property("D1PEFR", "other", "sliding_friction_coefficient") }}
+{{ render_property("D1PESF", "other", "static_friction_coefficient") }}
+{{ render_property("D1PEPSF", "other", "pressure_friction_coefficient") }}
+{{ render_property("D1PEVF", "other", "velocity_factor") }}
+{{ render_property("D1PEPF", "other", "pressure_factor") }}
 {{ render_property("D1PEM0", "fracture", "damage_delta_0") }}
 {{ render_property("D1PEMF", "fracture", "damage_delta_1") }}
 {{ render_property("D1PEDM", "fracture", "damage_threshold") }}

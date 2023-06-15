@@ -35,6 +35,29 @@ class FractureForm(Form):
     damage_threshold = FloatField(display_name="Damage Threshold")
 
 
+class OtherForm(Form):
+    """Temporary form for all remaining material properties."""
+
+    mass_damping_coefficient = FloatField(display_name="Mass Damping Coefficient")
+    penalty_number = FloatField(display_name="Penalty Number")
+    energy_release_rate_mode_1 = FloatField(display_name="Energy Release Rate - Mode 1")
+    energy_release_rate_mode_2 = FloatField(display_name="Energy Release Rate - Mode 2")
+    tensile_strength = FloatField(display_name="Tensile Strength")
+    cohesion = FloatField(display_name="Cohesion")
+    internal_friction_coefficient = FloatField(
+        display_name="Internal Friction Coefficient"
+    )
+    sliding_friction_coefficient = FloatField(
+        display_name="Sliding Friction Coefficient"
+    )
+    static_friction_coefficient = FloatField(display_name="Static Friction Coefficient")
+    pressure_friction_coefficient = FloatField(
+        display_name="Pressure Friction Coefficient"
+    )
+    velocity_factor = FloatField(display_name="Velocity Factor")
+    pressure_factor = FloatField(display_name="Pressure Factor")
+
+
 @dataclass
 class Property:
     """Definition of a Property.
@@ -91,6 +114,26 @@ def PROPERTIES() -> Properties_Dict_Type:
                 damage_delta_0=0.005,
                 damage_delta_1=1,
                 damage_threshold=0.5,
+            ),
+        ),
+        "other": Property(
+            category="Other",
+            name="Other",
+            enabled=False,
+            attributes=OtherForm,
+            default_data=dict(
+                mass_damping_coefficient=0.0,
+                penalty_number=2e10,
+                energy_release_rate_mode_1=50.0,
+                energy_release_rate_mode_2=50.0,
+                tensile_strength=1e7,
+                cohesion=3.5e7,
+                internal_friction_coefficient=0.577,
+                sliding_friction_coefficient=0.6,
+                static_friction_coefficient=0.0,
+                pressure_friction_coefficient=0.0,
+                velocity_factor=0.0,
+                pressure_factor=1.0,
             ),
         ),
     }
