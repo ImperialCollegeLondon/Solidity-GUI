@@ -1,4 +1,5 @@
 """Tests for the solidity_file_generator module."""
+import itertools
 
 import numpy as np
 
@@ -53,26 +54,19 @@ def test_generate_nodes_data():
     assert np.all(surface_node_flags[np.logical_not(surface_node_filter)] == 0)
 
 
-def _integer_incrementer():
-    i = 0.0
-    while True:
-        yield i
-        i += 1
-
-
 def test_generate_material_data():
     """Test generate_material_data function."""
     material1 = Material(name="material_1")
     material2 = Material(name="material_2")
 
-    counter = _integer_incrementer()
+    counter = itertools.count(0.0)
     for property_ in material2.properties.values():
         property_.enabled = True
         property_.data = {key: next(counter) for key in property_.default_data}
 
     data = generate_material_data({0: material1, 1: material2})
 
-    counter = _integer_incrementer()
+    counter = itertools.count(0.0)
 
     target_data = {
         property_label: {
