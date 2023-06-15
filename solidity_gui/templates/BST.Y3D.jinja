@@ -100,3 +100,24 @@
 {{ render_property("I1PEJP", 0) }}
 {{ render_property("I1PEMN", 0) }}
 {{ render_property("I1PSDE", 0) }}
+     /*   Boundary Conditions     */
+/YD/YDB/MBCON {{ num_conditions+1}}
+/YD/YDB/NBCON {{ num_conditions}}
+/YD/YDB/D1BNVX {{ num_conditions}}
+{% for condition in conditions -%}{{ condition.properties.velocity_x }} {% endfor %}
+/YD/YDB/D1BNVY     2
+{% for condition in conditions -%}{{ condition.properties.velocity_y }} {% endfor %} 
+/YD/YDB/D1BNVZ     2
+{% for condition in conditions -%}{{ condition.properties.velocity_z }} {% endfor %}
+/YD/YDB/D1BNFX     2
+{% for condition in conditions -%}{{ condition.properties.force_x }} {% endfor %}
+/YD/YDB/D1BNFY     2
+{% for condition in conditions -%}{{ condition.properties.force_y }} {% endfor %}
+/YD/YDB/D1BNFZ     2
+{% for condition in conditions -%}{{ condition.properties.force_z }} {% endfor %}
+/YD/YDB/D1BNAX     2
+{% for condition in conditions -%}{{ condition.properties.acceleration_x }} {% endfor %}
+/YD/YDB/D1BNAY     2
+{% for condition in conditions -%}{{ condition.properties.acceleration_y }} {% endfor %}
+/YD/YDB/D1BNAZ     2
+{% for condition in conditions -%}{{ condition.properties.acceleration_z }} {% endfor %}
