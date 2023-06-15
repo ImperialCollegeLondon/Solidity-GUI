@@ -109,7 +109,7 @@ class EditMaterialDialog(QDialog):
         edit_button.clicked.connect(self._edit_button_clicked)
 
         layout.addWidget(self.button_box)
-        layout.addWidget(edit_button)
+        buttons_layout.addWidget(edit_button)
 
         self.properties_trees = {
             "enabled": self.enabled_properties_tree,
