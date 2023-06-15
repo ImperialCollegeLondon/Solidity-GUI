@@ -206,9 +206,7 @@ class SimpleFormDialog(QDialog):
         """
         super().__init__(**kwargs)
         self.form_class = form_class
-        self.form_info = self.form_class().form_info(
-            data=initial_data or dict()
-        )
+        self.form_info = self.form_class().form_info(data=initial_data or dict())
         self.form_renderer = form_renderer
         contents = self._create_contents(self.form_info)
         self.setLayout(contents)
