@@ -72,7 +72,8 @@
 {%- for surface_flag in surface_node_flags %}
 {{ surface_flag }}
 {%- endfor %}
-
+/YD/YDN/I1NOPR {{ num_nodes }}
+{{ node_conditions|join(' ') }}
 {%- macro render_property(yd_code, value) -%}
 /YD/YDP/{{ yd_code }}  {{ num_materials }}
 {% for material in materials -%}{{ value }} {% endfor -%}
