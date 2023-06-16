@@ -73,30 +73,55 @@
 {{ surface_flag }}
 {%- endfor %}
 
-{%- macro render_property(yd_code, value) -%}
+{%- macro render_static_property(yd_code, value) -%}
 /YD/YDP/{{ yd_code }}  {{ num_materials }}
-{% for material in materials -%}{{ value }} {% endfor -%}
+{% for _ in range(num_materials) -%}{{ value }} {% endfor -%}
+{%- endmacro %}
+
+{%- macro render_property(yd_code, property_name, key, format_str="%20.13e") -%}
+/YD/YDP/{{ yd_code }}  {{ num_materials }}
+{% for value in material_properties.get(property_name).get(key) -%}{{ format_str | format(value) }} {% endfor %}
 {%- endmacro %}
 
 /YD/YDP/MPROP  200 {{ num_materials + 1 }}
 /YD/YDP/NPROP  200 {{ num_materials }}
-{{ render_property("D1PEKS", 0) }}
-{{ render_property("D1PELA", 0) }}
-{{ render_property("D1PEMU", 0) }}
-{{ render_property("D1PEPE", "2.0e+10") }}
-/YD/YDP/D1PERO  {{ num_materials }}
-{% for material in materials -%}{% if material.properties.density.enabled %}2.34e+10{% else %}0{% endif %} {% endfor %}
-{{ render_property("D1PEGFN", 50.0) }}
-{{ render_property("D1PEGFS", 50.0) }}
-{{ render_property("D1PEFT", "1.0e+7") }}
-{{ render_property("D1PCOH", "3.5e+7") }}
-{{ render_property("D1PICF", 0.577) }}
-{{ render_property("D1PEFR", 0.6) }}
-{{ render_property("D1PESF", 0) }}
-{{ render_property("D1PEPSF", 0) }}
-{{ render_property("D1PEVF", 0) }}
-{{ render_property("D1PEPF", 1) }}
-{{ render_property("I1PTYP", 13) }}
-{{ render_property("I1PEJP", 0) }}
-{{ render_property("I1PEMN", 0) }}
-{{ render_property("I1PSDE", 0) }}
+{{ render_property("D1PEKS", "other", "mass_damping_coefficient") }}
+{{ render_property("D1PELA", "elasticity", "lames_first_parameter") }}
+{{ render_property("D1PEMU", "elasticity", "lames_second_parameter") }}
+{{ render_property("D1PEPE", "other", "penalty_number") }}
+{{ render_property("D1PERO", "density", "density") }}
+{{ render_property("D1PEGFN", "other", "energy_release_rate_mode_1") }}
+{{ render_property("D1PEGFS", "other", "energy_release_rate_mode_2") }}
+{{ render_property("D1PEFT", "other", "tensile_strength") }}
+{{ render_property("D1PCOH", "other", "cohesion") }}
+{{ render_property("D1PICF", "other", "internal_friction_coefficient") }}
+{{ render_property("D1PEFR", "other", "sliding_friction_coefficient") }}
+{{ render_property("D1PESF", "other", "static_friction_coefficient") }}
+{{ render_property("D1PEPSF", "other", "pressure_friction_coefficient") }}
+{{ render_property("D1PEVF", "other", "velocity_factor") }}
+{{ render_property("D1PEPF", "other", "pressure_factor") }}
+{{ render_property("D1PEM0", "fracture", "damage_delta_0") }}
+{{ render_property("D1PEMF", "fracture", "damage_delta_1") }}
+{{ render_property("D1PEDM", "fracture", "damage_threshold") }}
+{{ render_property("I1PTYP", "_calculated", "is_joint", format_str="%d") }}
+{{ render_property("I1PEJP", "_calculated", "is_fracture", format_str="%d") }}
+{{ render_property("I1PEMN", "_calculated", "is_fracture", format_str="%d") }}
+{{ render_static_property("I1PSDE", 0) }}
+
+     /*   Elements     */
+/YD/YDE/MELEM {{num_tetra+1}}
+/YD/YDE/NELEM {{num_tetra}}
+/YD/YDE/MELST     2
+/YD/YDE/NELST     2
+/YD/YDE/MELNO     {{points_per_tetra+1}}
+/YD/YDE/NELNO     {{points_per_tetra}}
+/YD/YDE/D2ELST    21 0 0
+/YD/YDE/D1EMCT 0
+/YD/YDE/I1ELCF 0
+/YD/YDE/I1ELBE 0
+/YD/YDE/I1ELPR {{num_tetra}}
+{{ cell_materials|join(' ') }}
+/YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
+{% for element in tetra_node_ids -%}
+{% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
+{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}

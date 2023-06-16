@@ -1,14 +1,16 @@
 """Tests for the solidity_file_generator module."""
+import itertools
 
 import numpy as np
 import pytest
 
 from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
-from solidity_gui.main.material import MaterialAssignment
+from solidity_gui.main.material import PROPERTIES, Material, MaterialAssignment
 from solidity_gui.main.solidity_file_generator import (
     SystemValidationError,
     generate_elements_data,
     generate_interactions_data,
+    generate_material_data,
     generate_nodes_data,
     get_tetra_side_lengths,
 )
@@ -53,6 +55,33 @@ def test_generate_nodes_data():
     assert surface_node_flags.shape == (data["num_nodes"],)
     assert np.all(surface_node_flags[surface_node_filter] == 1)
     assert np.all(surface_node_flags[np.logical_not(surface_node_filter)] == 0)
+
+
+def test_generate_material_data():
+    """Test generate_material_data function."""
+    material1 = Material(name="material_1")
+    material2 = Material(name="material_2")
+
+    counter = itertools.count(0.0)
+    for property_ in material2.properties.values():
+        property_.enabled = True
+        property_.data = {key: next(counter) for key in property_.default_data}
+
+    data = generate_material_data({0: material1, 1: material2})
+
+    counter = itertools.count(0.0)
+
+    target_data = {
+        property_label: {
+            key: [value] + [next(counter)] * 2
+            for key, value in property_.default_data.items()
+        }
+        for property_label, property_ in PROPERTIES().items()
+    }
+    target_data["_calculated"] = dict(is_joint=[13, 13, 15], is_fracture=[0, 3, 0])
+
+    assert data["num_materials"] == 3
+    assert data["material_properties"] == target_data
 
 
 def _count_tetras(mesh):
