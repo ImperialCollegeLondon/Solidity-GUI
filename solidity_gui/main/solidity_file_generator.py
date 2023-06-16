@@ -73,10 +73,12 @@ def fetch_material_assignments(
     """Fetches the material assignments for a given mesh."""
     cell_materials_list = []
     for assignment in material_assignments.values():
-        cell_ids = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
-        cell_materials_list.append(
-            np.array([cell_ids, np.full_like(cell_ids, assignment.material_id)]).T
-        )
+        if assignment.cell_set_name in mesh.cell_sets_dict:
+            cell_ids = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
+            cell_materials_list.append(
+                np.array([cell_ids, np.full_like(cell_ids, assignment.material_id)]).T
+            )
+
     if cell_materials_list:
         cell_materials = np.concatenate(cell_materials_list, axis=0)
     else:
