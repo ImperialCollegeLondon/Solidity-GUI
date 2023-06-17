@@ -1,12 +1,18 @@
 """Tests for the solidity_file_generator module."""
+import itertools
 
 import numpy as np
+import pytest
 
 from solidity_gui.main.condition import ConditionAssignment
 from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
+from solidity_gui.main.material import PROPERTIES, Material, MaterialAssignment
 from solidity_gui.main.solidity_file_generator import (
+    SystemValidationError,
     fetch_condition_assignments,
+    generate_elements_data,
     generate_interactions_data,
+    generate_material_data,
     generate_nodes_data,
     get_tetra_side_lengths,
 )
@@ -53,6 +59,77 @@ def test_generate_nodes_data():
     assert surface_node_flags.shape == (data["num_nodes"],)
     assert np.all(surface_node_flags[surface_node_filter] == 1)
     assert np.all(surface_node_flags[np.logical_not(surface_node_filter)] == 0)
+
+
+def test_generate_material_data():
+    """Test generate_material_data function."""
+    material1 = Material(name="material_1")
+    material2 = Material(name="material_2")
+
+    counter = itertools.count(0.0)
+    for property_ in material2.properties.values():
+        property_.enabled = True
+        property_.data = {key: next(counter) for key in property_.default_data}
+
+    data = generate_material_data({0: material1, 1: material2})
+
+    counter = itertools.count(0.0)
+
+    target_data = {
+        property_label: {
+            key: [value] + [next(counter)] * 2
+            for key, value in property_.default_data.items()
+        }
+        for property_label, property_ in PROPERTIES().items()
+    }
+    target_data["_calculated"] = dict(is_joint=[13, 13, 15], is_fracture=[0, 3, 0])
+
+    assert data["num_materials"] == 3
+    assert data["material_properties"] == target_data
+
+
+def _count_tetras(mesh):
+    return mesh.cells_dict["tetra"].data.shape[0]
+
+
+def test_generate_elements_data():
+    """Test generate_elements_data function."""
+    mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
+        Component(shape="box", label="a", kwargs=dict(x0=[0, 0, 0], extents=[1, 1, 1]))
+    )
+    mesh_b, surface_nodes_b = _get_mesh_and_surface_nodes(
+        Component(shape="box", label="b", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1]))
+    )
+
+    meshes = dict(a=mesh_a, b=mesh_b)
+    assignments1 = {
+        0: MaterialAssignment(0, "a_volume"),
+    }
+    assignments2 = {
+        1: MaterialAssignment(1, "b_volume"),
+    }
+
+    # We should get errors if some of the elements don't have assigned materials
+    with pytest.raises(SystemValidationError):
+        generate_elements_data(meshes, assignments1)
+    with pytest.raises(SystemValidationError):
+        generate_elements_data(meshes, assignments2)
+
+    data = generate_elements_data(meshes, assignments1 | assignments2)
+
+    assert data["points_per_tetra"] == 4
+
+    num_tetras = (_count_tetras(mesh_a), _count_tetras(mesh_b))
+    total_tetras = sum(num_tetras)
+    assert data["num_tetra"] == total_tetras
+
+    assert np.all(data["cell_materials"][: num_tetras[0]] == 0)
+    # The material for the second mesh is offset by the number of tetras in the first
+    # plus one
+    assert np.all(data["cell_materials"][num_tetras[0] + 1 :] == num_tetras[0] + 1)
+
+    # There is probably a better test we can do for this...
+    assert data["tetra_node_ids"].shape == (total_tetras, 4)
 
 
 def test_generate_interactions_data():

@@ -1,15 +1,61 @@
 """Module containing definitions for bundling material and properties data."""
 
 from dataclasses import dataclass, field
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
 from meshio import Mesh
 from pubsub import pub
 
 from .datastore import IndexDatastore
+from .forms import Form
+from .forms.fields import FloatField
 from .meshes import mesh_datastore
 
 Attributes_Dict_Type = Dict[str, Type[float] | bool]
+
+
+class DensityForm(Form):
+    """Form for collecting material density data."""
+
+    density = FloatField()
+
+
+class ElasticityForm(Form):
+    """Form for collecting material properties related to elasticity."""
+
+    lames_first_parameter = FloatField(display_name="Lamé's First Parameter")
+    lames_second_parameter = FloatField(display_name="Lamé's Second Parameter")
+
+
+class FractureForm(Form):
+    """Form for collecting properties related to fracturing."""
+
+    damage_delta_0 = FloatField(display_name="Damage Delta 0")
+    damage_delta_1 = FloatField(display_name="Damage Delta 1")
+    damage_threshold = FloatField(display_name="Damage Threshold")
+
+
+class OtherForm(Form):
+    """Temporary form for all remaining material properties."""
+
+    mass_damping_coefficient = FloatField(display_name="Mass Damping Coefficient")
+    penalty_number = FloatField(display_name="Penalty Number")
+    energy_release_rate_mode_1 = FloatField(display_name="Energy Release Rate - Mode 1")
+    energy_release_rate_mode_2 = FloatField(display_name="Energy Release Rate - Mode 2")
+    tensile_strength = FloatField(display_name="Tensile Strength")
+    cohesion = FloatField(display_name="Cohesion")
+    internal_friction_coefficient = FloatField(
+        display_name="Internal Friction Coefficient"
+    )
+    sliding_friction_coefficient = FloatField(
+        display_name="Sliding Friction Coefficient"
+    )
+    static_friction_coefficient = FloatField(display_name="Static Friction Coefficient")
+    pressure_friction_coefficient = FloatField(
+        display_name="Pressure Friction Coefficient"
+    )
+    velocity_factor = FloatField(display_name="Velocity Factor")
+    pressure_factor = FloatField(display_name="Pressure Factor")
 
 
 @dataclass
@@ -31,7 +77,9 @@ class Property:
     name: str
     category: str
     enabled: bool
-    attributes: Attributes_Dict_Type
+    attributes: Type[Form]
+    data: Optional[Dict[str, object]] = None
+    default_data: Dict[str, object] = field(default_factory=dict)
 
 
 Properties_Dict_Type = dict[str, Property]
@@ -44,25 +92,49 @@ def PROPERTIES() -> Properties_Dict_Type:
             category="General",
             name="Density",
             enabled=False,
-            attributes=dict(density=float),
+            attributes=DensityForm,
+            default_data=dict(density=2.34e10),
         ),
-        "mohr_coulomb": Property(
+        "elasticity": Property(
             category="Mechanical",
-            name="Mohr-Coulomb",
+            name="Elasticity",
             enabled=False,
-            attributes=dict(specify_tension_cutoff=bool),
+            attributes=ElasticityForm,
+            default_data=dict(
+                lames_first_parameter=2.23325062035e10,
+                lames_second_parameter=2.41935483871e10,
+            ),
         ),
-        "example_property_1": Property(
-            category="General",
-            name="Example Property 1",
+        "fracture": Property(
+            category="Mechanical",
+            name="Fracture",
             enabled=False,
-            attributes=dict(example_setting=bool),
+            attributes=FractureForm,
+            default_data=dict(
+                damage_delta_0=0.005,
+                damage_delta_1=1,
+                damage_threshold=0.5,
+            ),
         ),
-        "example_property_2": Property(
-            category="General",
-            name="Example Property 2",
+        "other": Property(
+            category="Other",
+            name="Other",
             enabled=False,
-            attributes=dict(example_setting=bool),
+            attributes=OtherForm,
+            default_data=dict(
+                mass_damping_coefficient=0.0,
+                penalty_number=2e10,
+                energy_release_rate_mode_1=50.0,
+                energy_release_rate_mode_2=50.0,
+                tensile_strength=1e7,
+                cohesion=3.5e7,
+                internal_friction_coefficient=0.577,
+                sliding_friction_coefficient=0.6,
+                static_friction_coefficient=0.0,
+                pressure_friction_coefficient=0.0,
+                velocity_factor=0.0,
+                pressure_factor=1.0,
+            ),
         ),
     }
 

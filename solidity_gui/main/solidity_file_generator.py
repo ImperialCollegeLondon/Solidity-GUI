@@ -16,6 +16,7 @@ from .condition import (
 )
 from .gmsh_process import gmsh_process_datastore
 from .material import (
+    Material,
     MaterialAssignment,
     material_assignment_datastore,
     material_datastore,
@@ -144,10 +145,12 @@ def fetch_material_assignments(
     """Fetches the material assignments for a given mesh."""
     cell_materials_list = []
     for assignment in material_assignments.values():
-        cell_ids = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
-        cell_materials_list.append(
-            np.array([cell_ids, np.full_like(cell_ids, assignment.material_id)]).T
-        )
+        if assignment.cell_set_name in mesh.cell_sets_dict:
+            cell_ids = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
+            cell_materials_list.append(
+                np.array([cell_ids, np.full_like(cell_ids, assignment.material_id)]).T
+            )
+
     if cell_materials_list:
         cell_materials = np.concatenate(cell_materials_list, axis=0)
     else:
@@ -222,6 +225,47 @@ def generate_elements_data(
     )
 
 
+def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
+    """Generates data for the material properties section of the input file."""
+    property_lines: Dict[str, Any] = {}
+    for material in materials.values():
+        for property_label, property_ in material.properties.items():
+            property_line_dict = property_lines.setdefault(property_label, {})
+            property_data = (
+                property_.data if property_.enabled else property_.default_data
+            )
+            if property_data is None:
+                raise SystemValidationError(
+                    "Has not been set for the property '{property_.name}' of material "
+                    "'{material.name}'."
+                )
+            for key, value in property_data.items():
+                property_line_dict.setdefault(key, []).append(value)
+        calculated_properties = property_lines.setdefault("_calculated", {})
+        calculated_properties.setdefault("is_joint", []).append(13)
+        calculated_properties.setdefault("is_fracture", []).append(
+            3 if material.properties["fracture"].enabled else 0
+        )
+
+    # add in additional copies of materials with joint elements
+    extra_materials = 0
+    for i, material in enumerate(materials.values()):
+        if not material.properties["fracture"].enabled:
+            continue
+        extra_materials += 1
+        for property_label, property_ in material.properties.items():
+            property_line_dict = property_lines[property_label]
+            for property_line in property_line_dict.values():
+                property_line.append(property_line[i])
+        property_lines["_calculated"]["is_joint"].append(15)
+        property_lines["_calculated"]["is_fracture"].append(0)
+    return dict(
+        materials=materials.values(),
+        num_materials=len(materials) + extra_materials,
+        material_properties=property_lines,
+    )
+
+
 def get_tetra_side_lengths(meshes: Mapping[str, Mesh]) -> np.ndarray:
     """Gets the side lengths of the tetrahedra in the mesh."""
     # this is only good for linear meshes
@@ -273,15 +317,7 @@ def create_y3d_template() -> str:
             mesh_datastore, surface_nodes, condition_assignment_datastore
         )
     )
-
-    # add materials template data
-    data.update(
-        dict(
-            materials=material_datastore.values(), num_materials=len(material_datastore)
-        )
-    )
-
-    # add boundary conditions template data
+    data.update(generate_material_data(material_datastore))
     data.update(
         dict(
             conditions=condition_datastore.values(),
