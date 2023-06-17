@@ -1,7 +1,9 @@
+"""Module defining Condition and ConditionAssignment datastructures."""
 import copy
 from dataclasses import dataclass, field
-from meshio import Mesh
 from typing import Dict, Type
+
+from meshio import Mesh
 from pubsub import pub
 
 from .datastore import IndexDatastore

@@ -51,33 +51,36 @@ def fetch_condition_assignments(
     node_conditions_list = []
     unique_node_ids_mesh = np.array([], dtype="uint64")
     for condition_assignment in condition_assignment_datastore.values():
-        for cell_type in mesh.cell_sets_dict[condition_assignment.cell_set_name]:
-            cell_id_offset = 0
-            if cell_type == "tetra":
-                cell_id_offset = mesh.cells_dict["triangle"].shape[0]
-            if cell_type in mesh.cell_sets_dict[condition_assignment.cell_set_name]:
-                cell_ids = (
-                    mesh.cell_sets_dict[condition_assignment.cell_set_name][cell_type]
-                    - cell_id_offset
-                )
-                node_ids = mesh.cells_dict[cell_type][cell_ids].flatten()
-                unique_node_ids = np.setdiff1d(
-                    np.unique(node_ids), unique_node_ids_mesh
-                )
-                unique_node_ids_mesh = np.concatenate(
-                    [unique_node_ids_mesh, unique_node_ids]
-                )
-                node_conditions_list.append(
-                    np.array(
-                        [
-                            unique_node_ids,
-                            np.full_like(
-                                unique_node_ids,
-                                condition_assignment.condition_id + 1,
-                            ),
+        if condition_assignment.cell_set_name in mesh.cell_sets_dict:
+            for cell_type in mesh.cell_sets_dict[condition_assignment.cell_set_name]:
+                cell_id_offset = 0
+                if cell_type == "tetra":
+                    cell_id_offset = mesh.cells_dict["triangle"].shape[0]
+                if cell_type in mesh.cell_sets_dict[condition_assignment.cell_set_name]:
+                    cell_ids = (
+                        mesh.cell_sets_dict[condition_assignment.cell_set_name][
+                            cell_type
                         ]
-                    ).T,
-                )
+                        - cell_id_offset
+                    )
+                    node_ids = mesh.cells_dict[cell_type][cell_ids].flatten()
+                    unique_node_ids = np.setdiff1d(
+                        np.unique(node_ids), unique_node_ids_mesh
+                    )
+                    unique_node_ids_mesh = np.concatenate(
+                        [unique_node_ids_mesh, unique_node_ids]
+                    )
+                    node_conditions_list.append(
+                        np.array(
+                            [
+                                unique_node_ids,
+                                np.full_like(
+                                    unique_node_ids,
+                                    condition_assignment.condition_id + 1,
+                                ),
+                            ]
+                        ).T,
+                    )
 
     unassigned_nodes = np.setdiff1d(
         np.arange(mesh.points.shape[0], dtype="uint64"),

@@ -1,3 +1,4 @@
+"""Assign conditions to cell sets."""
 from .condition import (
     Condition,
     ConditionAssignment,
@@ -8,6 +9,7 @@ from .meshes import mesh_datastore
 
 
 def assign_conditions() -> None:
+    """Assign conditions to cell sets."""
     mesh = list(mesh_datastore.values())[0]
     cell_sets = mesh.cell_sets
     cell_set_names = list(cell_sets.keys())
