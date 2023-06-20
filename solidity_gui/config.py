@@ -3,6 +3,9 @@
 APP_NAME = "Solidity GUI"
 """The name of the app."""
 
+APP_AUTHOR = "Imperial College London"
+"""The author of the app."""
+
 MESH_COLOUR = (1, 1, 1, 1)  # white
 """Colour of rendered mesh components (RGBA format)."""
 
