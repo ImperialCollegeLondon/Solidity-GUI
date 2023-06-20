@@ -12,6 +12,15 @@ from .datastore import Datastore
 from .geometry import Geometry, GeometryWrapper
 
 
+@dataclass
+class _FunctionCall:
+    """Datastructure used internally to pass information between processes."""
+
+    name: str
+    kwargs: Dict[str, Any]
+    asynchronous: bool
+
+
 class GmshListener(QThread):
     """A class to listen for generated meshes produced in the separate gmsh process.
 
@@ -60,11 +69,11 @@ class GmshDaemon:
 
     def __init__(self) -> None:
         """Create a new GmshDaemon."""
-        self._in_queue: Queue = Queue()
+        self._in_queue: Queue[_FunctionCall] = Queue()
         """Queue containing the parameters for components to be meshed."""
-        self._async_out_queue: Queue = Queue()
+        self._async_out_queue: Queue[tuple[str, object] | None] = Queue()
         """Queue containing return values for asynchronous delivery."""
-        self._sync_out_queue: Queue = Queue()
+        self._sync_out_queue: Queue[object] = Queue()
         """Queue containing return values for synchronous delivery."""
 
     def run(self) -> None:
@@ -98,14 +107,6 @@ class GmshProcess:
     case the return value is injected into the GUI main loop (via a Pyside Signal on
     GmshListener) and broadcast using a pubsub message.
     """
-
-    @dataclass
-    class _FunctionCall:
-        """Datastructure used internally to pass information between processes."""
-
-        name: str
-        kwargs: Dict[str, Any]
-        asynchronous: bool
 
     def __init__(self) -> None:
         """Create a new GmshProcess."""
@@ -143,7 +144,7 @@ class GmshProcess:
           kwargs: keyword arguments to pass into the method
         """
         self.daemon._in_queue.put(
-            self._FunctionCall(name=function_name, kwargs=kwargs, asynchronous=False)
+            _FunctionCall(name=function_name, kwargs=kwargs, asynchronous=False)
         )
         return self.daemon._sync_out_queue.get()
 
@@ -159,7 +160,7 @@ class GmshProcess:
         """
         pub.sendMessage(f"{function_name}.start")
         self.daemon._in_queue.put(
-            self._FunctionCall(name=function_name, kwargs=kwargs, asynchronous=True)
+            _FunctionCall(name=function_name, kwargs=kwargs, asynchronous=True)
         )
 
     def _function_call_end(self, function_name: str, obj: object) -> None:
