@@ -26,6 +26,7 @@ from .meshes import mesh_datastore
 env = Environment(
     loader=FileSystemLoader(str(Path(__file__).absolute().parent.parent / "templates")),
     undefined=StrictUndefined,
+    keep_trailing_newline=True,
 )
 
 
