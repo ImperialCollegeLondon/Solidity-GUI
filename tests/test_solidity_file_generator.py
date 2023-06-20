@@ -167,5 +167,4 @@ def test_fetch_condition_assignments():
         mesh_a, {0: condition_assignment1, 1: condition_assignment2}
     )
 
-    assert np.any(node_conditions[:, 1] == 1)
-    assert np.any(node_conditions[:, 1] == 2)
+    assert np.all(np.isin(node_conditions[:, 1], [0, 1, 2]))

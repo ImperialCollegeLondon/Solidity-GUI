@@ -128,7 +128,7 @@
 /YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
 {% for element in tetra_node_ids -%}
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
-{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}
+{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
 
      /*   Boundary Conditions     */
 /YD/YDB/MBCON {{ num_conditions+1}}
@@ -151,3 +151,4 @@
 {% for condition in conditions -%}{{ condition.properties.acceleration_y }} {% endfor %}
 /YD/YDB/D1BNAZ     2
 {% for condition in conditions -%}{{ condition.properties.acceleration_z }} {% endfor %}
+\n

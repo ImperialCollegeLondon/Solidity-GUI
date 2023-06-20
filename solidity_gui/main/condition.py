@@ -1,5 +1,4 @@
 """Module defining Condition and ConditionAssignment datastructures."""
-import copy
 from dataclasses import dataclass, field
 from typing import Dict, Type
 
@@ -40,9 +39,7 @@ class Condition:
     """
 
     name: str
-    properties: Properties_Dict_Type = field(
-        default_factory=lambda: copy.deepcopy(PROPERTIES())
-    )
+    properties: Properties_Dict_Type = field(default_factory=PROPERTIES)
 
 
 @dataclass(frozen=True)
@@ -65,14 +62,14 @@ condition_assignment_datastore: IndexDatastore[ConditionAssignment] = IndexDatas
 
 def sync_assignments_condition_removed(key: int, value: Condition) -> None:
     """Message handler sync assignment datastore when condition datastore changes."""
-    for assignment_key, assignment in list(condition_assignment_datastore.items()):
+    for assignment_key, assignment in condition_assignment_datastore.items():
         if assignment.condition_id == key:
             del condition_assignment_datastore[assignment_key]
 
 
 def sync_assignments_mesh_removed(key: int, value: Mesh) -> None:
     """Message handler sync assignment datastore when mesh datastore changes."""
-    for assignment_key, assignment in list(condition_assignment_datastore.items()):
+    for assignment_key, assignment in condition_assignment_datastore.items():
         for cell_set_name in value.cell_sets:
             if assignment.cell_set_name == cell_set_name:
                 del condition_assignment_datastore[assignment_key]
