@@ -50,7 +50,7 @@ class GmshListener(QThread):
 
 
 class GmshDaemon:
-    """Child process logic for forwarding calls to a GeometryWrapper instance..
+    """Child process logic for forwarding calls to a GeometryWrapper instance.
 
     This class works closely with the GmshProcess class that handles the parent process
     logic for function call forwarding. Separation into separate classes minimises the
