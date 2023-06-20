@@ -5,20 +5,17 @@ from .material import Property
 
 
 class EditPropertyDialog(SimpleFormDialog):
-    """Generic dialog for creating a simple geometric shape.
+    """Dialog for editing a material's properties."""
 
-    Dialog contents are generated from the specified geometry.Shape.
-    """
-
-    def __init__(self, property_: Property):
-        """Initialise a new dialog.
+    def __init__(self, property: Property):
+        """Create a new EditPropertyDialog.
 
         Args:
-          property_: Property which fields will be edited
+          property: Property to be edited
         """
-        super().__init__(property_.attributes, initial_data=property_.data)
-        self.setWindowTitle(f"Edit {property_.name}")
-        self.material_property = property_
+        super().__init__(property.attributes, initial_data=property.data)
+        self.setWindowTitle(f"Edit {property.name}")
+        self.material_property = property
 
     def _ok_clicked(self) -> None:
         """Signal handler for clicking ok button."""
