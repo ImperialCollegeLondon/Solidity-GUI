@@ -49,6 +49,8 @@ packaging==23.1
     #   qtpy
 pillow==9.5.0
     # via matplotlib
+platformdirs==3.6.0
+    # via SolidityGUI (pyproject.toml)
 pydantic==1.10.7
     # via python-on-whales
 pygments==2.15.1
