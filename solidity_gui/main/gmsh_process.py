@@ -1,5 +1,6 @@
 """GUI components for interacting with gmsh via a separate process."""
 
+import logging
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
 from typing import Any, Dict, Optional, Tuple
@@ -87,6 +88,8 @@ class GmshDaemon:
     def _call_function(self) -> None:
         function_call = self._in_queue.get()
 
+        sync_str = "asynchronous" if function_call.asynchronous else "synchronous"
+        logging.info(f"Running gmsh function {function_call.name} ({sync_str})")
         obj = getattr(self.geometry_wrapper, function_call.name)(**function_call.kwargs)
 
         if function_call.asynchronous:
@@ -165,6 +168,7 @@ class GmshProcess:
 
     def _function_call_end(self, function_name: str, obj: object) -> None:
         """Event handler called when the mesh_received Signal is sent."""
+        logging.info(f"Async gmsh function {function_name} finished")
         pub.sendMessage(f"{function_name}.finish", obj=obj)
 
 

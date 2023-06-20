@@ -1,5 +1,7 @@
 """User interface elements for editing properties."""
 
+import logging
+
 from .forms import SimpleFormDialog
 from .material import Property
 
@@ -22,3 +24,5 @@ class EditPropertyDialog(SimpleFormDialog):
         if data := super()._ok_clicked():
             self.material_property.data = data
             self.close()
+
+            logging.info(f"Updated {self.material_property.name} ({repr(data)})")

@@ -1,4 +1,5 @@
 """Code to display a mesh within a VTK window."""
+import logging
 import os
 from tempfile import NamedTemporaryFile
 from typing import Any, Optional
@@ -73,6 +74,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
     def __init__(self) -> None:
         """Create new VTKWindow."""
+        logging.info("Creating VTK frame")
+
         super().__init__()
 
         self.ren = vtk.vtkRenderer()
@@ -109,6 +112,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
         Args:
           mesh: The mesh to render
         """
+        logging.info("Rendering mesh")
+
         # Create the temporary file, but don't leave the file handle open
         with NamedTemporaryFile(suffix=".vtu", delete=False) as f:
             filename = f.name
@@ -171,6 +176,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
     def reset_camera(self) -> None:
         """Apply default settings to camera."""
+        logging.info("Resetting camera")
+
         self.ren.ResetCamera()
         self.reorient_camera(
             config.DEFAULT_ORIENTATION_VECTOR, config.DEFAULT_UP_VECTOR
@@ -193,6 +200,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
                                 will preserve the current distance from the focal point.
             up_vector: up direction of camera for new orientation.
         """
+        logging.info("Reorienting camera")
+
         camera = self.ren.GetActiveCamera()
         focal_point = np.array(camera.GetFocalPoint())
         distance = camera.GetDistance()
