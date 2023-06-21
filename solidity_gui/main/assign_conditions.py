@@ -10,7 +10,6 @@ from .meshes import mesh_datastore
 
 def assign_conditions() -> None:
     """Assign conditions to cell sets."""
-
     cell_set_names = []
     for mesh in mesh_datastore.values():
         cell_set_names.extend(list(mesh.cell_sets.keys()))
