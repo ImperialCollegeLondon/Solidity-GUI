@@ -84,14 +84,17 @@ def fetch_condition_assignments(
                         ).T,
                     )
 
-    return np.concatenate(node_conditions_list)
+    if node_conditions_list:
+        node_conditions = np.concatenate(node_conditions_list, axis=0)
+    else:
+        node_conditions = np.empty((0, 2), dtype="uint64")
+
+    return node_conditions
 
 
-def check_unassigned_nodes(
-    node_conditions: np.ndarray, mesh: Mesh, num_nodes: int
-) -> None:
+def check_unassigned_nodes(node_conditions: np.ndarray, mesh: Mesh) -> None:
     """Checks if there are any unassigned cells in the mesh."""
-    node_ids = np.arange(num_nodes, dtype="uint64")
+    node_ids = np.arange(mesh.points.shape[0], dtype="uint64")
 
     if any(
         [
@@ -124,7 +127,7 @@ def generate_nodes_data(
         node_conditions = fetch_condition_assignments(
             meshes[mesh_name], condition_assignment_datastore
         )
-        check_unassigned_nodes(node_conditions, meshes[mesh_name], num_nodes)
+        check_unassigned_nodes(node_conditions, meshes[mesh_name])
 
         node_conditions_sorted = np.concatenate(
             (

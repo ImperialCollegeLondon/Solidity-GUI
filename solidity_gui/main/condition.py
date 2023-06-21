@@ -26,6 +26,9 @@ def PROPERTIES() -> Properties_Dict_Type:
         "velocity_x": 0.0,
         "velocity_y": 0.0,
         "velocity_z": 0.0,
+        "velocity_constraint_x": 0,
+        "velocity_constraint_y": 0,
+        "velocity_constraint_z": 0,
     }
 
 

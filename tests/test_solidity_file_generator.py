@@ -39,8 +39,19 @@ def test_generate_nodes_data():
     meshes = dict(a=mesh_a, b=mesh_b)
     surface_nodes = dict(a=surface_nodes_a, b=surface_nodes_b)
 
+    cell_set_names = []
+    cell_set_names.extend(list(mesh_a.cell_sets.keys()))
+    cell_set_names.extend(list(mesh_b.cell_sets.keys()))
+
+    condition_assignment_datastore = {
+        i: ConditionAssignment(i, cell_set_name)
+        for i, cell_set_name in enumerate(cell_set_names)
+    }
+
     data = generate_nodes_data(
-        meshes, surface_nodes, {0: ConditionAssignment(0, "a_volume")}
+        meshes,
+        surface_nodes,
+        condition_assignment_datastore,
     )
 
     assert data["num_nodes"] == mesh_a.points.shape[0] + mesh_b.points.shape[0]
