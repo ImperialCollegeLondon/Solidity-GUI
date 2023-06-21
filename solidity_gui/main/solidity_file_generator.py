@@ -9,6 +9,11 @@ from meshio import Mesh
 from PySide6.QtWidgets import QMessageBox
 
 from .. import config
+from .condition import (
+    ConditionAssignment,
+    condition_assignment_datastore,
+    condition_datastore,
+)
 from .gmsh_process import gmsh_process_datastore
 from .material import (
     Material,
@@ -21,6 +26,7 @@ from .meshes import mesh_datastore
 env = Environment(
     loader=FileSystemLoader(str(Path(__file__).absolute().parent.parent / "templates")),
     undefined=StrictUndefined,
+    keep_trailing_newline=True,
 )
 
 
@@ -40,8 +46,59 @@ def write_file(file_content: str, output_file: Path | str) -> None:
         f.write(file_content)
 
 
+def fetch_condition_assignments(
+    mesh: Mesh, condition_assignment_datastore: Mapping[int, ConditionAssignment]
+) -> np.ndarray:
+    """Fetch the condition assignments for a given mesh."""
+    node_conditions_list = []
+    unique_node_ids_mesh = np.array([], dtype="uint64")
+    for condition_assignment in condition_assignment_datastore.values():
+        if condition_assignment.cell_set_name in mesh.cell_sets_dict:
+            for cell_type in mesh.cell_sets_dict[condition_assignment.cell_set_name]:
+                cell_id_offset = 0
+                if cell_type == "tetra":
+                    cell_id_offset = mesh.cells_dict["triangle"].shape[0]
+                if cell_type in mesh.cell_sets_dict[condition_assignment.cell_set_name]:
+                    cell_ids = (
+                        mesh.cell_sets_dict[condition_assignment.cell_set_name][
+                            cell_type
+                        ]
+                        - cell_id_offset
+                    )
+                    node_ids = mesh.cells_dict[cell_type][cell_ids].flatten()
+                    unique_node_ids = np.setdiff1d(
+                        np.unique(node_ids), unique_node_ids_mesh
+                    )
+                    unique_node_ids_mesh = np.concatenate(
+                        [unique_node_ids_mesh, unique_node_ids]
+                    )
+                    node_conditions_list.append(
+                        np.array(
+                            [
+                                unique_node_ids,
+                                np.full_like(
+                                    unique_node_ids,
+                                    condition_assignment.condition_id + 1,
+                                ),
+                            ]
+                        ).T,
+                    )
+
+    unassigned_nodes = np.setdiff1d(
+        np.arange(mesh.points.shape[0], dtype="uint64"),
+        unique_node_ids_mesh,
+    )
+    node_conditions_list.append(
+        np.array([unassigned_nodes, np.full_like(unassigned_nodes, 0)]).T,
+    )
+
+    return np.concatenate(node_conditions_list)
+
+
 def generate_nodes_data(
-    meshes: Mapping[str, Mesh], surface_nodes: Mapping[str, np.ndarray]
+    meshes: Mapping[str, Mesh],
+    surface_nodes: Mapping[str, np.ndarray],
+    condition_assignment_datastore: Mapping[int, ConditionAssignment],
 ) -> Dict[str, Any]:
     """Prepare data needed for template renderering."""
     num_nodes = sum(mesh.points.shape[0] for mesh in meshes.values())
@@ -49,12 +106,25 @@ def generate_nodes_data(
 
     combined_surface_nodes = np.array([])
     incr = 0
+    node_conditions_sorted = np.empty((0, 2), dtype="uint64")
     for mesh_name in meshes:
         mesh_surface_nodes = surface_nodes[mesh_name]
         mesh_surface_nodes = mesh_surface_nodes + incr
         combined_surface_nodes = np.concatenate(
             [combined_surface_nodes, mesh_surface_nodes]
         )
+
+        node_conditions = fetch_condition_assignments(
+            meshes[mesh_name], condition_assignment_datastore
+        )
+
+        node_conditions_sorted = np.concatenate(
+            (
+                node_conditions_sorted,
+                node_conditions[node_conditions[:, 0].argsort()] + incr,
+            )
+        )
+
         incr += meshes[mesh_name].points.shape[0]
 
     surface_node_flags = np.zeros((num_nodes,), dtype="uint64")
@@ -64,6 +134,7 @@ def generate_nodes_data(
         num_nodes=num_nodes,
         nodes=all_nodes,
         surface_node_flags=surface_node_flags,
+        node_conditions=node_conditions_sorted[:, 1],
     )
 
 
@@ -240,8 +311,18 @@ def create_y3d_template() -> str:
     data: Dict[str, object] = {"num_timesteps": 2000000}
     data.update(generate_elements_data(mesh_datastore, material_assignment_datastore))
     data.update(generate_interactions_data(mesh_datastore))
-    data.update(generate_nodes_data(mesh_datastore, surface_nodes))
+    data.update(
+        generate_nodes_data(
+            mesh_datastore, surface_nodes, condition_assignment_datastore
+        )
+    )
     data.update(generate_material_data(material_datastore))
+    data.update(
+        dict(
+            conditions=condition_datastore.values(),
+            num_conditions=len(condition_datastore),
+        )
+    )
     return template.render(data)
 
 

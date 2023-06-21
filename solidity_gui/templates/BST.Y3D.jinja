@@ -72,6 +72,8 @@
 {%- for surface_flag in surface_node_flags %}
 {{ surface_flag }}
 {%- endfor %}
+/YD/YDN/I1NOPR {{ num_nodes }}
+{{ node_conditions|join(' ') }}
 
 {%- macro render_static_property(yd_code, value) -%}
 /YD/YDP/{{ yd_code }}  {{ num_materials }}
@@ -83,8 +85,10 @@
 {% for value in material_properties.get(property_name).get(key) -%}{{ format_str | format(value) }} {% endfor %}
 {%- endmacro %}
 
+     /*   Properties     */
 /YD/YDP/MPROP  200 {{ num_materials + 1 }}
 /YD/YDP/NPROP  200 {{ num_materials }}
+
 {{ render_property("D1PEKS", "other", "mass_damping_coefficient") }}
 {{ render_property("D1PELA", "elasticity", "lames_first_parameter") }}
 {{ render_property("D1PEMU", "elasticity", "lames_second_parameter") }}
@@ -124,4 +128,26 @@
 /YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
 {% for element in tetra_node_ids -%}
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
-{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor -%}
+{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
+
+     /*   Boundary Conditions     */
+/YD/YDB/MBCON {{ num_conditions+1}}
+/YD/YDB/NBCON {{ num_conditions}}
+/YD/YDB/D1BNVX {{ num_conditions}}
+{% for condition in conditions -%}{{ condition.properties.velocity_x }} {% endfor %}
+/YD/YDB/D1BNVY     2
+{% for condition in conditions -%}{{ condition.properties.velocity_y }} {% endfor %} 
+/YD/YDB/D1BNVZ     2
+{% for condition in conditions -%}{{ condition.properties.velocity_z }} {% endfor %}
+/YD/YDB/D1BNFX     2
+{% for condition in conditions -%}{{ condition.properties.force_x }} {% endfor %}
+/YD/YDB/D1BNFY     2
+{% for condition in conditions -%}{{ condition.properties.force_y }} {% endfor %}
+/YD/YDB/D1BNFZ     2
+{% for condition in conditions -%}{{ condition.properties.force_z }} {% endfor %}
+/YD/YDB/D1BNAX     2
+{% for condition in conditions -%}{{ condition.properties.acceleration_x }} {% endfor %}
+/YD/YDB/D1BNAY     2
+{% for condition in conditions -%}{{ condition.properties.acceleration_y }} {% endfor %}
+/YD/YDB/D1BNAZ     2
+{% for condition in conditions -%}{{ condition.properties.acceleration_z }} {% endfor %}
