@@ -26,14 +26,14 @@
 /YD/YDE/NELST     2
 /YD/YDE/MELNO     {{points_per_tetra+2}}
 /YD/YDE/NELNO     {{points_per_tetra+1}}
-/YD/YDE/D2ELST    21 0 {{ num_tetra }}
+/YD/YDE/D2ELST    21 {{ num_tetra }} 0
 /YD/YDE/D1EMCT 0
 /YD/YDE/I1ELCF {{ num_tetra }}
 {% for _ in range(num_tetra) -%}{{ '-1 ' }}{% endfor %}
 /YD/YDE/I1ELBE 0
 /YD/YDE/I1ELPR {{num_tetra}}
 {{ cell_materials|join(' ') }}
-/YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
+/YD/YDE/I2ELTO 21 {{points_per_tetra+1 ~ ' ' ~ num_tetra}}
 {% for element in tetra_node_ids -%}
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
 {% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
