@@ -92,9 +92,7 @@ def fetch_condition_assignments(
         np.array([unassigned_nodes, np.full_like(unassigned_nodes, 0)]).T,
     )
 
-    node_conditions = np.concatenate(node_conditions_list)
-
-    return node_conditions
+    return np.concatenate(node_conditions_list)
 
 
 def generate_nodes_data(
