@@ -192,4 +192,4 @@ def test_check_unassigned_nodes():
     node_conditions = fetch_condition_assignments(mesh_a, {0: condition_assignment1})
     # We should get an error if there are unassigned nodes
     with pytest.raises(SystemValidationError):
-        check_unassigned_nodes(node_conditions, mesh_a, mesh_a.points.shape[0])
+        check_unassigned_nodes(node_conditions, mesh_a)
