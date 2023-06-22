@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from solidity_gui.config import SOLIDITY_DOCKER_IMAGE
 from solidity_gui.solidity import SolidityContainer, run_solidity
 
 INPUT_DIR = Path(__file__).parent.absolute() / "solidity_input_files"
@@ -25,7 +26,7 @@ def test_run_solidity_no_error(docker_mock: Mock) -> None:
 
     RUN_DIR = "/home/software/solidity/run"
     docker_mock.run.assert_called_once_with(
-        "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS",
+        SOLIDITY_DOCKER_IMAGE,
         [
             "DEMPlus",
             f"{RUN_DIR}/BST.Y3D",

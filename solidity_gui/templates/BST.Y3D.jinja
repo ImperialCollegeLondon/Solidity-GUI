@@ -118,19 +118,25 @@
 /YD/YDB/NBCON {{ num_conditions}}
 /YD/YDB/D1BNVX {{ num_conditions}}
 {% for condition in conditions -%}{{ condition.properties.velocity_x }} {% endfor %}
-/YD/YDB/D1BNVY     2
+/YD/YDB/D1BNVY {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.velocity_y }} {% endfor %} 
-/YD/YDB/D1BNVZ     2
+/YD/YDB/D1BNVZ {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.velocity_z }} {% endfor %}
-/YD/YDB/D1BNFX     2
+/YD/YDB/I1BNVX {{ num_conditions }}
+{% for condition in conditions -%}{{ condition.properties.velocity_constraint_x | int }} {% endfor %}
+/YD/YDB/I1BNVY {{ num_conditions }}
+{% for condition in conditions -%}{{ condition.properties.velocity_constraint_y | int }} {% endfor %}
+/YD/YDB/I1BNVZ {{ num_conditions }}
+{% for condition in conditions -%}{{ condition.properties.velocity_constraint_z | int }} {% endfor %}
+/YD/YDB/D1BNFX {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.force_x }} {% endfor %}
-/YD/YDB/D1BNFY     2
+/YD/YDB/D1BNFY {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.force_y }} {% endfor %}
-/YD/YDB/D1BNFZ     2
+/YD/YDB/D1BNFZ {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.force_z }} {% endfor %}
-/YD/YDB/D1BNAX     2
+/YD/YDB/D1BNAX {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.acceleration_x }} {% endfor %}
-/YD/YDB/D1BNAY     2
+/YD/YDB/D1BNAY {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.acceleration_y }} {% endfor %}
-/YD/YDB/D1BNAZ     2
+/YD/YDB/D1BNAZ {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.acceleration_z }} {% endfor %}

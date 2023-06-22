@@ -9,6 +9,7 @@ from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
 from solidity_gui.main.material import PROPERTIES, Material, MaterialAssignment
 from solidity_gui.main.solidity_file_generator import (
     SystemValidationError,
+    check_unassigned_nodes,
     fetch_condition_assignments,
     generate_elements_data,
     generate_interactions_data,
@@ -38,8 +39,17 @@ def test_generate_nodes_data():
     meshes = dict(a=mesh_a, b=mesh_b)
     surface_nodes = dict(a=surface_nodes_a, b=surface_nodes_b)
 
+    cell_set_names = [*mesh_a.cell_sets.keys(), *mesh_b.cell_sets.keys()]
+
+    condition_assignment_datastore = {
+        i: ConditionAssignment(i, cell_set_name)
+        for i, cell_set_name in enumerate(cell_set_names)
+    }
+
     data = generate_nodes_data(
-        meshes, surface_nodes, {0: ConditionAssignment(0, "a_volume")}
+        meshes,
+        surface_nodes,
+        condition_assignment_datastore,
     )
 
     assert data["num_nodes"] == mesh_a.points.shape[0] + mesh_b.points.shape[0]
@@ -168,3 +178,16 @@ def test_fetch_condition_assignments():
     )
 
     assert np.all(np.isin(node_conditions[:, 1], [0, 1, 2]))
+
+
+def test_check_unassigned_nodes():
+    """Test check_unassigned_nodes function."""
+    mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
+        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+    )
+
+    condition_assignment1 = ConditionAssignment(0, "a_surface_0")
+    node_conditions = fetch_condition_assignments(mesh_a, {0: condition_assignment1})
+    # We should get an error if there are unassigned nodes
+    with pytest.raises(SystemValidationError):
+        check_unassigned_nodes(node_conditions, mesh_a)
