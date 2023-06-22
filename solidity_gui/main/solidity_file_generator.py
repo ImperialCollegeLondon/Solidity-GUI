@@ -78,21 +78,29 @@ def fetch_condition_assignments(
                                 unique_node_ids,
                                 np.full_like(
                                     unique_node_ids,
-                                    condition_assignment.condition_id + 1,
+                                    condition_assignment.condition_id,
                                 ),
                             ]
                         ).T,
                     )
 
-    unassigned_nodes = np.setdiff1d(
-        np.arange(mesh.points.shape[0], dtype="uint64"),
-        unique_node_ids_mesh,
-    )
-    node_conditions_list.append(
-        np.array([unassigned_nodes, np.full_like(unassigned_nodes, 0)]).T,
-    )
+    if node_conditions_list:
+        return np.concatenate(node_conditions_list)
 
-    return np.concatenate(node_conditions_list)
+    return np.empty((0, 2), dtype="uint64")
+
+
+def check_unassigned_nodes(node_conditions: np.ndarray, mesh: Mesh) -> None:
+    """Checks if there are any unassigned cells in the mesh."""
+    node_ids = np.arange(mesh.points.shape[0], dtype="uint64")
+
+    if any(
+        [
+            np.setdiff1d(node_ids, node_conditions[:, 0]).size != 0,
+            np.setdiff1d(node_conditions[:, 0], node_ids).size != 0,
+        ]
+    ):
+        raise SystemValidationError("One or more nodes have unassigned conditions!")
 
 
 def generate_nodes_data(
@@ -117,6 +125,7 @@ def generate_nodes_data(
         node_conditions = fetch_condition_assignments(
             meshes[mesh_name], condition_assignment_datastore
         )
+        check_unassigned_nodes(node_conditions, meshes[mesh_name])
 
         node_conditions_sorted = np.concatenate(
             (

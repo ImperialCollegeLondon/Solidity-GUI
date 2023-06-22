@@ -45,7 +45,12 @@ SOLIDITY_MATERIALS_FILE_NAME = "mat.txt"
 SOLIDITY_Y3D_TEMPLATE_FILE = "BST.Y3D.jinja"
 """Solidity Y3D template file."""
 
+_DOCKER_IMAGE_DIGEST = (
+    "b4384d92959f5f4ff9c2bd616fefde722be5e82645ebd27971879db454ae7d21"
+)
+"""The SHA256 digest for the Docker image. Used to pull a specific version."""
+
 SOLIDITY_DOCKER_IMAGE = (
-    "ghcr.io/imperialcollegelondon/solidity_project_dev:Solidity_RCS"
+    f"ghcr.io/imperialcollegelondon/solidity_project_dev@sha256:{_DOCKER_IMAGE_DIGEST}"
 )
 """The name of the Docker image to use when running Solidity."""

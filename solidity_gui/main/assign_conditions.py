@@ -10,22 +10,22 @@ from .meshes import mesh_datastore
 
 def assign_conditions() -> None:
     """Assign conditions to cell sets."""
-    mesh = list(mesh_datastore.values())[0]
-    cell_sets = mesh.cell_sets
-    cell_set_names = list(cell_sets.keys())
+    cell_set_names = []
+    for mesh in mesh_datastore.values():
+        cell_set_names.extend(mesh.cell_sets.keys())
 
     condition1 = Condition("Condition 1")
     condition_datastore.add(condition1)
-    condition_assignment = ConditionAssignment(
-        condition_id=0,
-        cell_set_name=cell_set_names[0],
-    )
-    condition_assignment_datastore.add(condition_assignment)
     condition2 = Condition("Condition 2")
     condition2.properties = {property: 1.0 for property in condition2.properties}
     condition_datastore.add(condition2)
-    condition_assignment = ConditionAssignment(
-        condition_id=1,
-        cell_set_name=cell_set_names[1],
-    )
-    condition_assignment_datastore.add(condition_assignment)
+
+    # Since every node requires a condition, we need to assign a condition to every
+    # cell set.
+    # We do this by assigning the same condition to multiple cell sets.
+    for i, cell_set_name in enumerate(cell_set_names):
+        condition_assignment = ConditionAssignment(
+            condition_id=i % len(condition_datastore),
+            cell_set_name=cell_set_name,
+        )
+        condition_assignment_datastore.add(condition_assignment)
