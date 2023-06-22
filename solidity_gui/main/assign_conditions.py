@@ -12,7 +12,7 @@ def assign_conditions() -> None:
     """Assign conditions to cell sets."""
     cell_set_names = []
     for mesh in mesh_datastore.values():
-        cell_set_names.extend(list(mesh.cell_sets.keys()))
+        cell_set_names.extend(mesh.cell_sets.keys())
 
     condition1 = Condition("Condition 1")
     condition_datastore.add(condition1)

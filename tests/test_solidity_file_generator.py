@@ -39,9 +39,7 @@ def test_generate_nodes_data():
     meshes = dict(a=mesh_a, b=mesh_b)
     surface_nodes = dict(a=surface_nodes_a, b=surface_nodes_b)
 
-    cell_set_names = []
-    cell_set_names.extend(list(mesh_a.cell_sets.keys()))
-    cell_set_names.extend(list(mesh_b.cell_sets.keys()))
+    cell_set_names = [*mesh_a.cell_sets.keys(), *mesh_b.cell_sets.keys()]
 
     condition_assignment_datastore = {
         i: ConditionAssignment(i, cell_set_name)

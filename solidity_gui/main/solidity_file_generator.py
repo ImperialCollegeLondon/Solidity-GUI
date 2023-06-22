@@ -85,11 +85,9 @@ def fetch_condition_assignments(
                     )
 
     if node_conditions_list:
-        node_conditions = np.concatenate(node_conditions_list, axis=0)
-    else:
-        node_conditions = np.empty((0, 2), dtype="uint64")
+        return np.concatenate(node_conditions_list)
 
-    return node_conditions
+    return np.empty((0, 2), dtype="uint64")
 
 
 def check_unassigned_nodes(node_conditions: np.ndarray, mesh: Mesh) -> None:
