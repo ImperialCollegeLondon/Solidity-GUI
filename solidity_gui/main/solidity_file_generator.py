@@ -189,7 +189,7 @@ def generate_elements_data(
 ) -> Dict[str, object]:
     """Generates the elements section data for the Solidity input file."""
     points_per_tetra = 4
-    node_ids = np.empty((0, 4), dtype="uint64")
+    all_node_ids = np.empty((0, points_per_tetra + 1), dtype="uint64")
     node_id_offset = 0
 
     cell_materials_sorted = np.empty((0, 2), dtype="uint64")
@@ -199,7 +199,7 @@ def generate_elements_data(
         mesh.cells_dict["tetra"].data.shape[0] for mesh in meshes.values()
     )
 
-    for mesh in meshes.values():
+    for i, mesh in enumerate(meshes.values()):
         cell_materials = fetch_material_assignments(mesh, material_assignments)
         check_unassigned_cells(cell_materials, mesh)
 
@@ -213,14 +213,20 @@ def generate_elements_data(
 
         # We can now get the node ids for each cell, offset by the accumulated number of
         # nodes from previous meshes
-        node_ids = np.concatenate((node_ids, mesh.cells_dict["tetra"] + node_id_offset))
+        node_ids = mesh.cells_dict["tetra"] + node_id_offset
+        # Append the mesh ID to each row
+        mesh_ids = np.full((mesh.cells_dict["tetra"].shape[0], 1), i, dtype="uint64")
+        node_ids = np.concatenate((node_ids, mesh_ids), axis=1)
+
+        all_node_ids = np.concatenate((all_node_ids, node_ids), axis=0)
+
         node_id_offset += mesh.points.shape[0]
 
     return dict(
         num_tetra=total_tetra,
         points_per_tetra=points_per_tetra,
         cell_materials=cell_materials_sorted[:, 1],
-        tetra_node_ids=node_ids,
+        tetra_node_ids=all_node_ids,
     )
 
 
