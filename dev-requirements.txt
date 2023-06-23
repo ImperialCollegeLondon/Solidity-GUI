@@ -156,6 +156,7 @@ pip-tools==6.13.0
     # via SolidityGUI (pyproject.toml)
 platformdirs==3.5.1
     # via
+    #   SolidityGUI (pyproject.toml)
     #   black
     #   virtualenv
 pluggy==1.0.0

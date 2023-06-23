@@ -1,5 +1,7 @@
 """Simple form for creating a new material."""
 
+import logging
+
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -64,4 +66,8 @@ class CreateMaterialDialog(QDialog):
         material = Material(name=material_name)
         material_datastore.add(material)
         self.close()
+
+        logging.info(f'Added new material "{material_name}"')
+
+        # Open dialog to edit new material
         EditMaterialDialog(material).exec()

@@ -1,4 +1,6 @@
 """Module for the AssignPropertiesDialog class."""
+import logging
+
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
 from .material import (
@@ -60,3 +62,8 @@ class AssignPropertiesDialog(QDialog):
         )
         material_assignment_datastore.add(assignment)
         self.close()
+
+        logging.info(
+            f"Assigned material {material_datastore[assignment.material_id]} (ID: "
+            "{assignment.material_id}) to {assignment.cell_set_name}"
+        )

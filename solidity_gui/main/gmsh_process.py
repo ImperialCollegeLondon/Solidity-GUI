@@ -1,5 +1,6 @@
 """GUI components for interacting with gmsh via a separate process."""
 
+import logging
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
 from typing import Any, Dict, Optional, Tuple
@@ -10,6 +11,15 @@ from PySide6.QtCore import QThread, Signal
 
 from .datastore import Datastore
 from .geometry import Geometry, GeometryWrapper
+
+
+@dataclass
+class _FunctionCall:
+    """Datastructure used internally to pass information between processes."""
+
+    name: str
+    kwargs: Dict[str, Any]
+    asynchronous: bool
 
 
 class GmshListener(QThread):
@@ -50,7 +60,7 @@ class GmshListener(QThread):
 
 
 class GmshDaemon:
-    """Child process logic for forwarding calls to a GeometryWrapper instance..
+    """Child process logic for forwarding calls to a GeometryWrapper instance.
 
     This class works closely with the GmshProcess class that handles the parent process
     logic for function call forwarding. Separation into separate classes minimises the
@@ -60,11 +70,11 @@ class GmshDaemon:
 
     def __init__(self) -> None:
         """Create a new GmshDaemon."""
-        self._in_queue: Queue = Queue()
+        self._in_queue: Queue[_FunctionCall] = Queue()
         """Queue containing the parameters for components to be meshed."""
-        self._async_out_queue: Queue = Queue()
+        self._async_out_queue: Queue[tuple[str, object] | None] = Queue()
         """Queue containing return values for asynchronous delivery."""
-        self._sync_out_queue: Queue = Queue()
+        self._sync_out_queue: Queue[object] = Queue()
         """Queue containing return values for synchronous delivery."""
 
     def run(self) -> None:
@@ -78,6 +88,8 @@ class GmshDaemon:
     def _call_function(self) -> None:
         function_call = self._in_queue.get()
 
+        sync_str = "asynchronous" if function_call.asynchronous else "synchronous"
+        logging.info(f"Running gmsh function {function_call.name} ({sync_str})")
         obj = getattr(self.geometry_wrapper, function_call.name)(**function_call.kwargs)
 
         if function_call.asynchronous:
@@ -98,14 +110,6 @@ class GmshProcess:
     case the return value is injected into the GUI main loop (via a Pyside Signal on
     GmshListener) and broadcast using a pubsub message.
     """
-
-    @dataclass
-    class _FunctionCall:
-        """Datastructure used internally to pass information between processes."""
-
-        name: str
-        kwargs: Dict[str, Any]
-        asynchronous: bool
 
     def __init__(self) -> None:
         """Create a new GmshProcess."""
@@ -143,7 +147,7 @@ class GmshProcess:
           kwargs: keyword arguments to pass into the method
         """
         self.daemon._in_queue.put(
-            self._FunctionCall(name=function_name, kwargs=kwargs, asynchronous=False)
+            _FunctionCall(name=function_name, kwargs=kwargs, asynchronous=False)
         )
         return self.daemon._sync_out_queue.get()
 
@@ -159,11 +163,12 @@ class GmshProcess:
         """
         pub.sendMessage(f"{function_name}.start")
         self.daemon._in_queue.put(
-            self._FunctionCall(name=function_name, kwargs=kwargs, asynchronous=True)
+            _FunctionCall(name=function_name, kwargs=kwargs, asynchronous=True)
         )
 
     def _function_call_end(self, function_name: str, obj: object) -> None:
         """Event handler called when the mesh_received Signal is sent."""
+        logging.info(f"Async gmsh function {function_name} finished")
         pub.sendMessage(f"{function_name}.finish", obj=obj)
 
 

@@ -1,4 +1,5 @@
 """Module for the MaterialsManagerDialog class."""
+import logging
 from copy import deepcopy
 from typing import Optional
 
@@ -97,7 +98,10 @@ class MaterialsManagerDialog(QDialog):
         material_id = int(self.materials_table.item(row, 1).text())
         new_name = self.materials_table.item(row, column).text()
 
+        old_name = material_datastore[material_id].name
         material_datastore[material_id].name = new_name
+
+        logging.info(f"Material {old_name} renamed to {new_name}")
 
     def _add_material(self, key: int, value: Material) -> Material:
         materials_count = len(material_datastore)
@@ -131,10 +135,15 @@ class MaterialsManagerDialog(QDialog):
         )
         material_datastore.add(material)
 
+        logging.info(f"Created copy of material {selected_material.name}")
+
     def _delete_click_handler(self) -> None:
         if (selected_material_id := self._get_selected_material_id()) is None:
             return
 
+        logging.info(f"Deleting material {material_datastore[selected_material_id]}")
+
         del material_datastore[selected_material_id]
         row = self.materials_table.currentIndex().row()
+
         self.materials_table.removeRow(row)

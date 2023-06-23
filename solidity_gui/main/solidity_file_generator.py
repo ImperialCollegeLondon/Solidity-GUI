@@ -1,4 +1,5 @@
 """This module provides functionality to generate an input file for Solidity."""
+import logging
 from itertools import combinations
 from pathlib import Path
 from typing import Any, Dict, Mapping
@@ -308,6 +309,7 @@ def generate_interactions_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
 def create_y3d_template() -> str:
     """Creates a Solidity input template using Jinja2."""
     template = env.get_template(config.SOLIDITY_Y3D_TEMPLATE_FILE)
+    logging.info(f"Generating Y3D file from {template.filename}")
 
     surface_nodes: Dict[str, np.ndarray] = dict()
     for mesh_name in mesh_datastore:
