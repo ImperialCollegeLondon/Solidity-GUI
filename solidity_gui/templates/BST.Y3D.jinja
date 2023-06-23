@@ -157,3 +157,16 @@
 {% for condition in conditions -%}{{ condition.properties.acceleration_y }} {% endfor %}
 /YD/YDB/D1BNAZ {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.acceleration_z }} {% endfor %}
+/YD/YDX/MELEM {{ num_triangles+1}}
+/YD/YDX/NELEM {{ num_triangles }}
+/YD/YDX/NELNO {{ points_per_triangle }}
+/YD/YDX/I2ELTO 21 3 {{ num_triangles }}
+{% for triangle in triangle_node_ids -%}
+{% for item in triangle -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
+{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
+/YD/YDX/D1NAP {{ num_triangles }}
+{% for _ in range(num_triangles) -%}{{ 0 ~ ' ' }}{% endfor %}
+/YD/YDX/D1NBP {{ num_triangles }}
+{% for _ in range(num_triangles) -%}{{ 0 ~ ' ' }}{% endfor %}
+/YD/YDX/I1JTP {{ num_triangles }}
+{% for _ in range(num_triangles) -%}{{ 0 ~ ' ' }}{% endfor %}
