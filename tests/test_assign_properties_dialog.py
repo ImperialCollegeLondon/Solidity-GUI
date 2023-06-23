@@ -7,7 +7,12 @@ import pytest
 from PySide6.QtWidgets import QDialogButtonBox
 
 from solidity_gui.main.assign_properties_dialog import AssignPropertiesDialog
-from solidity_gui.main.material import MaterialAssignment, material_assignment_datastore
+from solidity_gui.main.material import (
+    Material,
+    MaterialAssignment,
+    material_assignment_datastore,
+    material_datastore,
+)
 
 
 @pytest.fixture
@@ -46,6 +51,8 @@ def test_assign_save_clicked(qtbot):
     material_id = 0
     dialog.select_component_combo.addItem(cell_set_name)
     dialog.select_material_combo.addItem("material_name", userData=material_id)
+
+    material_datastore.add(Material("Steel"))
 
     dialog._save_clicked()
 

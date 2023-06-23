@@ -1,5 +1,7 @@
 """GUI components for specification of global mesh size."""
 
+import logging
+
 from marshmallow import validate
 from pubsub import pub
 
@@ -26,5 +28,6 @@ class MeshSizeDialog(SimpleFormDialog):
     def _ok_clicked(self) -> None:
         """Process form and send 'mesh.create' signal via pubsub."""
         if data := super()._ok_clicked():
+            logging.info(f"Creating mesh with resolution {data['size']}")
             pub.sendMessage("mesh.create", size=data["size"])
             self.close()

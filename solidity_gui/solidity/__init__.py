@@ -2,6 +2,7 @@
 
 It achieves this by using the docker image.
 """
+import logging
 from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -39,6 +40,8 @@ def run_solidity(
         ValueError: If input files are not in same directory
         RuntimeError: If any of the input files do not exist
     """
+    logging.info("Starting Solidity")
+
     input_files_path = y3d_file_path.parent
     if not all(
         p.parent.samefile(input_files_path)
@@ -52,6 +55,13 @@ def run_solidity(
     for p in (y3d_file_path, layout_file_path, pellet_file_path, materials_file_path):
         if not p.is_file():
             raise RuntimeError(f"File {p} does not exist")
+
+    logging.info(
+        f"(Files: {input_files_path}/: {y3d_file_path.name}, {layout_file_path.name}, "
+        f"{pellet_file_path.name}, {materials_file_path.name})"
+    )
+
+    logging.info(f"Running Docker image: {docker_image}")
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
     docker.run(

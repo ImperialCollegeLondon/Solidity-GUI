@@ -1,5 +1,6 @@
 """Dialog for adding simple geometric shapes."""
 
+import logging
 from typing import Dict, Set
 
 from PySide6.QtGui import QStandardItem, QStandardItemModel
@@ -179,6 +180,11 @@ class EditMaterialDialog(QDialog):
             self.material.properties[property].enabled ^= True
 
         self.close()
+
+        enabled_props = [
+            prop for prop in self.material.properties.values() if prop.enabled
+        ]
+        logging.info(f"Edited material {self.material.name} ({repr(enabled_props)})")
 
     def _reset_clicked(self) -> None:
         self.done(QDialog.Rejected)

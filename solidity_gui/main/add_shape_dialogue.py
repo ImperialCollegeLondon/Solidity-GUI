@@ -1,5 +1,6 @@
 """User interface elements for adding simple geometric shapes."""
 
+import logging
 from typing import Any
 
 from marshmallow.validate import Length
@@ -40,3 +41,5 @@ class AddShapeDialog(SimpleFormDialog):
             component = Component(self.shape.name, label, data)
             pub.sendMessage("geometry.update", component=component)
             self.close()
+
+            logging.info(f"Added {self.shape.name}")

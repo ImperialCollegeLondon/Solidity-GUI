@@ -4,7 +4,7 @@ from sys import platform
 
 import pytest
 
-from solidity_gui.main.gmsh_process import GmshDaemon, GmshProcess
+from solidity_gui.main.gmsh_process import GmshDaemon, GmshProcess, _FunctionCall
 
 
 @pytest.mark.skipif(
@@ -34,7 +34,7 @@ class TestGmshProcess:
         out = gmsh_process.call_function(self.function_name, **self.kwargs)
         assert gmsh_process.daemon._in_queue.qsize() == 1
 
-        assert gmsh_process.daemon._in_queue.get() == GmshProcess._FunctionCall(
+        assert gmsh_process.daemon._in_queue.get() == _FunctionCall(
             name=self.function_name, kwargs=self.kwargs, asynchronous=False
         )
         assert out == expected_output
@@ -47,7 +47,7 @@ class TestGmshProcess:
         gmsh_process.call_function_async(self.function_name, **self.kwargs)
         assert gmsh_process.daemon._in_queue.qsize() == 1
 
-        assert gmsh_process.daemon._in_queue.get() == GmshProcess._FunctionCall(
+        assert gmsh_process.daemon._in_queue.get() == _FunctionCall(
             name=self.function_name, kwargs=self.kwargs, asynchronous=True
         )
         send_message_mock.assert_called_once_with(f"{self.function_name}.start")
@@ -67,7 +67,7 @@ class TestGmshProcess:
         daemon.geometry_wrapper = wrapper_mock
 
         daemon._in_queue.put(
-            GmshProcess._FunctionCall(
+            _FunctionCall(
                 name=self.function_name, kwargs=self.kwargs, asynchronous=asynchronous
             )
         )

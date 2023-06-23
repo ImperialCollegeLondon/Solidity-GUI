@@ -344,7 +344,7 @@ class GeometryWrapper:
         return self._generate_mesh()
 
     def _generate_mesh(self) -> Mesh:
-        # we have to manually clear out some of the mesh and phsical group info
+        # we have to manually clear out some of the mesh and physical group info
         # before we can generate a new mesh
         gmsh.model.mesh.clear()
         for dim_tag in gmsh.model.get_physical_groups():

@@ -1,4 +1,6 @@
 """Code for the main window containing all the frames and menus of the GUI."""
+import logging
+
 from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -7,10 +9,16 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QTextEdit, QVBox
 from .. import config
 from .base_model_tree import BaseModelTree
 from .control_panel import ControlPanel
+from .geometry import Component
 from .menu_bar import MenuBar
 from .uncaught_exceptions import set_uncaught_exception_handler
 from .visualisation_toolbar import VisualisationToolbar
 from .vtk_window import VTKWindow
+
+
+def _log_geometry_update(component: Component) -> None:
+    """Log when new components are added to the geometry."""
+    logging.info(f'Added new component "{component.label}" (type: {component.shape})')
 
 
 class MainWindow(QMainWindow):
@@ -33,10 +41,16 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.main_frame)
 
+        logging.info("Creating main window")
+
+        pub.subscribe(_log_geometry_update, "geometry.update")
+
     def closeEvent(self, event: QCloseEvent) -> None:
         """Send message when window is closed."""
         super().closeEvent(event)
         pub.sendMessage("window.close")
+
+        logging.info("Main window closed")
 
     def create_main_frame(self) -> None:
         """Create the main frame of the window.

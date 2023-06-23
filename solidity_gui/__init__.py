@@ -12,6 +12,11 @@ def run() -> None:
     import multiprocessing
     import sys
 
+    from .logger import initialise_logging
+
+    # Configure program log
+    initialise_logging()
+
     if sys.platform == "linux":
         import os
 
@@ -21,8 +26,10 @@ def run() -> None:
 
     # Needed if you're using multiprocessing within a pyinstaller-built exe on Windows,
     # otherwise your main window will repeatedly open
+
     multiprocessing.freeze_support()
 
+    # NB: We import PySide *after* setting QT_QPA_PLATFORM
     from PySide6.QtWidgets import QApplication
 
     from .main.main_window import MainWindow
