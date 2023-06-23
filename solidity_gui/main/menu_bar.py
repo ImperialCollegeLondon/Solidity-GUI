@@ -4,6 +4,7 @@ from typing import Any
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenuBar
 
+from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
 from .drillco_dialog import DrillCoDialog
 from .materials_manager_dialog import MaterialsManagerDialog
@@ -24,7 +25,7 @@ class MenuBar(QMenuBar):
         self.materials_menu = self.addMenu("Materia&ls")
         self.addMenu("&Assembly")
         self.addMenu("&Step")
-        self.addMenu("&Conditions")
+        self.conditions_menu = self.addMenu("&Conditions")
         self.addMenu("&Interaction")
         job_menu = self.addMenu("&Job")
         self.addMenu("&Results")
@@ -34,21 +35,21 @@ class MenuBar(QMenuBar):
 
         self.materials_manager_dialog = MaterialsManagerDialog()
         materials_manager_action = QAction("Create and Edit &Materials", self)
-        materials_manager_action.triggered.connect(  # type: ignore[attr-defined]
-            self.materials_manager_dialog.open
-        )
+        materials_manager_action.triggered.connect(self.materials_manager_dialog.open)
         self.materials_menu.addAction(materials_manager_action)
 
         assign_properties_action = QAction("&Assign Properties", self)
-        assign_properties_action.triggered.connect(  # type: ignore[attr-defined]
+        assign_properties_action.triggered.connect(
             lambda: AssignPropertiesDialog().exec_()
         )
         self.materials_menu.addAction(assign_properties_action)
 
+        conditions_action = QAction("&Assign Conditions", self)
+        conditions_action.triggered.connect(assign_conditions)
+        self.conditions_menu.addAction(conditions_action)
+
         drill_action = QAction("Create &drill system", self)
-        drill_action.triggered.connect(  # type: ignore[attr-defined]
-            lambda: DrillCoDialog().exec_()
-        )
+        drill_action.triggered.connect(lambda: DrillCoDialog().exec_())
         geometry_menu.addAction(drill_action)
 
         export_bst_action = QAction("&Export BST", self)
