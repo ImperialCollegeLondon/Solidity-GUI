@@ -140,7 +140,7 @@ def test_generate_elements_data():
     assert np.all(data["cell_materials"][num_tetras[0] + 1 :] == num_tetras[0] + 1)
 
     # There is probably a better test we can do for this...
-    assert data["tetra_node_ids"].shape == (total_tetras, 4)
+    assert data["tetra_node_ids"].shape == (total_tetras, 5)
 
 
 def test_generate_interactions_data():

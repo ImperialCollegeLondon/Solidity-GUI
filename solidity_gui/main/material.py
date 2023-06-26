@@ -56,6 +56,7 @@ class OtherForm(Form):
     )
     velocity_factor = FloatField(display_name="Velocity Factor")
     pressure_factor = FloatField(display_name="Pressure Factor")
+    mass_ratio_coefficent = FloatField(display_name="Mass Ratio Coefficient")
 
 
 @dataclass
@@ -134,6 +135,7 @@ def PROPERTIES() -> Properties_Dict_Type:
                 pressure_friction_coefficient=0.0,
                 velocity_factor=0.0,
                 pressure_factor=1.0,
+                mass_ratio_coefficent=0.1,
             ),
         ),
     }
