@@ -24,15 +24,17 @@
 /YD/YDE/NELEM {{num_tetra}}
 /YD/YDE/MELST     2
 /YD/YDE/NELST     2
-/YD/YDE/MELNO     {{points_per_tetra+1}}
-/YD/YDE/NELNO     {{points_per_tetra}}
-/YD/YDE/D2ELST    21 0 0
+/YD/YDE/MELNO     {{points_per_tetra+2}}
+/YD/YDE/NELNO     {{points_per_tetra+1}}
+/YD/YDE/D2ELST    21 {{ num_tetra }} 0
 /YD/YDE/D1EMCT 0
-/YD/YDE/I1ELCF 0
+/YD/YDE/I1ELCF {{ num_tetra }}
+{% for _ in range(num_tetra) -%}{{ '-1 ' }}{% endfor %}
 /YD/YDE/I1ELBE 0
 /YD/YDE/I1ELPR {{num_tetra}}
 {{ cell_materials|join(' ') }}
-/YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
+{% set num_columns = points_per_tetra+1 %}
+/YD/YDE/I2ELTO 21 {{num_columns ~ ' ' ~ num_tetra}}
 {% for element in tetra_node_ids -%}
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
 {% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
@@ -56,7 +58,7 @@
      /*   Nodes     */
 /YD/YDN/MNODIM 4
 /YD/YDN/NNODIM 3
-/YD/YDN/MNOPO {{ num_nodes + 1 }}
+/YD/YDN/MNOPO {{ num_nodes + 1 + (4*num_tetra)}}
 /YD/YDN/NNOPO {{ num_nodes }}
 /YD/YDN/D2NCC 21 3 {{ num_nodes }}
 {%- for node in nodes %}
@@ -67,6 +69,7 @@
 {{ "%20.10e"|format(node.0) }} {{ "%20.10e"|format(node.1) }} {{ "%20.10e"|format(node.2) }}
 {%- endfor %}
 
+/YD/YDN/D2NCK 21 3 0
 /YD/YDN/D2NVC  21 0 0
 /YD/YDN/I1NOBF {{ num_nodes }}
 {%- for surface_flag in surface_node_flags %}
@@ -113,25 +116,6 @@
 {{ render_property("I1PEJP", "_calculated", "is_fracture", format_str="%d") }}
 {{ render_property("I1PEMN", "_calculated", "is_fracture", format_str="%d") }}
 {{ render_static_property("I1PSDE", 0) }}
-
-     /*   Elements     */
-/YD/YDE/MELEM {{num_tetra+1}}
-/YD/YDE/NELEM {{num_tetra}}
-/YD/YDE/MELST     2
-/YD/YDE/NELST     2
-/YD/YDE/MELNO     {{points_per_tetra+1}}
-/YD/YDE/NELNO     {{points_per_tetra}}
-/YD/YDE/D2ELST    21 0 0
-/YD/YDE/D1EMCT 0
-/YD/YDE/I1ELCF 0
-/YD/YDE/I1ELBE 0
-/YD/YDE/I1ELPR {{num_tetra}}
-{{ cell_materials|join(' ') }}
-/YD/YDE/I2ELTO 21 {{points_per_tetra ~ ' ' ~ num_tetra}}
-{% for element in tetra_node_ids -%}
-{% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
-{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
-
      /*   Boundary Conditions     */
 /YD/YDB/MBCON {{ num_conditions+1}}
 /YD/YDB/NBCON {{ num_conditions}}
