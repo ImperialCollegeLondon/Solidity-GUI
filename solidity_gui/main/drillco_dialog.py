@@ -1,5 +1,5 @@
 """A dialog for creating a DrillCo system geometry."""
-from typing import Any
+from typing import Any, Dict
 
 import meshio
 import numpy as np
@@ -10,6 +10,12 @@ from .forms import Form, NestedForm, SimpleFormDialog
 from .forms.fields import FloatField, IntField
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
+from .material import (
+    Material,
+    MaterialAssignment,
+    material_assignment_datastore,
+    material_datastore,
+)
 from .meshes import DEFAULT_RESOLUTION
 
 GAP_LENGTH = 0.5
@@ -69,6 +75,76 @@ def _create_mesh(mesh_name: str, component: Component) -> meshio.Mesh:
     )
 
 
+drillco_materials: Dict[str, Dict[str, Dict[str, object]]] = dict(
+    granite=dict(
+        density=dict(density=2626.0),
+        elasticity=dict(
+            lames_first_parameter=2.233251e10, lames_second_parameter=2.419355e10
+        ),
+        fracture=dict(damage_delta_0=0.005, damage_delta_1=1, damage_threshold=0.5),
+        other=dict(
+            mass_damping_coefficient=14000,
+            penalty_number=3000e9,
+            energy_release_rate_mode_1=10.0,
+            energy_release_rate_mode_2=1000.0,
+            tensile_strength=10.98e6,
+            cohesion=29.84e6,
+            internal_friction_coefficient=1.85,
+            sliding_friction_coefficient=0.6,
+            static_friction_coefficient=0.0,
+            pressure_friction_coefficient=0.0,
+            velocity_factor=0.0,
+            pressure_factor=1.0,
+            mass_ratio_coefficent=0.1,
+        ),
+    ),
+    steel=dict(
+        density=dict(density=7850.0),
+        elasticity=dict(
+            lames_first_parameter=1.070506e11,
+            lames_second_parameter=7.751938e10,
+        ),
+        other=dict(
+            mass_damping_coefficient=20000,
+            penalty_number=3000e9,
+            energy_release_rate_mode_1=100.0,
+            energy_release_rate_mode_2=1000.0,
+            tensile_strength=11.4e6,
+            cohesion=46.49e6,
+            internal_friction_coefficient=0.577,
+            sliding_friction_coefficient=0.6,
+            static_friction_coefficient=0.0,
+            pressure_friction_coefficient=0.0,
+            velocity_factor=0.0,
+            pressure_factor=1.0,
+            mass_ratio_coefficent=1,
+        ),
+    ),
+    carbide=dict(
+        density=dict(density=15250.0),
+        elasticity=dict(
+            lames_first_parameter=1.666667e11,
+            lames_second_parameter=2.500000e11,
+        ),
+        other=dict(
+            mass_damping_coefficient=40000,
+            penalty_number=3000e9,
+            energy_release_rate_mode_1=100.0,
+            energy_release_rate_mode_2=1000.0,
+            tensile_strength=11.4e6,
+            cohesion=46.49e6,
+            internal_friction_coefficient=0.577,
+            sliding_friction_coefficient=0.6,
+            static_friction_coefficient=0.0,
+            pressure_friction_coefficient=0.0,
+            velocity_factor=0.0,
+            pressure_factor=1.0,
+            mass_ratio_coefficent=1,
+        ),
+    ),
+)
+
+
 class DrillCoDialog(SimpleFormDialog):
     """A dialog displaying and processing DrillCoForm."""
 
@@ -80,6 +156,10 @@ class DrillCoDialog(SimpleFormDialog):
         """
         super().__init__(DrillCoForm, **kwargs)
         self.setWindowTitle("Create DrillCo System Geometry")
+
+    def _create_materials(self) -> None:
+        for name, data in drillco_materials.items():
+            material_datastore.add(Material.from_properties_dict(name, data))
 
     def _ok_clicked(self) -> None:
         if data := super()._ok_clicked():
@@ -139,4 +219,17 @@ class DrillCoDialog(SimpleFormDialog):
                     ),
                 ),
             )
+            self._create_materials()
+            for material_name, cell_set_name in (
+                ("granite", "ground_volume"),
+                ("steel", "bit_volume"),
+                ("steel", "piston_volume"),
+            ):
+                material_assignment_datastore.add(
+                    MaterialAssignment(
+                        material_id=material_datastore.get_by_name(material_name)[0],
+                        cell_set_name=cell_set_name,
+                    )
+                )
+
             self.close()

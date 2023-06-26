@@ -1,7 +1,7 @@
 """Module containing definitions for bundling material and properties data."""
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Tuple, Type
 
 from meshio import Mesh
 from pubsub import pub
@@ -153,6 +153,18 @@ class Material:
     name: str
     properties: Properties_Dict_Type = field(default_factory=PROPERTIES)
 
+    @classmethod
+    def from_properties_dict(
+        cls, name: str, properties_data: Dict[str, Dict[str, object]]
+    ) -> "Material":
+        """Construct a Material instance from a dictionary of property data."""
+        material = cls(name=name)
+        for property_name, property_data in properties_data.items():
+            property_ = material.properties[property_name]
+            property_.enabled = True
+            property_.data = property_data.copy()
+        return material
+
 
 @dataclass(frozen=True)
 class MaterialAssignment:
@@ -164,6 +176,17 @@ class MaterialAssignment:
 
 class MaterialDatastore(IndexDatastore[Material]):
     """Convenience IndexDatastore subclass with concretised type."""
+
+    def get_by_name(self, name: str) -> Tuple[int, Material]:
+        """Retrieve a material using its name.
+
+        Args:
+          name: name of the material to get.
+        """
+        for key, material in self.items():
+            if material.name == name:
+                return key, material
+        raise ValueError(f"Unable to find material with name - {name}")
 
 
 material_datastore = MaterialDatastore("materials")
