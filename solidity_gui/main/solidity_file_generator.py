@@ -312,6 +312,29 @@ def generate_interactions_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
     return dict(mean_length=mean_length, min_length=min_length)
 
 
+def generate_surface_elements_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
+    """Generates the surface elements section data for the Solidity input file."""
+    points_per_triangle = 3
+    node_ids = np.empty((0, 3), dtype="uint64")
+    node_id_offset = 0
+
+    total_triangles = sum(
+        mesh.cells_dict["triangle"].data.shape[0] for mesh in meshes.values()
+    )
+
+    for mesh in meshes.values():
+        node_ids = np.concatenate(
+            (node_ids, mesh.cells_dict["triangle"] + node_id_offset)
+        )
+        node_id_offset += mesh.points.shape[0]
+
+    return dict(
+        num_triangles=total_triangles,
+        points_per_triangle=points_per_triangle,
+        triangle_node_ids=node_ids,
+    )
+
+
 def create_y3d_template() -> str:
     """Creates a Solidity input template using Jinja2."""
     template = env.get_template(config.SOLIDITY_Y3D_TEMPLATE_FILE)
@@ -340,6 +363,7 @@ def create_y3d_template() -> str:
             num_conditions=len(condition_datastore),
         )
     )
+    data.update(generate_surface_elements_data(mesh_datastore))
     return template.render(data)
 
 

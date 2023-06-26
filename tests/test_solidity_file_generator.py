@@ -15,6 +15,7 @@ from solidity_gui.main.solidity_file_generator import (
     generate_interactions_data,
     generate_material_data,
     generate_nodes_data,
+    generate_surface_elements_data,
     get_tetra_side_lengths,
 )
 
@@ -191,3 +192,28 @@ def test_check_unassigned_nodes():
     # We should get an error if there are unassigned nodes
     with pytest.raises(SystemValidationError):
         check_unassigned_nodes(node_conditions, mesh_a)
+
+
+def test_generate_surface_elements_data():
+    """Test generate_surface_elements_data function."""
+    mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
+        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+    )
+    mesh_b, surface_nodes_b = _get_mesh_and_surface_nodes(
+        Component(shape="box", label="b", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1]))
+    )
+
+    meshes = dict(a=mesh_a, b=mesh_b)
+
+    surface_elements_data = generate_surface_elements_data(meshes)
+
+    assert surface_elements_data["points_per_triangle"] == 3
+    assert (
+        surface_elements_data["num_triangles"]
+        == mesh_a.cells_dict["triangle"].data.shape[0]
+        + mesh_b.cells_dict["triangle"].data.shape[0]
+    )
+    assert surface_elements_data["triangle_node_ids"].shape == (
+        surface_elements_data["num_triangles"],
+        3,
+    )
