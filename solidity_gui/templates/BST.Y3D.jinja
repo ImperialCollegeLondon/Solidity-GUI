@@ -89,9 +89,10 @@
 {%- endmacro %}
 
      /*   Properties     */
-/YD/YDP/MPROP  200 {{ num_materials + 1 }}
-/YD/YDP/NPROP  200 {{ num_materials }}
-
+/YD/YDP/MPROP {{ num_materials + 1 }}
+/YD/YDP/NPROP {{ num_materials }}
+/YD/YDP/I1INDEX {{ num_materials }}
+{% for _ in range(num_materials) %}{{ loop.index ~ ' ' }}{% endfor %}
 {{ render_property("D1PEKS", "other", "mass_damping_coefficient") }}
 {{ render_property("D1PELA", "elasticity", "lames_first_parameter") }}
 {{ render_property("D1PEMU", "elasticity", "lames_second_parameter") }}
@@ -107,6 +108,7 @@
 {{ render_property("D1PEPSF", "other", "pressure_friction_coefficient") }}
 {{ render_property("D1PEVF", "other", "velocity_factor") }}
 {{ render_property("D1PEPF", "other", "pressure_factor") }}
+{{ render_property("D1PEMR", "other", "mass_ratio_coefficent") }}
 {{ render_property("D1PEM0", "fracture", "damage_delta_0") }}
 {{ render_property("D1PEMF", "fracture", "damage_delta_1") }}
 {{ render_property("D1PEDM", "fracture", "damage_threshold") }}
