@@ -16,7 +16,7 @@ from .visualisation_toolbar import VisualisationToolbar
 from .vtk_window import VTKWindow
 
 
-def _log_geometry_update(component: Component) -> None:
+def _log_geometry_update(mesh_name: str, component: Component) -> None:
     """Log when new components are added to the geometry."""
     logging.info(f'Added new component "{component.label}" (type: {component.shape})')
 

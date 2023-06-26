@@ -1,4 +1,6 @@
 """Tests for solidity_gui.main.drillco_dialog module."""
+from unittest.mock import patch
+
 from solidity_gui.main.drillco_dialog import (
     BIT_FACE_HEIGHT,
     GAP_LENGTH,
@@ -9,6 +11,7 @@ from solidity_gui.main.drillco_dialog import (
 )
 from solidity_gui.main.forms.info import FormInfo
 from solidity_gui.main.geometry import Component
+from solidity_gui.main.meshes import DEFAULT_RESOLUTION
 
 
 def test_drill_co_dialog(qtbot):
@@ -18,7 +21,8 @@ def test_drill_co_dialog(qtbot):
     assert isinstance(dialog.form_info, FormInfo)
 
 
-def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
+@patch("solidity_gui.main.drillco_dialog.GmshProcess")
+def test_drill_co_dialog_ok_clicked(gmsh_process_mock, qtbot, send_message_mock):
     """Check ok button event handler of DrillCoDialog."""
     dialog = DrillCoDialog()
 
@@ -30,17 +34,18 @@ def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
     dialog.form_info = form_info
 
     dialog._ok_clicked()
-    send_message_mock.assert_any_call(
-        "geometry.update",
+    gmsh_process_mock("ground").call_function.assert_any_call(
+        "add_component",
         component=Component(
             "box",
             "ground",
             dict(x0=[0, -1, -1], extents=[2, 2, 2]),
         ),
+        resolution=DEFAULT_RESOLUTION,
     )
     bit_distance = data["bit"]["length"] + GAP_LENGTH + BIT_FACE_HEIGHT
-    send_message_mock.assert_any_call(
-        "geometry.update",
+    gmsh_process_mock("bit").call_function.assert_any_call(
+        "add_component",
         component=Component(
             "drillbit",
             "bit",
@@ -57,11 +62,12 @@ def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
                 insert_length=BIT_FACE_HEIGHT * INSERT_LENGTH_FACTOR,
             ),
         ),
+        resolution=DEFAULT_RESOLUTION,
     )
     piston_length = data["bit"]["length"] * data["piston"]["length_ratio"]
     piston_distance = bit_distance + piston_length + GAP_LENGTH
-    send_message_mock.assert_any_call(
-        "geometry.update",
+    gmsh_process_mock("piston").call_function.assert_any_call(
+        "add_component",
         component=Component(
             "cylinder",
             "piston",
@@ -71,4 +77,5 @@ def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
                 radius=data["piston"]["width"] / 2,
             ),
         ),
+        resolution=DEFAULT_RESOLUTION,
     )

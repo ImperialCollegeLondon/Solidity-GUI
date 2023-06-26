@@ -44,11 +44,11 @@ def test_vtk_window_render_mesh(vtk_window):
     """Test render_mesh method of VTKWindow."""
     mesh = generate_mesh([component_factory()], resolution=0.2)
 
-    assert vtk_window.ugrid is None
-    vtk_window.render_mesh(mesh)
+    assert vtk_window.ugrids == {}
+    mesh_name = "default"
+    vtk_window.render_mesh(mesh_name, mesh)
 
     # basic checks that mesh has converted to vtk unstructuredgrid properly
-    assert vtk_window.ugrid.GetNumberOfPoints() == mesh.points.shape[0]
-    assert vtk_window.ugrid.GetNumberOfCells() == sum(
-        block.data.shape[0] for block in mesh.cells
-    )
+    ugrid = vtk_window.ugrids[mesh_name]
+    assert ugrid.GetNumberOfPoints() == mesh.points.shape[0]
+    assert ugrid.GetNumberOfCells() == sum(block.data.shape[0] for block in mesh.cells)

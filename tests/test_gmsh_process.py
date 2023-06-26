@@ -18,12 +18,12 @@ class TestGmshProcess:
 
     def test_gmsh_process_init(self, subscribe_mock):
         """Test instance initialisation."""
-        gmsh_process = GmshProcess()
+        gmsh_process = GmshProcess("default")
         subscribe_mock.assert_called_once_with(gmsh_process.stop_thread, "window.close")
 
     def test_call_function(self):
         """Test call_function method of class."""
-        gmsh_process = GmshProcess()
+        gmsh_process = GmshProcess("default")
         expected_output = "output"
 
         # pre-load something into the output queue as there in no
@@ -41,7 +41,7 @@ class TestGmshProcess:
 
     def test_call_function_async(self, send_message_mock):
         """Test call_function_async method of class."""
-        gmsh_process = GmshProcess()
+        gmsh_process = GmshProcess("default")
 
         assert gmsh_process.daemon._in_queue.qsize() == 0
         gmsh_process.call_function_async(self.function_name, **self.kwargs)
