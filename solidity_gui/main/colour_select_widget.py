@@ -15,7 +15,9 @@ class ColourSelectWidget(QComboBox):
 
         self.currentTextChanged.connect(self._select_handler)
         pub.subscribe(self._set_items, "add_component.finish")
+        pub.subscribe(self._set_items, "generate_mesh.finish")
         pub.subscribe(self._select_handler, "mesh.rendered")
+        pub.subscribe(self._clear, "mesh.create")
 
     def _select_handler(self, mesh: Mesh = None) -> None:
         selectedValue = self.currentText()
@@ -24,6 +26,8 @@ class ColourSelectWidget(QComboBox):
 
         pub.sendMessage("mesh.select", selection_name=selectedValue)
 
-    def _set_items(self, obj: Mesh) -> None:
+    def _clear(self, size: float) -> None:
         self.clear()
+
+    def _set_items(self, mesh_name: str, obj: Mesh) -> None:
         self.addItems(obj.cell_sets.keys())

@@ -25,7 +25,7 @@ def component_factory(
 def test_add_component_to_geometry_begin(gmsh_process_mock):
     """Test _add_component_to_geometry_begin method of VTKWindow."""
     component = component_factory()
-    _add_component_to_geometry_begin(component)
+    _add_component_to_geometry_begin(current_mesh, component)
     gmsh_process = gmsh_process_datastore[current_mesh]
     assert gmsh_process == gmsh_process_mock()
     gmsh_process.start.assert_called_once_with()
@@ -38,9 +38,11 @@ def test_add_component_to_geometry_end(send_message_mock):
     """Test _add_component_to_geometry_end method of VTKWindow."""
     mesh = MagicMock()
     assert len(mesh_datastore) == 0
-    _add_component_to_geometry_end(mesh)
+    _add_component_to_geometry_end(current_mesh, mesh)
     assert mesh_datastore[current_mesh] == mesh
-    send_message_mock.assert_called_with("geometry.updated", mesh=mesh)
+    send_message_mock.assert_called_with(
+        "geometry.updated", mesh_name=current_mesh, mesh=mesh
+    )
 
 
 def test_create_mesh_from_geometry_begin():
@@ -58,6 +60,8 @@ def test_create_mesh_from_geometry_begin():
 def test_create_mesh_from_geometry_end(send_message_mock):
     """Test _create_mesh_from_geometry_end method of VTKWindow."""
     mesh = MagicMock()
-    _create_mesh_from_geometry_end(mesh)
+    _create_mesh_from_geometry_end(current_mesh, mesh)
     assert mesh_datastore[current_mesh] == mesh
-    send_message_mock.assert_called_with("mesh.updated", mesh=mesh)
+    send_message_mock.assert_called_with(
+        "mesh.updated", mesh_name=current_mesh, mesh=mesh
+    )

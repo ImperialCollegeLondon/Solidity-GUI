@@ -1,6 +1,7 @@
 """A dialog for creating a DrillCo system geometry."""
 from typing import Any
 
+import meshio
 import numpy as np
 from marshmallow import validate
 from pubsub import pub
@@ -8,6 +9,8 @@ from pubsub import pub
 from .forms import Form, NestedForm, SimpleFormDialog
 from .forms.fields import FloatField, IntField
 from .geometry import Component
+from .gmsh_process import GmshProcess, gmsh_process_datastore
+from .meshes import DEFAULT_RESOLUTION
 
 GAP_LENGTH = 0.5
 """Length of gap between system components."""
@@ -52,6 +55,20 @@ class DrillCoForm(Form):
     piston = NestedForm(PistonForm)
 
 
+def _create_mesh(mesh_name: str, component: Component) -> meshio.Mesh:
+    """Helper function to synchronously create meshes."""
+    try:
+        gmsh_process = gmsh_process_datastore[mesh_name]
+    except KeyError:
+        gmsh_process = GmshProcess(mesh_name)
+        gmsh_process.start()
+        gmsh_process_datastore[mesh_name] = gmsh_process
+
+    return gmsh_process.call_function(
+        "add_component", component=component, resolution=DEFAULT_RESOLUTION
+    )
+
+
 class DrillCoDialog(SimpleFormDialog):
     """A dialog displaying and processing DrillCoForm."""
 
@@ -67,9 +84,11 @@ class DrillCoDialog(SimpleFormDialog):
     def _ok_clicked(self) -> None:
         if data := super()._ok_clicked():
             pub.sendMessage(
-                "geometry.update",
-                component=Component(
-                    "box", "ground", dict(x0=[0, -1, -1], extents=[2, 2, 2])
+                "add_component.finish",
+                mesh_name="ground",
+                obj=_create_mesh(
+                    "ground",
+                    Component("box", "ground", dict(x0=[0, -1, -1], extents=[2, 2, 2])),
                 ),
             )
 
@@ -79,19 +98,23 @@ class DrillCoDialog(SimpleFormDialog):
             )
             bit_radius = data["bit"]["width"] / 2
             pub.sendMessage(
-                "geometry.update",
-                component=Component(
-                    "drillbit",
+                "add_component.finish",
+                mesh_name="bit",
+                obj=_create_mesh(
                     "bit",
-                    dict(
-                        insert_number=data["bit"]["inserts"]["number"],
-                        x0=list(bit_x0),
-                        axis=list(bit_axis),
-                        face_height=BIT_FACE_HEIGHT,
-                        radius=bit_radius,
-                        insert_radius=data["bit"]["inserts"]["width"] / 2,
-                        insert_displacement=bit_radius * INSERT_DISPLACEMENT_FACTOR,
-                        insert_length=BIT_FACE_HEIGHT * INSERT_LENGTH_FACTOR,
+                    Component(
+                        "drillbit",
+                        "bit",
+                        dict(
+                            insert_number=data["bit"]["inserts"]["number"],
+                            x0=list(bit_x0),
+                            axis=list(bit_axis),
+                            face_height=BIT_FACE_HEIGHT,
+                            radius=bit_radius,
+                            insert_radius=data["bit"]["inserts"]["width"] / 2,
+                            insert_displacement=bit_radius * INSERT_DISPLACEMENT_FACTOR,
+                            insert_length=BIT_FACE_HEIGHT * INSERT_LENGTH_FACTOR,
+                        ),
                     ),
                 ),
             )
@@ -101,14 +124,18 @@ class DrillCoDialog(SimpleFormDialog):
             )
             piston_x0 = bit_x0 - piston_axis - GAP_VECTOR
             pub.sendMessage(
-                "geometry.update",
-                component=Component(
-                    "cylinder",
+                "add_component.finish",
+                mesh_name="piston",
+                obj=_create_mesh(
                     "piston",
-                    dict(
-                        x0=list(piston_x0),
-                        axis=list(piston_axis),
-                        radius=data["piston"]["width"] / 2,
+                    Component(
+                        "cylinder",
+                        "piston",
+                        dict(
+                            x0=list(piston_x0),
+                            axis=list(piston_axis),
+                            radius=data["piston"]["width"] / 2,
+                        ),
                     ),
                 ),
             )

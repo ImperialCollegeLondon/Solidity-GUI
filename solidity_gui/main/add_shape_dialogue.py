@@ -9,6 +9,7 @@ from pubsub import pub
 from .forms import SimpleFormDialog
 from .forms.fields import StrField
 from .geometry import Component, Shape
+from .meshes import current_mesh
 
 
 class AddShapeDialog(SimpleFormDialog):
@@ -39,7 +40,9 @@ class AddShapeDialog(SimpleFormDialog):
         if data := super()._ok_clicked():
             label = data.pop("label")
             component = Component(self.shape.name, label, data)
-            pub.sendMessage("geometry.update", component=component)
+            pub.sendMessage(
+                "geometry.update", mesh_name=current_mesh, component=component
+            )
             self.close()
 
             logging.info(f"Added {self.shape.name}")

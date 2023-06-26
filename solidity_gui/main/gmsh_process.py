@@ -111,8 +111,9 @@ class GmshProcess:
     GmshListener) and broadcast using a pubsub message.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, mesh_name: str) -> None:
         """Create a new GmshProcess."""
+        self.mesh_name = mesh_name
         self.daemon = GmshDaemon()
         """"""
         self._process = Process(target=self.daemon.run, daemon=True)
@@ -169,7 +170,7 @@ class GmshProcess:
     def _function_call_end(self, function_name: str, obj: object) -> None:
         """Event handler called when the mesh_received Signal is sent."""
         logging.info(f"Async gmsh function {function_name} finished")
-        pub.sendMessage(f"{function_name}.finish", obj=obj)
+        pub.sendMessage(f"{function_name}.finish", mesh_name=self.mesh_name, obj=obj)
 
 
 gmsh_process_datastore: Datastore[str, GmshProcess] = Datastore("gmsh_process")
