@@ -135,11 +135,9 @@ def add_dome(
     _, dome_volume, _ = geom.revolve(surface, axis_array, x0_array, -2 * np.pi)
 
     # remove unneeded parts of the geometry
-    geom.remove(surface)
+    geom.remove(surface, recursive=True)
     for cp in curve_points:
         geom.remove(cp)
-    for line in lines:
-        geom.remove(line)
     return dome_volume
 
 
