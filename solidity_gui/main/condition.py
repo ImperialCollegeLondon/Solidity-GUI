@@ -1,6 +1,6 @@
 """Module defining Condition and ConditionAssignment datastructures."""
 from dataclasses import dataclass, field
-from typing import Dict, Type
+from typing import Dict, List, Type
 
 from meshio import Mesh
 from pubsub import pub
@@ -57,10 +57,26 @@ class ConditionDatastore(IndexDatastore[Condition]):
     """Convenience IndexDatastore subclass with concretised type."""
 
 
+class ConditionAssignmentDatastore(IndexDatastore[ConditionAssignment]):
+    """Datastore for ConditionAssignments."""
+
+    def get_assignments_for_mesh(
+        self, mesh: Mesh
+    ) -> Dict[str, List[ConditionAssignment]]:
+        """Returns all ConditionAssignments associated with a particular mesh."""
+        assignments: Dict[str, List[ConditionAssignment]] = dict()
+        for assignment in self.values():
+            if assignment.cell_set_name in mesh.cell_sets:
+                # should only ever be one cell type in a cell set
+                cell_type = list(mesh.cell_sets_dict[assignment.cell_set_name].keys())[
+                    0
+                ]
+                assignments.setdefault(cell_type, []).append(assignment)
+        return assignments
+
+
 condition_datastore = ConditionDatastore("conditions")
-condition_assignment_datastore: IndexDatastore[ConditionAssignment] = IndexDatastore(
-    "condition_assignment"
-)
+condition_assignment_datastore = ConditionAssignmentDatastore("condition_assignments")
 
 
 def sync_assignments_condition_removed(key: int, value: Condition) -> None:

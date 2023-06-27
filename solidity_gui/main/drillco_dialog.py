@@ -6,6 +6,12 @@ import numpy as np
 from marshmallow import validate
 from pubsub import pub
 
+from .condition import (
+    Condition,
+    ConditionAssignment,
+    condition_assignment_datastore,
+    condition_datastore,
+)
 from .forms import Form, NestedForm, SimpleFormDialog
 from .forms.fields import FloatField, IntField
 from .geometry import Component
@@ -144,6 +150,37 @@ drillco_materials: Dict[str, Dict[str, Dict[str, object]]] = dict(
     ),
 )
 
+conditions_data = dict(
+    condition1={
+        "acceleration_x": 0.0,
+        "acceleration_y": 0.0,
+        "acceleration_z": 0.0,
+        "force_x": 0.0,
+        "force_y": 0.0,
+        "force_z": 0.0,
+        "velocity_x": 0.0,
+        "velocity_y": 0.0,
+        "velocity_z": 0.0,
+        "velocity_constraint_x": 0,
+        "velocity_constraint_y": 0,
+        "velocity_constraint_z": 0,
+    },
+    condition2={
+        "acceleration_x": 0.0,
+        "acceleration_y": 0.0,
+        "acceleration_z": 0.0,
+        "force_x": 0.0,
+        "force_y": 0.0,
+        "force_z": 0.0,
+        "velocity_x": 0.0,
+        "velocity_y": 0.0,
+        "velocity_z": 0.0,
+        "velocity_constraint_x": 1,
+        "velocity_constraint_y": 1,
+        "velocity_constraint_z": 1,
+    },
+)
+
 
 class DrillCoDialog(SimpleFormDialog):
     """A dialog displaying and processing DrillCoForm."""
@@ -227,9 +264,24 @@ class DrillCoDialog(SimpleFormDialog):
             ):
                 material_assignment_datastore.add(
                     MaterialAssignment(
-                        material_id=material_datastore.get_by_name(material_name)[0],
+                        material=material_datastore.get_by_name(material_name)[1],
                         cell_set_name=cell_set_name,
                     )
                 )
 
+            for name, properties in conditions_data.items():
+                condition_datastore.add(Condition(name=name, properties=properties))
+
+            for condition_id, cell_set_name in (
+                (0, "ground_volume"),
+                (0, "bit_volume"),
+                (0, "piston_volume"),
+                (1, "ground_surface_1"),
+            ):
+                condition_assignment_datastore.add(
+                    ConditionAssignment(
+                        condition=condition_datastore[condition_id],
+                        cell_set_name=cell_set_name,
+                    )
+                )
             self.close()
