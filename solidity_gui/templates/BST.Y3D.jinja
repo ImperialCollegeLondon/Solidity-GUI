@@ -30,7 +30,7 @@
 /YD/YDE/D1EMCT 0
 /YD/YDE/I1ELCF {{ num_tetra }}
 {% for _ in range(num_tetra) -%}{{ '-1 ' }}{% endfor %}
-/YD/YDE/I1ELBE 0
+/YD/YDE/I1ELBE {{ boundary_tetra|length }}
 {{ boundary_tetra|join(' ')}}
 /YD/YDE/I1ELPR {{num_tetra}}
 {{ cell_materials|join(' ') }}
