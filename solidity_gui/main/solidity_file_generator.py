@@ -2,7 +2,7 @@
 import logging
 from itertools import combinations
 from pathlib import Path
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, Union
 
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
@@ -376,7 +376,7 @@ def create_y3d_template() -> str:
             raise ValueError("Invalid datastructure.")
         surface_nodes[mesh_name] = mesh_surface_nodes
 
-    data: Dict[str, object] = {"num_timesteps": 2000000}
+    data: Dict[str, Union[int, np.array]] = {"num_timesteps": 2000000}
     data.update(
         generate_elements_data(
             mesh_datastore, material_assignment_datastore, surface_nodes
@@ -396,6 +396,10 @@ def create_y3d_template() -> str:
         )
     )
     data.update(generate_surface_elements_data(mesh_datastore))
+    num_joint_elements = (
+        ((int(data["num_tetra"]) * 4) - int(data["num_triangles"])) // 2
+    ) + int(data["num_triangles"])
+    data.update(dict(num_joint_elements=num_joint_elements))
     return template.render(data)
 
 

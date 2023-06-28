@@ -157,3 +157,9 @@
 {% for _ in range(num_triangles) -%}{{ 0 ~ ' ' }}{% endfor %}
 /YD/YDX/I1JTP {{ num_triangles }}
 {% for _ in range(num_triangles) -%}{{ 0 ~ ' ' }}{% endfor %}
+     /*  Joint Elements     */
+/YD/YDJ/MELEM {{ num_joint_elements }}
+/YD/YDJ/MELNO 7
+/YD/YDJ/NELNO 6
+$YDOIT
+$YSTOP
