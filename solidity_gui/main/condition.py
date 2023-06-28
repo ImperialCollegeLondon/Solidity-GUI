@@ -49,7 +49,7 @@ class Condition:
 class ConditionAssignment:
     """Simple datastructure recording the association of a cell_set and Condition."""
 
-    condition_id: int
+    condition: Condition
     cell_set_name: str
 
 
@@ -66,7 +66,7 @@ condition_assignment_datastore: IndexDatastore[ConditionAssignment] = IndexDatas
 def sync_assignments_condition_removed(key: int, value: Condition) -> None:
     """Message handler sync assignment datastore when condition datastore changes."""
     for assignment_key, assignment in condition_assignment_datastore.items():
-        if assignment.condition_id == key:
+        if assignment.condition == value:
             del condition_assignment_datastore[assignment_key]
 
 

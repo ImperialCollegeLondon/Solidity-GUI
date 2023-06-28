@@ -158,7 +158,7 @@ class Material:
 class MaterialAssignment:
     """Simple datastructure recording the association of a cell_set and Material."""
 
-    material_id: int
+    material: Material
     cell_set_name: str
 
 
@@ -175,7 +175,7 @@ material_assignment_datastore: IndexDatastore[MaterialAssignment] = IndexDatasto
 def sync_assignments_material_removed(key: int, value: Material) -> None:
     """Message handler sync assignment datastore when material datastore changes."""
     for assignment_key, assignment in list(material_assignment_datastore.items()):
-        if assignment.material_id == key:
+        if assignment.material == value:
             del material_assignment_datastore[assignment_key]
 
 
