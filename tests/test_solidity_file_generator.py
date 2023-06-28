@@ -199,6 +199,23 @@ def test_fetch_condition_assignments():
     assert np.all(np.isin(node_conditions[:, 1], [0, 1, 2]))
 
 
+def test_fetch_condition_assignments_non_contiguous_ids():
+    """Check function where conditions have non-contiguous id values."""
+    mesh, _ = _get_mesh_and_surface_nodes(
+        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+    )
+
+    condition_assignments = {
+        0: ConditionAssignment(condition_id=0, cell_set_name="a_surface_0"),
+        1: ConditionAssignment(condition_id=2, cell_set_name="a_volume"),
+    }
+
+    element_assignments = fetch_condition_assignments(mesh, condition_assignments)
+    # values in the second column should be indexes into the condition columns
+    # not the actual value of condition_id datastore
+    assert np.setdiff1d(element_assignments[:, 1], (0, 1)).size == 0
+
+
 def test_check_unassigned_nodes():
     """Test check_unassigned_nodes function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
