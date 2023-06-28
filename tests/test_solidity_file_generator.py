@@ -11,6 +11,7 @@ from solidity_gui.main.solidity_file_generator import (
     SystemValidationError,
     check_unassigned_nodes,
     fetch_condition_assignments,
+    fetch_material_assignments,
     generate_elements_data,
     generate_interactions_data,
     generate_material_data,
@@ -163,6 +164,23 @@ def test_generate_interactions_data():
 
     assert data["min_length"] == expected_min_length
     assert data["mean_length"] == expected_mean_length
+
+
+def test_fetch_material_assignments_non_contiguous_ids():
+    """Check function where materials have non-contiguous id values."""
+    mesh, _ = _get_mesh_and_surface_nodes(
+        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+    )
+
+    material_assignments = {
+        0: MaterialAssignment(material_id=0, cell_set_name="a_volume"),
+        1: MaterialAssignment(material_id=2, cell_set_name="a_volume"),
+    }
+
+    element_assignments = fetch_material_assignments(mesh, material_assignments)
+    # values in the second column should be indexes into the material property columns
+    # not the key of the material datastore
+    assert np.setdiff1d(element_assignments[:, 1], (0, 1)).size == 0
 
 
 def test_fetch_condition_assignments():
