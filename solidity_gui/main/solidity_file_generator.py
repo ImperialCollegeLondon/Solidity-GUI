@@ -11,7 +11,6 @@ from PySide6.QtWidgets import QMessageBox
 
 from .. import config
 from .condition import (
-    ConditionAssignment,
     ConditionAssignmentDatastore,
     ConditionDatastore,
     condition_assignment_datastore,
@@ -327,6 +326,37 @@ def generate_surface_elements_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]
     )
 
 
+def get_template_data(
+    meshes: Mapping[str, Mesh],
+    materials: MaterialDatastore,
+    material_assignments: Mapping[int, MaterialAssignment],
+    conditions: ConditionDatastore,
+    condition_assignments: ConditionAssignmentDatastore,
+    surface_nodes: Mapping[str, np.ndarray],
+) -> Dict[str, object]:
+    """Get the data needed to render the input file template."""
+    data: Dict[str, object] = {"num_timesteps": 2000000}
+    data.update(generate_elements_data(meshes, materials, material_assignments))
+    data.update(generate_interactions_data(meshes))
+    data.update(
+        generate_nodes_data(
+            meshes,
+            surface_nodes,
+            conditions,
+            condition_assignments,
+        )
+    )
+    data.update(generate_material_data(materials))
+    data.update(
+        dict(
+            conditions=conditions.values(),
+            num_conditions=len(conditions),
+        )
+    )
+    data.update(generate_surface_elements_data(meshes))
+    return data
+
+
 def create_y3d_template() -> str:
     """Creates a Solidity input template using Jinja2."""
     template = env.get_template(config.SOLIDITY_Y3D_TEMPLATE_FILE)
@@ -340,29 +370,14 @@ def create_y3d_template() -> str:
             raise ValueError("Invalid datastructure.")
         surface_nodes[mesh_name] = mesh_surface_nodes
 
-    data: Dict[str, object] = {"num_timesteps": 2000000}
-    data.update(
-        generate_elements_data(
-            mesh_datastore, material_datastore, material_assignment_datastore
-        )
+    data = get_template_data(
+        mesh_datastore,
+        material_datastore,
+        material_assignment_datastore,
+        condition_datastore,
+        condition_assignment_datastore,
+        surface_nodes,
     )
-    data.update(generate_interactions_data(mesh_datastore))
-    data.update(
-        generate_nodes_data(
-            mesh_datastore,
-            surface_nodes,
-            condition_datastore,
-            condition_assignment_datastore,
-        )
-    )
-    data.update(generate_material_data(material_datastore))
-    data.update(
-        dict(
-            conditions=condition_datastore.values(),
-            num_conditions=len(condition_datastore),
-        )
-    )
-    data.update(generate_surface_elements_data(mesh_datastore))
     return template.render(data)
 
 
