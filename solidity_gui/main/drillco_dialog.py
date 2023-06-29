@@ -8,7 +8,7 @@ from pubsub import pub
 from .condition import condition_assignment_datastore, condition_datastore
 from .drillco_system import create_drillco_system
 from .forms import Form, NestedForm, SimpleFormDialog
-from .forms.fields import FloatField, IntField
+from .forms.fields import FloatField
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 from .material import material_assignment_datastore, material_datastore
@@ -18,23 +18,26 @@ from .meshes import DEFAULT_RESOLUTION
 class InsertForm(Form):
     """Data for drill bit inserts."""
 
-    number = IntField(validators=[validate.Range(min=1)])
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False)])
+    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=1)])
+    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
 
 
 class BitForm(Form):
     """Data for drill bits."""
 
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False)])
-    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False)])
+    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
+    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=10)])
     inserts = NestedForm(InsertForm)
 
 
 class PistonForm(Form):
     """Data for piston."""
 
-    length_ratio = FloatField(validators=[validate.Range(min=0, min_inclusive=False)])
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False)])
+    length_ratio = FloatField(
+        display_name="Bit to Piston Length Ratio",
+        validators=[validate.Range(min=0, min_inclusive=False)],
+    )
+    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
 
 
 class DrillCoForm(Form):

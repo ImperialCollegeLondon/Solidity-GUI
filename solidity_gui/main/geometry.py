@@ -162,7 +162,6 @@ def add_drill_bit(
     geom: pygmsh.occ.Geometry,
     x0: Vector,
     axis: Vector,
-    face_height: float,
     radius: float,
     insert_radius: float,
     insert_length: float,

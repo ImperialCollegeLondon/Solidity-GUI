@@ -12,10 +12,6 @@ GAP_LENGTH = 0.5
 """Length of gap between system components."""
 INSERT_DISPLACEMENT_FACTOR = 0.5
 """Distance of inserts from bit center as a factor of the radius of the bit."""
-INSERT_LENGTH_FACTOR = 1.25
-"""Length of bit inserts as a factor of the bit face height."""
-BIT_FACE_HEIGHT = 0.25
-"""Height of the domed drill bit cap."""
 SYSTEM_AXIS = np.array([1, 0, 0])
 """Arbitrary axis for system orientation"""
 GAP_VECTOR = SYSTEM_AXIS * GAP_LENGTH
@@ -177,7 +173,10 @@ def _create_drillco_geometry(
     )
 
     bit_axis = SYSTEM_AXIS * data["bit"]["length"]
-    bit_x0 = -SYSTEM_AXIS * (data["bit"]["length"] + BIT_FACE_HEIGHT) - GAP_VECTOR
+    bit_x0 = (
+        -SYSTEM_AXIS * (data["bit"]["length"] + data["bit"]["inserts"]["length"])
+        - GAP_VECTOR
+    )
     bit_radius = data["bit"]["width"] / 2
     meshes["bit"] = mesh_generator(
         "bit",
@@ -187,10 +186,9 @@ def _create_drillco_geometry(
             dict(
                 x0=list(bit_x0),
                 axis=list(bit_axis),
-                face_height=BIT_FACE_HEIGHT,
                 radius=bit_radius,
                 insert_radius=data["bit"]["inserts"]["width"] / 2,
-                insert_length=BIT_FACE_HEIGHT * INSERT_LENGTH_FACTOR,
+                insert_length=data["bit"]["inserts"]["length"],
             ),
         ),
     )

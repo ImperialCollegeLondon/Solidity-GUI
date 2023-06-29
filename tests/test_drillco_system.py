@@ -3,13 +3,11 @@ import numpy as np
 
 from solidity_gui.main.condition import ConditionAssignmentDatastore, ConditionDatastore
 from solidity_gui.main.drillco_system import (
-    BIT_FACE_HEIGHT,
     DRILLCO_CONDITION_ASSIGNMENTS,
     DRILLCO_CONDITIONS,
     DRILLCO_MATERIAL_ASSIGNMENTS,
     DRILLCO_MATERIALS,
     GAP_LENGTH,
-    INSERT_LENGTH_FACTOR,
     Condition,
     ConditionAssignment,
     MaterialAssignment,
@@ -27,7 +25,7 @@ def _mesher(name, component):
 
 
 PARAMETERS = dict(
-    bit=dict(width=1.0, length=5.0, inserts=dict(number=2, width=0.15)),
+    bit=dict(width=1.0, length=5.0, inserts=dict(length=0.5, width=0.5)),
     piston=dict(length_ratio=1.5, width=1.5),
 )
 
@@ -53,11 +51,10 @@ def test_create_drillco_system():
     bit_maxes = bit_mesh.points.max(axis=0)
     bit_mins = bit_mesh.points.min(axis=0)
     bit_width = PARAMETERS["bit"]["width"]
-    insert_height = BIT_FACE_HEIGHT * INSERT_LENGTH_FACTOR
     assert np.isclose(
         bit_maxes - bit_mins,
         (
-            PARAMETERS["bit"]["length"] + insert_height,
+            PARAMETERS["bit"]["length"] + PARAMETERS["bit"]["inserts"]["length"],
             bit_width,
             bit_width,
         ),
