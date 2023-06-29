@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 import numpy as np
 import vtk
-from meshio import CellBlock, Mesh
+from meshio import Mesh
 from numpy.typing import NDArray
 from pubsub import pub
 from PySide6.QtCore import Qt
@@ -61,16 +61,18 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
     unselected_lookup_value, selected_lookup_value = 0, 1
 
-    def get_point_ids_in_surface(self, name: str, mesh: Mesh) -> NDArray[Any]:
+    def get_point_ids_for_cell_set(self, name: str, mesh: Mesh) -> NDArray[Any]:
         """Gets the points IDs of a mesh surface by name.
 
         Args:
             name: Name of the mesh surface
             mesh: The mesh object containing the surface
         """
-        triangles: CellBlock = mesh.cells[1]
-        surface_cell_ids = mesh.cell_sets[name][1]
-        return triangles.data[surface_cell_ids]
+        cell_set_dict = mesh.cell_sets_dict[name]
+        cell_type = list(cell_set_dict.keys())[0]
+        cell_set = cell_set_dict[cell_type]
+        offset = mesh.cells_dict["triangle"].shape[0] if cell_type == "tetra" else 0
+        return mesh.cells_dict[cell_type][cell_set - offset]
 
     def __init__(self) -> None:
         """Create new VTKWindow."""
@@ -163,10 +165,10 @@ class VTKWindow(QVTKRenderWindowInteractor):
         for mesh_name, mesh in mesh_datastore.items():
             point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
             try:
-                surface_point_ids = np.unique(
-                    self.get_point_ids_in_surface(selection_name, mesh)
+                point_ids = np.unique(
+                    self.get_point_ids_for_cell_set(selection_name, mesh)
                 )
-                point_colours[surface_point_ids] = self.selected_lookup_value
+                point_colours[point_ids] = self.selected_lookup_value
                 self.iren.ReInitialize()
             except KeyError:
                 pass
