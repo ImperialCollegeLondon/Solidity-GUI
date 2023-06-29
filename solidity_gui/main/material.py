@@ -189,10 +189,12 @@ class MaterialDatastore(IndexDatastore[Material]):
         raise ValueError(f"Unable to find material with name - {name}")
 
 
+class MaterialAssignmentDatastore(IndexDatastore[MaterialAssignment]):
+    """IndexDatastore subclass with types concretised for MaterialAssignment."""
+
+
 material_datastore = MaterialDatastore("materials")
-material_assignment_datastore: IndexDatastore[MaterialAssignment] = IndexDatastore(
-    "material_assignment"
-)
+material_assignment_datastore = MaterialAssignmentDatastore("material_assignment")
 
 
 def sync_assignments_material_removed(key: int, value: Material) -> None:

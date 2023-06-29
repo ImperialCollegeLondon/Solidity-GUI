@@ -1,17 +1,13 @@
 """Tests for solidity_gui.main.drillco_dialog module."""
 from unittest.mock import patch
 
-from solidity_gui.main.drillco_dialog import (
-    BIT_FACE_HEIGHT,
-    GAP_LENGTH,
-    INSERT_DISPLACEMENT_FACTOR,
-    INSERT_LENGTH_FACTOR,
-    DrillCoDialog,
-    DrillCoForm,
+from solidity_gui.main.condition import (
+    condition_assignment_datastore,
+    condition_datastore,
 )
+from solidity_gui.main.drillco_dialog import DrillCoDialog, DrillCoForm
 from solidity_gui.main.forms.info import FormInfo
-from solidity_gui.main.geometry import Component
-from solidity_gui.main.meshes import DEFAULT_RESOLUTION
+from solidity_gui.main.material import material_assignment_datastore, material_datastore
 
 
 def test_drill_co_dialog(qtbot):
@@ -21,9 +17,20 @@ def test_drill_co_dialog(qtbot):
     assert isinstance(dialog.form_info, FormInfo)
 
 
-@patch("solidity_gui.main.drillco_dialog.GmshProcess")
-def test_drill_co_dialog_ok_clicked(gmsh_process_mock, qtbot, send_message_mock):
-    """Check ok button event handler of DrillCoDialog."""
+TEST_DATA = (dict(a=0, b=1), dict(c=2, d=3), [4, 5], [6], [7, 8, 9])
+
+
+@patch(
+    "solidity_gui.main.drillco_dialog.create_drillco_system", lambda *args: TEST_DATA
+)
+def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
+    """Check ok button event handler of DrillCoDialog.
+
+    The responsibilities of this function are to broadcast and store the outputs of the
+    create_drillco_system function so we don't need to work with real data. Instead we
+    patch out that function and inject some arbitrary data then check the correct
+    messages are sent and datastores updated.
+    """
     dialog = DrillCoDialog()
 
     data = dict(
@@ -34,48 +41,22 @@ def test_drill_co_dialog_ok_clicked(gmsh_process_mock, qtbot, send_message_mock)
     dialog.form_info = form_info
 
     dialog._ok_clicked()
-    gmsh_process_mock("ground").call_function.assert_any_call(
-        "add_component",
-        component=Component(
-            "box",
-            "ground",
-            dict(x0=[0, -1, -1], extents=[2, 2, 2]),
-        ),
-        resolution=DEFAULT_RESOLUTION,
-    )
-    bit_distance = data["bit"]["length"] + GAP_LENGTH + BIT_FACE_HEIGHT
-    gmsh_process_mock("bit").call_function.assert_any_call(
-        "add_component",
-        component=Component(
-            "drillbit",
-            "bit",
-            dict(
-                insert_number=data["bit"]["inserts"]["number"],
-                x0=[-bit_distance, 0, 0],
-                axis=[data["bit"]["length"], 0, 0],
-                face_height=BIT_FACE_HEIGHT,
-                radius=data["bit"]["width"] / 2,
-                insert_radius=data["bit"]["inserts"]["width"] / 2,
-                insert_displacement=data["bit"]["width"]
-                / 2
-                * INSERT_DISPLACEMENT_FACTOR,
-                insert_length=BIT_FACE_HEIGHT * INSERT_LENGTH_FACTOR,
-            ),
-        ),
-        resolution=DEFAULT_RESOLUTION,
-    )
-    piston_length = data["bit"]["length"] * data["piston"]["length_ratio"]
-    piston_distance = bit_distance + piston_length + GAP_LENGTH
-    gmsh_process_mock("piston").call_function.assert_any_call(
-        "add_component",
-        component=Component(
-            "cylinder",
-            "piston",
-            dict(
-                x0=[-piston_distance, 0, 0],
-                axis=[piston_length, 0, 0],
-                radius=data["piston"]["width"] / 2,
-            ),
-        ),
-        resolution=DEFAULT_RESOLUTION,
-    )
+
+    # the mesh_datastore would usually be updated by a handler of the
+    # add_component.finish signal
+    for mesh_name, obj in TEST_DATA[0].items():
+        send_message_mock.assert_any_call(
+            "add_component.finish", mesh_name=mesh_name, obj=obj
+        )
+
+    # for everything else the datastores are updated directly
+    assert material_datastore == {
+        i: value for i, value in enumerate(TEST_DATA[1].values())
+    }
+    assert material_assignment_datastore == {
+        i: value for i, value in enumerate(TEST_DATA[2])
+    }
+    assert condition_datastore == {i: value for i, value in enumerate(TEST_DATA[3])}
+    assert condition_assignment_datastore == {
+        i: value for i, value in enumerate(TEST_DATA[4])
+    }
