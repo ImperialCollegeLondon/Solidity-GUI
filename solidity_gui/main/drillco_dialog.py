@@ -1,8 +1,8 @@
 """A dialog for creating a DrillCo system geometry."""
-from typing import Any
+from typing import Any, Dict
 
 import meshio
-from marshmallow import validate
+from marshmallow import ValidationError, validate
 from pubsub import pub
 
 from .condition import condition_assignment_datastore, condition_datastore
@@ -28,6 +28,11 @@ class BitForm(Form):
     width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
     length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=10)])
     inserts = NestedForm(InsertForm)
+
+    def validate(self, data: Dict[str, Any], **kwargs: Any) -> None:
+        """Schema level validator."""
+        if data["inserts"]["width"] > data["width"]:
+            raise ValidationError("Insert cannot be wider than bit.")
 
 
 class PistonForm(Form):
