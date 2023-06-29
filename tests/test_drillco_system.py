@@ -1,6 +1,7 @@
 """Tests for the drillco_system module."""
 import numpy as np
 
+from solidity_gui.main.condition import ConditionAssignmentDatastore, ConditionDatastore
 from solidity_gui.main.drillco_system import (
     BIT_FACE_HEIGHT,
     DRILLCO_CONDITION_ASSIGNMENTS,
@@ -15,6 +16,8 @@ from solidity_gui.main.drillco_system import (
     create_drillco_system,
 )
 from solidity_gui.main.geometry import Geometry, GeometryWrapper
+from solidity_gui.main.material import MaterialAssignmentDatastore, MaterialDatastore
+from solidity_gui.main.solidity_file_generator import get_template_data
 
 
 def _mesher(name, component):
@@ -23,19 +26,21 @@ def _mesher(name, component):
         return wrapper.add_component(component, 0.4)
 
 
+PARAMETERS = dict(
+    bit=dict(width=1.0, length=5.0, inserts=dict(number=2, width=0.15)),
+    piston=dict(length_ratio=1.5, width=1.5),
+)
+
+
 def test_create_drillco_system():
     """Test create_drillco_system function."""
-    parameters = dict(
-        bit=dict(width=1.0, length=5.0, inserts=dict(number=2, width=0.15)),
-        piston=dict(length_ratio=1.5, width=1.5),
-    )
     (
         meshes,
         materials,
         material_assignments,
         conditions,
         condition_assignments,
-    ) = create_drillco_system(parameters, _mesher)
+    ) = create_drillco_system(PARAMETERS, _mesher)
 
     # do basic checks of meshes from the created geometry
     ground_mesh = meshes["ground"]
@@ -47,12 +52,12 @@ def test_create_drillco_system():
     bit_mesh = meshes["bit"]
     bit_maxes = bit_mesh.points.max(axis=0)
     bit_mins = bit_mesh.points.min(axis=0)
-    bit_width = parameters["bit"]["width"]
+    bit_width = PARAMETERS["bit"]["width"]
     insert_height = BIT_FACE_HEIGHT * INSERT_LENGTH_FACTOR
     assert np.isclose(
         bit_maxes - bit_mins,
         (
-            parameters["bit"]["length"] + insert_height,
+            PARAMETERS["bit"]["length"] + insert_height,
             bit_width,
             bit_width,
         ),
@@ -61,11 +66,11 @@ def test_create_drillco_system():
     piston_mesh = meshes["piston"]
     piston_maxes = piston_mesh.points.max(axis=0)
     piston_mins = piston_mesh.points.min(axis=0)
-    piston_width = parameters["piston"]["width"]
+    piston_width = PARAMETERS["piston"]["width"]
     assert np.isclose(
         piston_maxes - piston_mins,
         (
-            parameters["bit"]["length"] * parameters["piston"]["length_ratio"],
+            PARAMETERS["bit"]["length"] * PARAMETERS["piston"]["length_ratio"],
             piston_width,
             piston_width,
         ),
@@ -95,3 +100,41 @@ def test_create_drillco_system():
         assert condition_assignment == ConditionAssignment(
             condition=conditions[condition_id], cell_set_name=cell_set_name
         )
+
+
+def test_solidity_input_integration():
+    """Integration test checking we can get the Y3D file data for the Drillco system."""
+    (
+        meshes,
+        materials,
+        material_assignments,
+        conditions,
+        condition_assignments,
+    ) = create_drillco_system(PARAMETERS, _mesher)
+    surface_nodes = {mesh_name: np.array([]) for mesh_name in meshes}
+
+    material_datastore = MaterialDatastore("materials")
+    for material in materials.values():
+        material_datastore.add(material)
+    material_assignment_datastore = MaterialAssignmentDatastore("material_assignments")
+    for material_assignment in material_assignments:
+        material_assignment_datastore.add(material_assignment)
+
+    condition_datastore = ConditionDatastore("conditions")
+    for condition in conditions:
+        condition_datastore.add(condition)
+    condition_assignment_datastore = ConditionAssignmentDatastore(
+        "condition_assignments"
+    )
+    for condition_assignment in condition_assignments:
+        condition_assignment_datastore.add(condition_assignment)
+
+    # just check that we can get the template data without raising any validation errors
+    get_template_data(
+        meshes,
+        material_datastore,
+        material_assignment_datastore,
+        condition_datastore,
+        condition_assignment_datastore,
+        surface_nodes,
+    )
