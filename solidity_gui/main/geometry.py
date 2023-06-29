@@ -71,6 +71,23 @@ class Geometry(pygmsh.occ.Geometry):
             )
             return super().boolean_union(entities, delete_first, delete_other)
 
+    def boolean_fragments(
+        self,
+        d0: Dummy,
+        d1: Dummy,
+        delete_first: bool = True,
+        delete_other: bool = True,
+    ) -> List[Dummy]:
+        """Perform a boolean union of geometric entities.
+
+        A thin wrapper around pygmsh.occ.Geometry that suppresses warnings.
+        """
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=".*Specified mesh size.*", module=".*geometry"
+            )
+            return super().boolean_fragments(d0, d1, delete_first, delete_other)
+
 
 @dataclass
 class Component:
@@ -138,49 +155,33 @@ def add_dome(
     geom.remove(surface, recursive=True)
     for cp in curve_points:
         geom.remove(cp)
-    return dome_volume
+    return [dome_volume]
 
 
 def add_drill_bit(
     geom: pygmsh.occ.Geometry,
-    insert_number: int,
     x0: Vector,
     axis: Vector,
     face_height: float,
     radius: float,
     insert_radius: float,
     insert_length: float,
-    insert_displacement: float,
     mesh_size: float = 0.2,
 ) -> Dummy:
     """Add a drill bit shape for drillco systems."""
-    bit_base = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
-    top_axis = np.array(axis) / np.linalg.norm(axis) * face_height
-    top_base = np.array(x0) + np.array(axis)
-    bit_top = add_dome(
-        geom, x0=top_base, axis=top_axis, radius=radius, mesh_size=mesh_size
+    insert_base = np.array(x0) + np.array(axis)
+    insert_axis = np.array(axis) / np.linalg.norm(axis) * insert_length
+    insert = add_dome(
+        geom,
+        x0=insert_base,
+        axis=insert_axis,
+        radius=insert_radius,
     )
-    insert_axis = top_axis / np.linalg.norm(top_axis) * insert_length
-    inserts = [
-        add_dome(
-            geom,
-            x0=top_base
-            + np.array(
-                (
-                    0,
-                    insert_displacement * np.cos(i * 2 * np.pi / insert_number),
-                    insert_displacement * np.sin(i * 2 * np.pi / insert_number),
-                )
-            ),
-            axis=insert_axis,
-            radius=insert_radius,
-        )
-        for i in range(insert_number)
-    ]
-
-    bit = geom.boolean_union([bit_base, bit_top] + inserts)[0]
-    geom._SIZE_QUEUE.append((bit, mesh_size))
-    return bit
+    bit_base = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
+    bit_volumes = geom.boolean_fragments(bit_base, insert)
+    for volume in bit_volumes:
+        geom._SIZE_QUEUE.append((volume, mesh_size))
+    return bit_volumes
 
 
 @dataclass
@@ -327,18 +328,27 @@ class GeometryWrapper:
           component: definition of the shape to add to the system geometry
           resolution: resolution to use for mesh
         """
-        shape = self.function_map[component.shape](
+        shapes = self.function_map[component.shape](
             self.geom, **component.kwargs, mesh_size=resolution
         )
+        # below fudge allows some functions to return more than one shape
+        # we could avoid this by making all shape functions return a list but that would
+        # involve wrapping all of the pygmsh functions
+        if not isinstance(shapes, list):
+            shapes = [shapes]
 
         # unfortunately when using the OCC geometry kernel there doesn't seem to be a
         # way to directly get the ids of the surfaces for a shape, instead we have to
         # get these directly from the gmsh module
-        _, surface_tags = gmsh.model.occ.get_surface_loops(shape._id)
-
-        self.geom.add_physical(shape, f"{component.label}_volume")
-        for i, tag in enumerate(surface_tags[0]):
-            self.geom.add_physical(Dummy(2, int(tag)), f"{component.label}_surface_{i}")
+        surface_count = 0
+        for shape_count, shape in enumerate(shapes):
+            _, surface_tags = gmsh.model.occ.get_surface_loops(shape._id)
+            self.geom.add_physical(shape, f"{component.label}_volume_{shape_count}")
+            for tag in surface_tags[0]:
+                self.geom.add_physical(
+                    Dummy(2, int(tag)), f"{component.label}_surface_{surface_count}"
+                )
+                surface_count += 1
         return self._generate_mesh()
 
     def _generate_mesh(self) -> Mesh:

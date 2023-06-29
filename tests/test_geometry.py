@@ -29,7 +29,7 @@ def generate_mesh(components, resolution):
 def check_mesh_cell_sets(mesh, no_surfaces, label):
     """Helper function that checks the cell sets of a mesh are correct."""
     assert len(mesh.cell_sets.keys()) == no_surfaces + 1
-    assert mesh.cell_sets[f"{label}_volume"][2] is not None
+    assert mesh.cell_sets[f"{label}_volume_0"][2] is not None
     for i in range(no_surfaces):
         assert mesh.cell_sets[f"{label}_surface_{i}"][1] is not None
 

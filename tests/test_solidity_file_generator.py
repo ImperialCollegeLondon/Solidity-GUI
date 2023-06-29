@@ -52,7 +52,7 @@ def test_generate_nodes_data():
     surface_nodes = dict(a=surface_nodes_a, b=surface_nodes_b)
 
     # choose a mix of cell sets to apply conditions to
-    cell_set_names = ["a_volume", "b_volume", "b_surface_1"]
+    cell_set_names = ["a_volume_0", "b_volume_0", "b_surface_1"]
 
     conditions = ConditionDatastore(
         "conditions", {i: Condition(name=str(i)) for i in range(len(cell_set_names))}
@@ -159,10 +159,10 @@ def test_generate_elements_data():
         "materials", {i: Material(name=str(i)) for i in range(len(meshes))}
     )
     assignments1 = {
-        0: MaterialAssignment(materials[0], "a_volume"),
+        0: MaterialAssignment(materials[0], "a_volume_0"),
     }
     assignments2 = {
-        1: MaterialAssignment(materials[1], "b_volume"),
+        1: MaterialAssignment(materials[1], "b_volume_0"),
     }
 
     # We should get errors if some of the elements don't have assigned materials
@@ -217,7 +217,7 @@ def test_fetch_material_assignments_non_contiguous_ids():
     )
     materials = MaterialDatastore("materials", {2: Material(name="1")})
     material_assignments = {
-        1: MaterialAssignment(material=materials[2], cell_set_name="a_volume"),
+        1: MaterialAssignment(material=materials[2], cell_set_name="a_volume_0"),
     }
 
     element_assignments = fetch_material_assignments(
@@ -237,7 +237,7 @@ def test_fetch_condition_assignments():
         "conditions", {0: Condition(name="0"), 1: Condition(name="1")}
     )
     condition_assignment1 = ConditionAssignment(conditions[0], "a_surface_0")
-    condition_assignment2 = ConditionAssignment(conditions[1], "a_volume")
+    condition_assignment2 = ConditionAssignment(conditions[1], "a_volume_0")
 
     condition_assigments = ConditionAssignmentDatastore(
         "assigments", {0: condition_assignment1, 1: condition_assignment2}
@@ -266,7 +266,7 @@ def test_fetch_condition_assignments_non_contiguous_ids():
             0: ConditionAssignment(
                 condition=conditions[0], cell_set_name="a_surface_0"
             ),
-            1: ConditionAssignment(condition=conditions[2], cell_set_name="a_volume"),
+            1: ConditionAssignment(condition=conditions[2], cell_set_name="a_volume_0"),
         },
     )
 

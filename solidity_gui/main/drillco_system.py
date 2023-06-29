@@ -90,9 +90,10 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
     ),
 )
 DRILLCO_MATERIAL_ASSIGNMENTS = (
-    ("granite", "ground_volume"),
-    ("steel", "bit_volume"),
-    ("steel", "piston_volume"),
+    ("granite", "ground_volume_0"),
+    ("steel", "bit_volume_0"),
+    ("carbide", "bit_volume_1"),
+    ("steel", "piston_volume_0"),
 )
 DRILLCO_CONDITIONS = dict(
     condition1={
@@ -126,9 +127,10 @@ DRILLCO_CONDITIONS = dict(
 )
 
 DRILLCO_CONDITION_ASSIGNMENTS = (
-    (0, "ground_volume"),
-    (0, "bit_volume"),
-    (0, "piston_volume"),
+    (0, "ground_volume_0"),
+    (0, "bit_volume_0"),
+    (0, "bit_volume_1"),
+    (0, "piston_volume_0"),
     (1, "ground_surface_1"),
 )
 
@@ -183,13 +185,11 @@ def _create_drillco_geometry(
             "drillbit",
             "bit",
             dict(
-                insert_number=data["bit"]["inserts"]["number"],
                 x0=list(bit_x0),
                 axis=list(bit_axis),
                 face_height=BIT_FACE_HEIGHT,
                 radius=bit_radius,
                 insert_radius=data["bit"]["inserts"]["width"] / 2,
-                insert_displacement=bit_radius * INSERT_DISPLACEMENT_FACTOR,
                 insert_length=BIT_FACE_HEIGHT * INSERT_LENGTH_FACTOR,
             ),
         ),
