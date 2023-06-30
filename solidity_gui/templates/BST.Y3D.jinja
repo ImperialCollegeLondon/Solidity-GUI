@@ -90,8 +90,7 @@
      /*   Properties     */
 /YD/YDP/MPROP {{ num_materials + 1 }}
 /YD/YDP/NPROP {{ num_materials }}
-/YD/YDP/I1INDEX {{ num_materials }}
-{% for _ in range(num_materials) %}{{ loop.index ~ ' ' }}{% endfor %}
+{{ render_property("I1INDEX", "_calculated", "material_index", "%d") }}
 {{ render_property("D1PEKS", "other", "mass_damping_coefficient") }}
 {{ render_property("D1PELA", "elasticity", "lames_first_parameter") }}
 {{ render_property("D1PEMU", "elasticity", "lames_second_parameter") }}

@@ -272,7 +272,7 @@ def generate_elements_data(
 def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
     """Generates data for the material properties section of the input file."""
     property_lines: Dict[str, Any] = {}
-    for material in materials.values():
+    for i, material in enumerate(materials.values(), 1):
         for property_label, property_ in material.properties.items():
             property_line_dict = property_lines.setdefault(property_label, {})
             property_data = (
@@ -290,6 +290,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
         calculated_properties.setdefault("is_fracture", []).append(
             3 if material.properties["fracture"].enabled else 0
         )
+        calculated_properties.setdefault("material_index", []).append(i)
 
     # add in additional copies of materials with joint elements
     extra_materials = 0
@@ -303,6 +304,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
                 property_line.append(property_line[i])
         property_lines["_calculated"]["is_joint"].append(15)
         property_lines["_calculated"]["is_fracture"].append(0)
+        property_lines["_calculated"]["material_index"].append(i + 1)
     return dict(
         materials=materials.values(),
         num_materials=len(materials) + extra_materials,
