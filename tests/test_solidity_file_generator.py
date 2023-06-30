@@ -155,6 +155,7 @@ def test_generate_elements_data():
     )
 
     meshes = dict(a=mesh_a, b=mesh_b)
+    surface_nodes = dict(a=surface_nodes_a, b=surface_nodes_b)
     materials = MaterialDatastore(
         "materials", {i: Material(name=str(i)) for i in range(len(meshes))}
     )
@@ -167,11 +168,13 @@ def test_generate_elements_data():
 
     # We should get errors if some of the elements don't have assigned materials
     with pytest.raises(SystemValidationError):
-        generate_elements_data(meshes, materials, assignments1)
+        generate_elements_data(meshes, materials, assignments1, surface_nodes)
     with pytest.raises(SystemValidationError):
-        generate_elements_data(meshes, materials, assignments2)
+        generate_elements_data(meshes, materials, assignments2, surface_nodes)
 
-    data = generate_elements_data(meshes, materials, assignments1 | assignments2)
+    data = generate_elements_data(
+        meshes, materials, assignments1 | assignments2, surface_nodes
+    )
 
     assert data["points_per_tetra"] == 4
 

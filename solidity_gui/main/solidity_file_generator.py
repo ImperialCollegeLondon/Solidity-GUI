@@ -8,6 +8,7 @@ import numpy as np
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from meshio import Mesh
 from PySide6.QtWidgets import QMessageBox
+from typing_extensions import TypedDict
 
 from .. import config
 from .condition import (
@@ -89,7 +90,7 @@ def generate_nodes_data(
     surface_nodes: Mapping[str, np.ndarray],
     conditions: ConditionDatastore,
     condition_assignments: ConditionAssignmentDatastore,
-) -> Dict[str, Any]:
+) -> Dict[str, object]:
     """Prepare data needed for template renderering."""
     num_nodes = sum(mesh.points.shape[0] for mesh in meshes.values())
     all_nodes = np.concatenate([mesh.points for mesh in meshes.values()], axis=0)
@@ -181,14 +182,27 @@ def error_message(message: str) -> None:
     msg_box.exec_()
 
 
+class ElementData(TypedDict):
+    """Typed dict class providing types for element data."""
+
+    num_tetra: int
+    points_per_tetra: int
+    cell_materials: np.ndarray
+    tetra_node_ids: np.ndarray
+    boundary_tetra: np.ndarray
+
+
 def generate_elements_data(
     meshes: Mapping[str, Mesh],
     materials: MaterialDatastore,
     material_assignments: Mapping[int, MaterialAssignment],
-) -> Dict[str, object]:
+    surface_nodes: Mapping[str, np.ndarray],
+) -> ElementData:
     """Generates the elements section data for the Solidity input file."""
     points_per_tetra = 4
     all_node_ids = np.empty((0, points_per_tetra + 1), dtype="uint64")
+    boundary_tetra = np.empty((0,), dtype="uint64")
+
     node_id_offset = 0
 
     cell_materials_sorted = np.empty((0, 2), dtype="uint64")
@@ -198,7 +212,7 @@ def generate_elements_data(
         mesh.cells_dict["tetra"].data.shape[0] for mesh in meshes.values()
     )
 
-    for i, mesh in enumerate(meshes.values()):
+    for i, (mesh_name, mesh) in enumerate(meshes.items()):
         cell_materials = fetch_material_assignments(
             mesh, materials, material_assignments
         )
@@ -216,10 +230,31 @@ def generate_elements_data(
         # nodes from previous meshes
         node_ids = mesh.cells_dict["tetra"] + node_id_offset
         # Append the mesh ID to each row
-        mesh_ids = np.full((mesh.cells_dict["tetra"].shape[0], 1), i, dtype="uint64")
+        mesh_ids = np.full(
+            (mesh.cells_dict["tetra"].shape[0], 1), i + 1, dtype="uint64"
+        )
         node_ids = np.concatenate((node_ids, mesh_ids), axis=1)
 
         all_node_ids = np.concatenate((all_node_ids, node_ids), axis=0)
+
+        # Find the indices of tetra elements that contain surface nodes
+        indices = np.where(
+            np.apply_along_axis(
+                lambda x: np.isin(x[:4], surface_nodes[mesh_name]).any(),
+                1,
+                node_ids,
+            )
+        )[0]
+        boundary_tetra_layer = np.zeros(node_ids.shape[0], dtype="uint64")
+        boundary_tetra_layer[indices] = i + 1
+        boundary_tetra = np.concatenate(
+            (
+                (
+                    boundary_tetra,
+                    boundary_tetra_layer,
+                )
+            )
+        )
 
         node_id_offset += mesh.points.shape[0]
 
@@ -228,6 +263,7 @@ def generate_elements_data(
         points_per_tetra=points_per_tetra,
         cell_materials=cell_materials_sorted[:, 1],
         tetra_node_ids=all_node_ids,
+        boundary_tetra=boundary_tetra,
     )
 
 
@@ -303,7 +339,15 @@ def generate_interactions_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
     return dict(mean_length=mean_length, min_length=min_length)
 
 
-def generate_surface_elements_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
+class SurfaceElementData(TypedDict):
+    """Typed dict class providing types for surface element data."""
+
+    num_triangles: int
+    points_per_triangle: int
+    triangle_node_ids: np.ndarray
+
+
+def generate_surface_elements_data(meshes: Mapping[str, Mesh]) -> SurfaceElementData:
     """Generates the surface elements section data for the Solidity input file."""
     points_per_triangle = 3
     node_ids = np.empty((0, 3), dtype="uint64")
@@ -336,7 +380,10 @@ def get_template_data(
 ) -> Dict[str, object]:
     """Get the data needed to render the input file template."""
     data: Dict[str, object] = {"num_timesteps": 2000000}
-    data.update(generate_elements_data(meshes, materials, material_assignments))
+    element_data = generate_elements_data(
+        meshes, materials, material_assignments, surface_nodes
+    )
+    data.update(element_data)
     data.update(generate_interactions_data(meshes))
     data.update(
         generate_nodes_data(
@@ -353,7 +400,13 @@ def get_template_data(
             num_conditions=len(conditions),
         )
     )
-    data.update(generate_surface_elements_data(meshes))
+    surface_element_data = generate_surface_elements_data(meshes)
+    data.update(surface_element_data)
+    num_triangles = surface_element_data["num_triangles"]
+    num_joint_elements = (
+        ((element_data["num_tetra"] * 4) - num_triangles) // 2
+    ) + num_triangles
+    data.update(dict(num_joint_elements=num_joint_elements))
     return data
 
 
