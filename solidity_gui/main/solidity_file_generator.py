@@ -2,16 +2,17 @@
 import logging
 from itertools import combinations
 from pathlib import Path
-from typing import Any, Dict, Mapping, Union
+from typing import Any, Dict, Mapping
 
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from meshio import Mesh
 from PySide6.QtWidgets import QMessageBox
+from typing_extensions import TypedDict
 
 from .. import config
 from .condition import (
-    ConditionAssignment,
+    ConditionAssignmentDatastore,
     ConditionDatastore,
     condition_assignment_datastore,
     condition_datastore,
@@ -52,62 +53,35 @@ def write_file(file_content: str, output_file: Path | str) -> None:
 def fetch_condition_assignments(
     mesh: Mesh,
     conditions: ConditionDatastore,
-    condition_assignment_datastore: Mapping[int, ConditionAssignment],
+    condition_assignments: ConditionAssignmentDatastore,
 ) -> np.ndarray:
     """Fetch the condition assignments for a given mesh."""
-    node_conditions_list = []
-    unique_node_ids_mesh = np.array([], dtype="uint64")
-    for condition_assignment in condition_assignment_datastore.values():
-        if condition_assignment.cell_set_name in mesh.cell_sets_dict:
-            for cell_type in mesh.cell_sets_dict[condition_assignment.cell_set_name]:
-                cell_id_offset = 0
-                if cell_type == "tetra":
-                    cell_id_offset = mesh.cells_dict["triangle"].shape[0]
-                if cell_type in mesh.cell_sets_dict[condition_assignment.cell_set_name]:
-                    cell_ids = (
-                        mesh.cell_sets_dict[condition_assignment.cell_set_name][
-                            cell_type
-                        ]
-                        - cell_id_offset
-                    )
-                    node_ids = mesh.cells_dict[cell_type][cell_ids].flatten()
-                    unique_node_ids = np.setdiff1d(
-                        np.unique(node_ids), unique_node_ids_mesh
-                    )
-                    unique_node_ids_mesh = np.concatenate(
-                        [unique_node_ids_mesh, unique_node_ids]
-                    )
-                    condition_id = conditions.get_positional_index(
-                        condition_assignment.condition
-                    )
-                    node_conditions_list.append(
-                        np.array(
-                            [
-                                unique_node_ids,
-                                np.full_like(
-                                    unique_node_ids,
-                                    condition_id,
-                                ),
-                            ]
-                        ).T,
-                    )
-
-    if node_conditions_list:
-        return np.concatenate(node_conditions_list)
-
-    return np.empty((0, 2), dtype="uint64")
+    node_count = mesh.points.shape[0]
+    node_assignments = np.array((np.arange(node_count), np.full(node_count, -1))).T
+    # important that we work on the cell types in this order so that lower dimension
+    # entities take precedence over higher dimension
+    cell_type_order = ("tetra", "triangle")
+    mesh_assignments = condition_assignments.get_assignments_for_mesh(mesh)
+    for cell_type in cell_type_order:
+        if cell_type not in mesh_assignments:
+            continue
+        for assignment in mesh_assignments[cell_type]:
+            cell_set = mesh.cell_sets_dict[assignment.cell_set_name][cell_type]
+            cell_id_offset = 0
+            # for some reason in the cell sets the id of tetra are offset by the
+            # number of triangles in the mesh so we need to account for that
+            if cell_type == "tetra":
+                cell_id_offset = mesh.cells_dict["triangle"].shape[0]
+            cell_ids = cell_set - cell_id_offset
+            node_ids = np.unique(mesh.cells_dict[cell_type][cell_ids].flatten())
+            condition_id = conditions.get_positional_index(assignment.condition)
+            node_assignments[node_ids, 1] = condition_id
+    return node_assignments
 
 
 def check_unassigned_nodes(node_conditions: np.ndarray, mesh: Mesh) -> None:
     """Checks if there are any unassigned cells in the mesh."""
-    node_ids = np.arange(mesh.points.shape[0], dtype="uint64")
-
-    if any(
-        [
-            np.setdiff1d(node_ids, node_conditions[:, 0]).size != 0,
-            np.setdiff1d(node_conditions[:, 0], node_ids).size != 0,
-        ]
-    ):
+    if any(node_conditions[:, 1] == -1):
         raise SystemValidationError("One or more nodes have unassigned conditions!")
 
 
@@ -115,15 +89,15 @@ def generate_nodes_data(
     meshes: Mapping[str, Mesh],
     surface_nodes: Mapping[str, np.ndarray],
     conditions: ConditionDatastore,
-    condition_assignment_datastore: Mapping[int, ConditionAssignment],
-) -> Dict[str, Any]:
+    condition_assignments: ConditionAssignmentDatastore,
+) -> Dict[str, object]:
     """Prepare data needed for template renderering."""
     num_nodes = sum(mesh.points.shape[0] for mesh in meshes.values())
     all_nodes = np.concatenate([mesh.points for mesh in meshes.values()], axis=0)
 
     combined_surface_nodes = np.array([])
     incr = 0
-    node_conditions_sorted = np.empty((0, 2), dtype="uint64")
+    all_node_conditions = np.empty((0, 2), dtype="uint64")
     for mesh_name in meshes:
         mesh_surface_nodes = surface_nodes[mesh_name]
         mesh_surface_nodes = mesh_surface_nodes + incr
@@ -131,16 +105,14 @@ def generate_nodes_data(
             [combined_surface_nodes, mesh_surface_nodes]
         )
 
-        node_conditions = fetch_condition_assignments(
-            meshes[mesh_name], conditions, condition_assignment_datastore
+        mesh_node_conditions = fetch_condition_assignments(
+            meshes[mesh_name], conditions, condition_assignments
         )
-        check_unassigned_nodes(node_conditions, meshes[mesh_name])
+        check_unassigned_nodes(mesh_node_conditions, meshes[mesh_name])
 
-        node_conditions_sorted = np.concatenate(
-            (
-                node_conditions_sorted,
-                node_conditions[node_conditions[:, 0].argsort()] + incr,
-            )
+        mesh_node_conditions[:, 0] += incr
+        all_node_conditions = np.concatenate(
+            (all_node_conditions, mesh_node_conditions)
         )
 
         incr += meshes[mesh_name].points.shape[0]
@@ -152,7 +124,7 @@ def generate_nodes_data(
         num_nodes=num_nodes,
         nodes=all_nodes,
         surface_node_flags=surface_node_flags,
-        node_conditions=node_conditions_sorted[:, 1],
+        node_conditions=all_node_conditions[:, 1],
     )
 
 
@@ -210,12 +182,22 @@ def error_message(message: str) -> None:
     msg_box.exec_()
 
 
+class ElementData(TypedDict):
+    """Typed dict class providing types for element data."""
+
+    num_tetra: int
+    points_per_tetra: int
+    cell_materials: np.ndarray
+    tetra_node_ids: np.ndarray
+    boundary_tetra: np.ndarray
+
+
 def generate_elements_data(
     meshes: Mapping[str, Mesh],
     materials: MaterialDatastore,
     material_assignments: Mapping[int, MaterialAssignment],
     surface_nodes: Mapping[str, np.ndarray],
-) -> Dict[str, object]:
+) -> ElementData:
     """Generates the elements section data for the Solidity input file."""
     points_per_tetra = 4
     all_node_ids = np.empty((0, points_per_tetra + 1), dtype="uint64")
@@ -357,7 +339,15 @@ def generate_interactions_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
     return dict(mean_length=mean_length, min_length=min_length)
 
 
-def generate_surface_elements_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
+class SurfaceElementData(TypedDict):
+    """Typed dict class providing types for surface element data."""
+
+    num_triangles: int
+    points_per_triangle: int
+    triangle_node_ids: np.ndarray
+
+
+def generate_surface_elements_data(meshes: Mapping[str, Mesh]) -> SurfaceElementData:
     """Generates the surface elements section data for the Solidity input file."""
     points_per_triangle = 3
     node_ids = np.empty((0, 3), dtype="uint64")
@@ -380,6 +370,46 @@ def generate_surface_elements_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]
     )
 
 
+def get_template_data(
+    meshes: Mapping[str, Mesh],
+    materials: MaterialDatastore,
+    material_assignments: Mapping[int, MaterialAssignment],
+    conditions: ConditionDatastore,
+    condition_assignments: ConditionAssignmentDatastore,
+    surface_nodes: Mapping[str, np.ndarray],
+) -> Dict[str, object]:
+    """Get the data needed to render the input file template."""
+    data: Dict[str, object] = {"num_timesteps": 2000000}
+    element_data = generate_elements_data(
+        meshes, materials, material_assignments, surface_nodes
+    )
+    data.update(element_data)
+    data.update(generate_interactions_data(meshes))
+    data.update(
+        generate_nodes_data(
+            meshes,
+            surface_nodes,
+            conditions,
+            condition_assignments,
+        )
+    )
+    data.update(generate_material_data(materials))
+    data.update(
+        dict(
+            conditions=conditions.values(),
+            num_conditions=len(conditions),
+        )
+    )
+    surface_element_data = generate_surface_elements_data(meshes)
+    data.update(surface_element_data)
+    num_triangles = surface_element_data["num_triangles"]
+    num_joint_elements = (
+        ((element_data["num_tetra"] * 4) - num_triangles) // 2
+    ) + num_triangles
+    data.update(dict(num_joint_elements=num_joint_elements))
+    return data
+
+
 def create_y3d_template() -> str:
     """Creates a Solidity input template using Jinja2."""
     template = env.get_template(config.SOLIDITY_Y3D_TEMPLATE_FILE)
@@ -393,36 +423,14 @@ def create_y3d_template() -> str:
             raise ValueError("Invalid datastructure.")
         surface_nodes[mesh_name] = mesh_surface_nodes
 
-    data: Dict[str, Union[int, np.array]] = {"num_timesteps": 2000000}
-    data.update(
-        generate_elements_data(
-            mesh_datastore,
-            material_datastore,
-            material_assignment_datastore,
-            surface_nodes,
-        )
+    data = get_template_data(
+        mesh_datastore,
+        material_datastore,
+        material_assignment_datastore,
+        condition_datastore,
+        condition_assignment_datastore,
+        surface_nodes,
     )
-    data.update(generate_interactions_data(mesh_datastore))
-    data.update(
-        generate_nodes_data(
-            mesh_datastore,
-            surface_nodes,
-            condition_datastore,
-            condition_assignment_datastore,
-        )
-    )
-    data.update(generate_material_data(material_datastore))
-    data.update(
-        dict(
-            conditions=condition_datastore.values(),
-            num_conditions=len(condition_datastore),
-        )
-    )
-    data.update(generate_surface_elements_data(mesh_datastore))
-    num_joint_elements = (
-        ((int(data["num_tetra"]) * 4) - int(data["num_triangles"])) // 2
-    ) + int(data["num_triangles"])
-    data.update(dict(num_joint_elements=num_joint_elements))
     return template.render(data)
 
 

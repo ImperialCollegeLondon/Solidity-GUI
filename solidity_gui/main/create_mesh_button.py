@@ -30,5 +30,5 @@ class CreateMeshButton(QPushButton):
     def _disable(self, mesh: Mesh = None) -> None:
         self.setDisabled(True)
 
-    def _enable(self, mesh: Mesh = None) -> None:
+    def _enable(self, mesh_name: str, mesh: Mesh = None) -> None:
         self.setDisabled(False)

@@ -2,11 +2,11 @@
 import logging
 import os
 from tempfile import NamedTemporaryFile
-from typing import Any, Optional
+from typing import Any, Dict
 
 import numpy as np
 import vtk
-from meshio import CellBlock, Mesh
+from meshio import Mesh
 from numpy.typing import NDArray
 from pubsub import pub
 from PySide6.QtCore import Qt
@@ -19,7 +19,7 @@ from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 from .. import config
 from .custom_interactor_style import CustomInteractorStyle
 from .geometry import Vector
-from .meshes import current_mesh, mesh_datastore
+from .meshes import mesh_datastore
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
@@ -61,16 +61,18 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
     unselected_lookup_value, selected_lookup_value = 0, 1
 
-    def get_point_ids_in_surface(self, name: str, mesh: Mesh) -> NDArray[Any]:
+    def get_point_ids_for_cell_set(self, name: str, mesh: Mesh) -> NDArray[Any]:
         """Gets the points IDs of a mesh surface by name.
 
         Args:
             name: Name of the mesh surface
             mesh: The mesh object containing the surface
         """
-        triangles: CellBlock = mesh.cells[1]
-        surface_cell_ids = mesh.cell_sets[name][1]
-        return triangles.data[surface_cell_ids]
+        cell_set_dict = mesh.cell_sets_dict[name]
+        cell_type = list(cell_set_dict.keys())[0]
+        cell_set = cell_set_dict[cell_type]
+        offset = mesh.cells_dict["triangle"].shape[0] if cell_type == "tetra" else 0
+        return mesh.cells_dict[cell_type][cell_set - offset]
 
     def __init__(self) -> None:
         """Create new VTKWindow."""
@@ -89,8 +91,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.iren.SetInteractorStyle(self.inter_style)
         self.iren.Initialize()
         self.reset_camera()
-        self.ugrid: Optional[vtk.vtkUnstructuredGrid] = None
-
+        self.ugrids: Dict[str, vtk.vtkUnstructuredGrid] = {}
+        self.actors: Dict[str, vtk.vtkActor] = {}
         self._create_orientation_marker()
 
         pub.subscribe(self._colour_mesh_selection, "mesh.select")
@@ -106,10 +108,11 @@ class VTKWindow(QVTKRenderWindowInteractor):
         pub.subscribe(self.render_mesh, "geometry.updated")
         pub.subscribe(self.render_mesh, "mesh.updated")
 
-    def render_mesh(self, mesh: Mesh) -> None:
+    def render_mesh(self, mesh_name: str, mesh: Mesh) -> None:
         """Render a mesh within the VTKWindow.
 
         Args:
+          mesh_name: The name of the mesh
           mesh: The mesh to render
         """
         logging.info("Rendering mesh")
@@ -131,7 +134,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
             # Delete the file now that we've finished with it
             os.unlink(filename)
 
-        self.ugrid = ugrid
+        self.ugrids[mesh_name] = ugrid
         # Create the LUT for scalars to colors
         lut = vtk.vtkLookupTable()
         lut.SetNumberOfTableValues(2)
@@ -145,11 +148,13 @@ class VTKWindow(QVTKRenderWindowInteractor):
         mapper.UseLookupTableScalarRangeOn()
         mapper.SetLookupTable(lut)
 
-        for actor in self.ren.GetActors():
-            self.ren.RemoveActor(actor)
+        if mesh_name in self.actors:
+            self.ren.RemoveActor(self.actors[mesh_name])
+
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
         self.ren.AddActor(actor)
+        self.actors[mesh_name] = actor
 
         self.ren.ResetCamera()
         self.iren.ReInitialize()
@@ -157,21 +162,20 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
     def _colour_mesh_selection(self, selection_name: str) -> None:
         """Update rendered mesh colours based on selected element."""
-        if not self.ugrid:
-            return
+        for mesh_name, mesh in mesh_datastore.items():
+            point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
+            try:
+                point_ids = np.unique(
+                    self.get_point_ids_for_cell_set(selection_name, mesh)
+                )
+                point_colours[point_ids] = self.selected_lookup_value
+                self.iren.ReInitialize()
+            except KeyError:
+                pass
 
-        mesh = mesh_datastore[current_mesh]
-        point_colours = np.full(mesh.points.shape[0], self.unselected_lookup_value)
-        try:
-            surface_point_ids = np.unique(
-                self.get_point_ids_in_surface(selection_name, mesh)
+            self.ugrids[mesh_name].GetPointData().SetScalars(
+                numpy_support.numpy_to_vtk(point_colours)
             )
-            point_colours[surface_point_ids] = self.selected_lookup_value
-            self.iren.ReInitialize()
-        except KeyError:
-            pass
-
-        self.ugrid.GetPointData().SetScalars(numpy_support.numpy_to_vtk(point_colours))
         self.iren.ReInitialize()
 
     def reset_camera(self) -> None:

@@ -1,5 +1,5 @@
 """Test configuration and fixtures."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pubsub import pub
@@ -29,7 +29,15 @@ def send_message_mock(monkeypatch: MonkeyPatch) -> MagicMock:
 @pytest.fixture(autouse=True)
 def clear_datastores():
     """Clear all datastores before each test."""
-    mesh_datastore.clear()
-    gmsh_process_datastore.clear()
-    material_datastore.clear()
-    material_assignment_datastore.clear()
+    # patch out sendMessage here as the syncing signals can cause issues sometimes
+    with patch.object(pub, "sendMessage"):
+        mesh_datastore.clear()
+        gmsh_process_datastore.clear()
+        material_datastore.clear()
+        material_assignment_datastore.clear()
+
+
+@pytest.fixture(autouse=True)
+def mock_gmsh_process_start(monkeypatch):
+    """Prevent any extra threads or processes from being started."""
+    monkeypatch.setattr("solidity_gui.main.gmsh_process.GmshProcess.start", MagicMock())
