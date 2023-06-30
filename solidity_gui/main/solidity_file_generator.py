@@ -192,6 +192,7 @@ class ElementData(TypedDict):
     cell_materials: np.ndarray
     tetra_node_ids: np.ndarray
     boundary_tetra: np.ndarray
+    num_meshes: int
 
 
 def generate_elements_data(
@@ -266,6 +267,7 @@ def generate_elements_data(
         cell_materials=cell_materials_sorted[:, 1],
         tetra_node_ids=all_node_ids,
         boundary_tetra=boundary_tetra,
+        num_meshes=len(meshes),
     )
 
 
