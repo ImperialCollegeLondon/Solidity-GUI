@@ -73,9 +73,7 @@
 /YD/YDN/D2NCK 21 3 0
 /YD/YDN/D2NVC  21 0 0
 /YD/YDN/I1NOBF {{ num_nodes }}
-{%- for surface_flag in surface_node_flags %}
-{{ surface_flag }}
-{%- endfor %}
+{{ surface_node_flags|join(' ') }}
 /YD/YDN/I1NOPR {{ num_nodes }}
 {{ node_conditions|join(' ') }}
 
