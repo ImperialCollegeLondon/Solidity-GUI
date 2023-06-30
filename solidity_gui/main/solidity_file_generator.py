@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QMessageBox
 from .. import config
 from .condition import (
     ConditionAssignment,
+    ConditionDatastore,
     condition_assignment_datastore,
     condition_datastore,
 )
@@ -19,6 +20,7 @@ from .gmsh_process import gmsh_process_datastore
 from .material import (
     Material,
     MaterialAssignment,
+    MaterialDatastore,
     material_assignment_datastore,
     material_datastore,
 )
@@ -48,7 +50,9 @@ def write_file(file_content: str, output_file: Path | str) -> None:
 
 
 def fetch_condition_assignments(
-    mesh: Mesh, condition_assignment_datastore: Mapping[int, ConditionAssignment]
+    mesh: Mesh,
+    conditions: ConditionDatastore,
+    condition_assignment_datastore: Mapping[int, ConditionAssignment],
 ) -> np.ndarray:
     """Fetch the condition assignments for a given mesh."""
     node_conditions_list = []
@@ -73,13 +77,16 @@ def fetch_condition_assignments(
                     unique_node_ids_mesh = np.concatenate(
                         [unique_node_ids_mesh, unique_node_ids]
                     )
+                    condition_id = conditions.get_positional_index(
+                        condition_assignment.condition
+                    )
                     node_conditions_list.append(
                         np.array(
                             [
                                 unique_node_ids,
                                 np.full_like(
                                     unique_node_ids,
-                                    condition_assignment.condition_id,
+                                    condition_id,
                                 ),
                             ]
                         ).T,
@@ -107,6 +114,7 @@ def check_unassigned_nodes(node_conditions: np.ndarray, mesh: Mesh) -> None:
 def generate_nodes_data(
     meshes: Mapping[str, Mesh],
     surface_nodes: Mapping[str, np.ndarray],
+    conditions: ConditionDatastore,
     condition_assignment_datastore: Mapping[int, ConditionAssignment],
 ) -> Dict[str, Any]:
     """Prepare data needed for template renderering."""
@@ -124,7 +132,7 @@ def generate_nodes_data(
         )
 
         node_conditions = fetch_condition_assignments(
-            meshes[mesh_name], condition_assignment_datastore
+            meshes[mesh_name], conditions, condition_assignment_datastore
         )
         check_unassigned_nodes(node_conditions, meshes[mesh_name])
 
@@ -149,15 +157,23 @@ def generate_nodes_data(
 
 
 def fetch_material_assignments(
-    mesh: Mesh, material_assignments: Mapping[int, MaterialAssignment]
+    mesh: Mesh,
+    materials: MaterialDatastore,
+    material_assignments: Mapping[int, MaterialAssignment],
 ) -> np.ndarray:
     """Fetches the material assignments for a given mesh."""
     cell_materials_list = []
     for assignment in material_assignments.values():
         if assignment.cell_set_name in mesh.cell_sets_dict:
             cell_ids = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
+            material_id = materials.get_positional_index(assignment.material)
             cell_materials_list.append(
-                np.array([cell_ids, np.full_like(cell_ids, assignment.material_id)]).T
+                np.array(
+                    [
+                        cell_ids,
+                        np.full_like(cell_ids, material_id),
+                    ]
+                ).T
             )
 
     if cell_materials_list:
@@ -196,6 +212,7 @@ def error_message(message: str) -> None:
 
 def generate_elements_data(
     meshes: Mapping[str, Mesh],
+    materials: MaterialDatastore,
     material_assignments: Mapping[int, MaterialAssignment],
     surface_nodes: Mapping[str, np.ndarray],
 ) -> Dict[str, object]:
@@ -214,7 +231,9 @@ def generate_elements_data(
     )
 
     for i, (mesh_name, mesh) in enumerate(meshes.items()):
-        cell_materials = fetch_material_assignments(mesh, material_assignments)
+        cell_materials = fetch_material_assignments(
+            mesh, materials, material_assignments
+        )
         check_unassigned_cells(cell_materials, mesh)
 
         cell_materials_sorted = np.concatenate(
@@ -377,13 +396,19 @@ def create_y3d_template() -> str:
     data: Dict[str, Union[int, np.array]] = {"num_timesteps": 2000000}
     data.update(
         generate_elements_data(
-            mesh_datastore, material_assignment_datastore, surface_nodes
+            mesh_datastore,
+            material_datastore,
+            material_assignment_datastore,
+            surface_nodes,
         )
     )
     data.update(generate_interactions_data(mesh_datastore))
     data.update(
         generate_nodes_data(
-            mesh_datastore, surface_nodes, condition_assignment_datastore
+            mesh_datastore,
+            surface_nodes,
+            condition_datastore,
+            condition_assignment_datastore,
         )
     )
     data.update(generate_material_data(material_datastore))
