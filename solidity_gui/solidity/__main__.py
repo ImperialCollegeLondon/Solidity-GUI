@@ -7,4 +7,8 @@ from . import run_solidity
 
 if __name__ == "__main__":
     initialise_logging()
-    run_solidity(Path(argv[1]), Path(argv[2]), Path(argv[3]), Path(argv[4]))
+
+    container = run_solidity(Path(argv[1]), Path(argv[2]), Path(argv[3]), Path(argv[4]))
+
+    # Print stdout and stderr and wait for execution to finish
+    container.attach()

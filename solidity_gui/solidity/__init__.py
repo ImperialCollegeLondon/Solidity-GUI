@@ -2,12 +2,13 @@
 
 It achieves this by using the docker image.
 """
+import atexit
 import logging
 from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, Optional, cast
 
-from python_on_whales import docker
+from python_on_whales import Container, docker
 
 from ..config import (
     SOLIDITY_DOCKER_IMAGE,
@@ -18,13 +19,21 @@ from ..config import (
 )
 
 
+def _stop_container() -> None:
+    if not _container or not _container.exists():
+        return
+
+    logging.info(f"Stopping Docker container ({_container})...")
+    _container.stop()
+
+
 def run_solidity(
     y3d_file_path: Path,
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
     docker_image: str = SOLIDITY_DOCKER_IMAGE,
-) -> None:
+) -> Container:
     """Run Solidity using the specified input files.
 
     All the input files must be in the same directory as one another.
@@ -37,10 +46,19 @@ def run_solidity(
         materials_file_path: Path to materials file (mat.txt)
         docker_image: URL and tag/SHA of docker image
 
+    Returns:
+        The newly created Docker container
+
     Raises:
         ValueError: If input files are not in same directory
-        RuntimeError: If any of the input files do not exist
+        RuntimeError: If any of the input files do not exist or the Docker image is
+                      already running
     """
+    global _container
+
+    if _container and _container.exists():
+        raise RuntimeError("Only one Docker image can be running at a time")
+
     logging.info("Starting Solidity")
 
     input_files_path = y3d_file_path.parent
@@ -65,17 +83,23 @@ def run_solidity(
     logging.info(f"Running Docker image: {docker_image}")
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
-    docker.run(
-        docker_image,
-        [
-            "DEMPlus",
-            str(path_on_container / y3d_file_path.name),
-            str(path_on_container / layout_file_path.name),
-            str(path_on_container / pellet_file_path.name),
-            str(path_on_container / materials_file_path.name),
-        ],
-        volumes=[(input_files_path.absolute(), str(path_on_container))],
+    _container = cast(
+        Container,
+        docker.run(
+            docker_image,
+            [
+                "DEMPlus",
+                str(path_on_container / y3d_file_path.name),
+                str(path_on_container / layout_file_path.name),
+                str(path_on_container / pellet_file_path.name),
+                str(path_on_container / materials_file_path.name),
+            ],
+            volumes=[(input_files_path.absolute(), str(path_on_container))],
+            detach=True,
+        ),
     )
+
+    return _container
 
 
 class SolidityContainer(TemporaryDirectory):
@@ -125,3 +149,11 @@ class SolidityContainer(TemporaryDirectory):
             self.pellet_file_path,
             self.materials_file_path,
         )
+
+
+_container: Optional[Container] = None
+"""The running container (if any)."""
+
+
+# Make sure container is always stopped on program exit
+atexit.register(_stop_container)
