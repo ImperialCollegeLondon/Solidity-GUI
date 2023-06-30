@@ -213,11 +213,9 @@ def generate_elements_data(
         mesh.cells_dict["tetra"].data.shape[0] for mesh in meshes.values()
     )
 
-    for i, mesh_name in enumerate(meshes):
-        cell_materials = fetch_material_assignments(
-            meshes[mesh_name], material_assignments
-        )
-        check_unassigned_cells(cell_materials, meshes[mesh_name])
+    for i, (mesh_name, mesh) in enumerate(meshes.items()):
+        cell_materials = fetch_material_assignments(mesh, material_assignments)
+        check_unassigned_cells(cell_materials, mesh)
 
         cell_materials_sorted = np.concatenate(
             (
@@ -229,10 +227,10 @@ def generate_elements_data(
 
         # We can now get the node ids for each cell, offset by the accumulated number of
         # nodes from previous meshes
-        node_ids = meshes[mesh_name].cells_dict["tetra"] + node_id_offset
+        node_ids = mesh.cells_dict["tetra"] + node_id_offset
         # Append the mesh ID to each row
         mesh_ids = np.full(
-            (meshes[mesh_name].cells_dict["tetra"].shape[0], 1), i + 1, dtype="uint64"
+            (mesh.cells_dict["tetra"].shape[0], 1), i + 1, dtype="uint64"
         )
         node_ids = np.concatenate((node_ids, mesh_ids), axis=1)
 
@@ -247,7 +245,7 @@ def generate_elements_data(
             )
         )[0]
         boundary_tetra_layer = np.zeros(node_ids.shape[0], dtype="uint64")
-        np.put(boundary_tetra_layer, indices, i + 1)
+        boundary_tetra_layer[indices] = i + 1
         boundary_tetra = np.concatenate(
             (
                 (
@@ -257,7 +255,7 @@ def generate_elements_data(
             )
         )
 
-        node_id_offset += meshes[mesh_name].points.shape[0]
+        node_id_offset += mesh.points.shape[0]
 
     return dict(
         num_tetra=total_tetra,
