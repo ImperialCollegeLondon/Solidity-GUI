@@ -35,6 +35,7 @@ def run_solidity(
                           (layout.txt)
         pellet_file_path: Path to file with elements and particles (pellet.txt)
         materials_file_path: Path to materials file (mat.txt)
+        docker_image: URL and tag/SHA of docker image
 
     Raises:
         ValueError: If input files are not in same directory
