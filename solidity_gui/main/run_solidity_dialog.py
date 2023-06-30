@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QFileDialog
 from solidity_gui.solidity import run_solidity
 
 
-def get_file_paths() -> list[str]:
+def get_file_paths() -> list[str] | None:
     """Get the file paths from the user."""
     file_paths = []
     file_names = ["BST.Y3D", "layout.txt", "pellet.txt", "mat.txt"]
@@ -14,17 +14,18 @@ def get_file_paths() -> list[str]:
         file_dialog = QFileDialog()
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
         file_dialog.setWindowTitle("Select " + file_names[i])
-        file_dialog.exec_()
+        if file_dialog.exec_() == QFileDialog.DialogCode.Rejected:
+            return None
         file_paths.append(file_dialog.selectedFiles()[0])
     return file_paths
 
 
 def run_solidity_dialog() -> None:
     """Run Solidity with the file paths selected by the user."""
-    file_paths = get_file_paths()
-    run_solidity(
-        Path(file_paths[0]),
-        Path(file_paths[1]),
-        Path(file_paths[2]),
-        Path(file_paths[3]),
-    )
+    if file_paths := get_file_paths():
+        run_solidity(
+            Path(file_paths[0]),
+            Path(file_paths[1]),
+            Path(file_paths[2]),
+            Path(file_paths[3]),
+        )
