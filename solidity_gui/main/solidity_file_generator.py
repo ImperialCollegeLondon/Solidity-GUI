@@ -57,7 +57,9 @@ def fetch_condition_assignments(
 ) -> np.ndarray:
     """Fetch the condition assignments for a given mesh."""
     node_count = mesh.points.shape[0]
-    node_assignments = np.array((np.arange(node_count), np.full(node_count, -1))).T
+    node_assignments = np.array(
+        (np.arange(node_count), np.full(node_count, -1)), dtype="uint64"
+    ).T
     # important that we work on the cell types in this order so that lower dimension
     # entities take precedence over higher dimension
     cell_type_order = ("tetra", "triangle")
