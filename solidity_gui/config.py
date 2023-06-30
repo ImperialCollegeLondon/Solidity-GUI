@@ -49,7 +49,7 @@ SOLIDITY_Y3D_TEMPLATE_FILE = "BST.Y3D.jinja"
 """Solidity Y3D template file."""
 
 _DOCKER_IMAGE_DIGEST = (
-    "1730fbe6b8f660cdf427cdee8831ca28823b9c584691e7c350e21552f47800ed"
+    "b4384d92959f5f4ff9c2bd616fefde722be5e82645ebd27971879db454ae7d21"
 )
 """The SHA256 digest for the Docker image. Used to pull a specific version."""
 

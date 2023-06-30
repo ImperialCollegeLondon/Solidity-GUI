@@ -1,6 +1,4 @@
 """Assign conditions to cell sets."""
-from itertools import cycle
-
 from .condition import (
     Condition,
     ConditionAssignment,
@@ -25,11 +23,9 @@ def assign_conditions() -> None:
     # Since every node requires a condition, we need to assign a condition to every
     # cell set.
     # We do this by assigning the same condition to multiple cell sets.
-    for cell_set_name, condition in zip(
-        cell_set_names, cycle((condition1, condition2))
-    ):
+    for i, cell_set_name in enumerate(cell_set_names):
         condition_assignment = ConditionAssignment(
-            condition=condition,
+            condition_id=i % len(condition_datastore),
             cell_set_name=cell_set_name,
         )
         condition_assignment_datastore.add(condition_assignment)

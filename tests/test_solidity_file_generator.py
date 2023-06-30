@@ -4,23 +4,13 @@ import itertools
 import numpy as np
 import pytest
 
-from solidity_gui.main.condition import (
-    Condition,
-    ConditionAssignment,
-    ConditionDatastore,
-)
+from solidity_gui.main.condition import ConditionAssignment
 from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
-from solidity_gui.main.material import (
-    PROPERTIES,
-    Material,
-    MaterialAssignment,
-    MaterialDatastore,
-)
+from solidity_gui.main.material import PROPERTIES, Material, MaterialAssignment
 from solidity_gui.main.solidity_file_generator import (
     SystemValidationError,
     check_unassigned_nodes,
     fetch_condition_assignments,
-    fetch_material_assignments,
     generate_elements_data,
     generate_interactions_data,
     generate_material_data,
@@ -52,19 +42,14 @@ def test_generate_nodes_data():
 
     cell_set_names = [*mesh_a.cell_sets.keys(), *mesh_b.cell_sets.keys()]
 
-    conditions = ConditionDatastore(
-        "conditions", {i: Condition(name=str(i)) for i in range(len(cell_set_names))}
-    )
-
     condition_assignment_datastore = {
-        i: ConditionAssignment(conditions[i], cell_set_name)
+        i: ConditionAssignment(i, cell_set_name)
         for i, cell_set_name in enumerate(cell_set_names)
     }
 
     data = generate_nodes_data(
         meshes,
         surface_nodes,
-        conditions,
         condition_assignment_datastore,
     )
 
@@ -130,10 +115,10 @@ def test_generate_elements_data():
     meshes = dict(a=mesh_a, b=mesh_b)
     surface_nodes = dict(a=surface_nodes_a, b=surface_nodes_b)
     assignments1 = {
-        0: MaterialAssignment(materials[0], "a_volume"),
+        0: MaterialAssignment(0, "a_volume"),
     }
     assignments2 = {
-        1: MaterialAssignment(materials[1], "b_volume"),
+        1: MaterialAssignment(1, "b_volume"),
     }
 
     # We should get errors if some of the elements don't have assigned materials
@@ -181,63 +166,20 @@ def test_generate_interactions_data():
     assert data["mean_length"] == expected_mean_length
 
 
-def test_fetch_material_assignments_non_contiguous_ids():
-    """Check function where materials have non-contiguous id values."""
-    mesh, _ = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
-    )
-    materials = MaterialDatastore("materials", {2: Material(name="1")})
-    material_assignments = {
-        1: MaterialAssignment(material=materials[2], cell_set_name="a_volume"),
-    }
-
-    element_assignments = fetch_material_assignments(
-        mesh, materials, material_assignments
-    )
-    # values in the second column should be indexes into the material property columns
-    # not the key of the material datastore
-    assert np.setdiff1d(element_assignments[:, 1], (0, 1)).size == 0
-
-
 def test_fetch_condition_assignments():
     """Test fetch_condition_assignments function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
         Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
     )
-    conditions = ConditionDatastore(
-        "conditions", {0: Condition(name="0"), 1: Condition(name="1")}
-    )
-    condition_assignment1 = ConditionAssignment(conditions[0], "a_surface_0")
-    condition_assignment2 = ConditionAssignment(conditions[1], "a_volume")
+
+    condition_assignment1 = ConditionAssignment(0, "a_surface_0")
+    condition_assignment2 = ConditionAssignment(1, "a_volume")
 
     node_conditions = fetch_condition_assignments(
-        mesh_a, conditions, {0: condition_assignment1, 1: condition_assignment2}
+        mesh_a, {0: condition_assignment1, 1: condition_assignment2}
     )
 
     assert np.all(np.isin(node_conditions[:, 1], [0, 1, 2]))
-
-
-def test_fetch_condition_assignments_non_contiguous_ids():
-    """Check function where conditions have non-contiguous id values."""
-    mesh, _ = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
-    )
-
-    conditions = ConditionDatastore(
-        "conditions", {0: Condition(name="1"), 2: Condition(name="2")}
-    )
-
-    condition_assignments = {
-        0: ConditionAssignment(condition=conditions[0], cell_set_name="a_surface_0"),
-        1: ConditionAssignment(condition=conditions[2], cell_set_name="a_volume"),
-    }
-
-    element_assignments = fetch_condition_assignments(
-        mesh, conditions, condition_assignments
-    )
-    # values in the second column should be indexes into the condition columns
-    # not the actual value of condition_id datastore
-    assert np.setdiff1d(element_assignments[:, 1], (0, 1)).size == 0
 
 
 def test_check_unassigned_nodes():
@@ -245,11 +187,9 @@ def test_check_unassigned_nodes():
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
         Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
     )
-    conditions = ConditionDatastore("conditions", {0: Condition(name="0")})
-    condition_assignment1 = ConditionAssignment(conditions[0], "a_surface_0")
-    node_conditions = fetch_condition_assignments(
-        mesh_a, conditions, {0: condition_assignment1}
-    )
+
+    condition_assignment1 = ConditionAssignment(0, "a_surface_0")
+    node_conditions = fetch_condition_assignments(mesh_a, {0: condition_assignment1})
     # We should get an error if there are unassigned nodes
     with pytest.raises(SystemValidationError):
         check_unassigned_nodes(node_conditions, mesh_a)

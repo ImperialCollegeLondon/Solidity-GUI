@@ -52,17 +52,6 @@ class Datastore(UserDict[KeyType, ValueType]):
         """Message topic sent when removing items from Datastore."""
         return f"{self.name}.remove"
 
-    def get_positional_index(self, item: ValueType) -> int:
-        """Return the positional index of an item in the Datastore.
-
-        Args:
-          item: to get the index for
-        """
-        for i, value in enumerate(self.values()):
-            if item == value:
-                return i
-        raise ValueError("Unable to find {item} in {datastore}")
-
 
 class IndexDatastore(Datastore[int, ValueType]):
     """A Datastore subclass with auto-incremented integer keys."""

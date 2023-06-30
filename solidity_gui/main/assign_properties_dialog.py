@@ -57,15 +57,13 @@ class AssignPropertiesDialog(QDialog):
         selected_material_value = self.select_material_combo.currentData()
         if not selected_component_value or selected_material_value is None:
             return
-        material = material_datastore[selected_material_value]
         assignment = MaterialAssignment(
-            material=material,
-            cell_set_name=selected_component_value,
+            material_id=selected_material_value, cell_set_name=selected_component_value
         )
         material_assignment_datastore.add(assignment)
         self.close()
 
         logging.info(
-            f"Assigned material {material.name} (ID: "
-            "{selected_material_value}) to {assignment.cell_set_name}"
+            f"Assigned material {material_datastore[assignment.material_id]} (ID: "
+            "{assignment.material_id}) to {assignment.cell_set_name}"
         )

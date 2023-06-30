@@ -164,7 +164,9 @@ def _setup_assignments_sync_test():
     mesh_name = "default"
     mesh_datastore[mesh_name] = mesh
 
-    assignment = MaterialAssignment(material=material, cell_set_name=cell_set_name)
+    assignment = MaterialAssignment(
+        material_id=material_id, cell_set_name=cell_set_name
+    )
     material_assignment_datastore.add(assignment)
     return material_id, mesh_name
 
