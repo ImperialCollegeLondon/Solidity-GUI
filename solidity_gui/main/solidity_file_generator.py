@@ -58,7 +58,7 @@ def fetch_condition_assignments(
     """Fetch the condition assignments for a given mesh."""
     node_count = mesh.points.shape[0]
     node_assignments = np.array(
-        (np.arange(node_count), np.full(node_count, -1)), dtype="uint64"
+        (np.arange(node_count), np.full(node_count, -1)), dtype="int64"
     ).T
     # important that we work on the cell types in this order so that lower dimension
     # entities take precedence over higher dimension
@@ -99,7 +99,7 @@ def generate_nodes_data(
 
     combined_surface_nodes = np.array([])
     incr = 0
-    all_node_conditions = np.empty((0, 2), dtype="uint64")
+    all_node_conditions = np.empty((0, 2), dtype="int64")
     for mesh_name in meshes:
         mesh_surface_nodes = surface_nodes[mesh_name]
         mesh_surface_nodes = mesh_surface_nodes + incr

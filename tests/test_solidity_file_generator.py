@@ -135,7 +135,9 @@ def test_generate_material_data():
         }
         for property_label, property_ in PROPERTIES().items()
     }
-    target_data["_calculated"] = dict(is_joint=[13, 13, 15], is_fracture=[0, 3, 0])
+    target_data["_calculated"] = dict(
+        is_joint=[13, 13, 15], is_fracture=[0, 3, 0], material_index=[1, 2, 2]
+    )
 
     assert data["num_materials"] == 3
     assert data["material_properties"] == target_data
