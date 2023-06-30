@@ -22,6 +22,7 @@
      /*   Elements     */
 /YD/YDE/MELEM {{num_tetra+1}}
 /YD/YDE/NELEM {{num_tetra}}
+/YD/YDE/LAYMX {{num_meshes}}
 /YD/YDE/MELST     2
 /YD/YDE/NELST     2
 /YD/YDE/MELNO     {{points_per_tetra+2}}
@@ -73,9 +74,7 @@
 /YD/YDN/D2NCK 21 3 0
 /YD/YDN/D2NVC  21 0 0
 /YD/YDN/I1NOBF {{ num_nodes }}
-{%- for surface_flag in surface_node_flags %}
-{{ surface_flag }}
-{%- endfor %}
+{{ surface_node_flags|join(' ') }}
 /YD/YDN/I1NOPR {{ num_nodes }}
 {{ node_conditions|join(' ') }}
 
@@ -92,8 +91,7 @@
      /*   Properties     */
 /YD/YDP/MPROP {{ num_materials + 1 }}
 /YD/YDP/NPROP {{ num_materials }}
-/YD/YDP/I1INDEX {{ num_materials }}
-{% for _ in range(num_materials) %}{{ loop.index ~ ' ' }}{% endfor %}
+{{ render_property("I1INDEX", "_calculated", "material_index", "%d") }}
 {{ render_property("D1PEKS", "other", "mass_damping_coefficient") }}
 {{ render_property("D1PELA", "elasticity", "lames_first_parameter") }}
 {{ render_property("D1PEMU", "elasticity", "lames_second_parameter") }}

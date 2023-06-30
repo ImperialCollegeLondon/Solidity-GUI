@@ -57,7 +57,9 @@ def fetch_condition_assignments(
 ) -> np.ndarray:
     """Fetch the condition assignments for a given mesh."""
     node_count = mesh.points.shape[0]
-    node_assignments = np.array((np.arange(node_count), np.full(node_count, -1))).T
+    node_assignments = np.array(
+        (np.arange(node_count), np.full(node_count, -1)), dtype="int64"
+    ).T
     # important that we work on the cell types in this order so that lower dimension
     # entities take precedence over higher dimension
     cell_type_order = ("tetra", "triangle")
@@ -97,7 +99,7 @@ def generate_nodes_data(
 
     combined_surface_nodes = np.array([])
     incr = 0
-    all_node_conditions = np.empty((0, 2), dtype="uint64")
+    all_node_conditions = np.empty((0, 2), dtype="int64")
     for mesh_name in meshes:
         mesh_surface_nodes = surface_nodes[mesh_name]
         mesh_surface_nodes = mesh_surface_nodes + incr
@@ -190,6 +192,7 @@ class ElementData(TypedDict):
     cell_materials: np.ndarray
     tetra_node_ids: np.ndarray
     boundary_tetra: np.ndarray
+    num_meshes: int
 
 
 def generate_elements_data(
@@ -264,13 +267,14 @@ def generate_elements_data(
         cell_materials=cell_materials_sorted[:, 1],
         tetra_node_ids=all_node_ids,
         boundary_tetra=boundary_tetra,
+        num_meshes=len(meshes),
     )
 
 
 def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
     """Generates data for the material properties section of the input file."""
     property_lines: Dict[str, Any] = {}
-    for material in materials.values():
+    for i, material in enumerate(materials.values(), 1):
         for property_label, property_ in material.properties.items():
             property_line_dict = property_lines.setdefault(property_label, {})
             property_data = (
@@ -288,6 +292,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
         calculated_properties.setdefault("is_fracture", []).append(
             3 if material.properties["fracture"].enabled else 0
         )
+        calculated_properties.setdefault("material_index", []).append(i)
 
     # add in additional copies of materials with joint elements
     extra_materials = 0
@@ -301,6 +306,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
                 property_line.append(property_line[i])
         property_lines["_calculated"]["is_joint"].append(15)
         property_lines["_calculated"]["is_fracture"].append(0)
+        property_lines["_calculated"]["material_index"].append(i + 1)
     return dict(
         materials=materials.values(),
         num_materials=len(materials) + extra_materials,
