@@ -48,7 +48,9 @@ def test_assign_save_clicked(qtbot):
     dialog = AssignPropertiesDialog()
 
     cell_set_name = "component"
-    material_id = 0
+
+    material = Material(name="foo")
+    material_id = material_datastore.add(material)
     dialog.select_component_combo.addItem(cell_set_name)
     dialog.select_material_combo.addItem("material_name", userData=material_id)
 
@@ -57,5 +59,5 @@ def test_assign_save_clicked(qtbot):
     dialog._save_clicked()
 
     assert material_assignment_datastore == {
-        0: MaterialAssignment(material_id=material_id, cell_set_name=cell_set_name)
+        0: MaterialAssignment(material=material, cell_set_name=cell_set_name)
     }
