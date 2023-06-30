@@ -1,9 +1,8 @@
 """This module provides functionality to run Solidity."""
 from pathlib import Path
 
+from pubsub import pub
 from PySide6.QtWidgets import QFileDialog
-
-from solidity_gui.solidity import run_solidity
 
 
 def get_file_paths() -> list[str] | None:
@@ -23,9 +22,10 @@ def get_file_paths() -> list[str] | None:
 def run_solidity_dialog() -> None:
     """Run Solidity with the file paths selected by the user."""
     if file_paths := get_file_paths():
-        run_solidity(
-            Path(file_paths[0]),
-            Path(file_paths[1]),
-            Path(file_paths[2]),
-            Path(file_paths[3]),
+        pub.sendMessage(
+            "docker.start",
+            y3d_file_path=Path(file_paths[0]),
+            layout_file_path=Path(file_paths[1]),
+            pellet_file_path=Path(file_paths[2]),
+            materials_file_path=Path(file_paths[3]),
         )

@@ -5,9 +5,11 @@ It achieves this by using the docker image.
 import atexit
 import logging
 from pathlib import Path, PurePosixPath
+from shutil import copyfile
 from tempfile import TemporaryDirectory
 from typing import Any, Optional, cast
 
+from pubsub import pub
 from python_on_whales import Container, docker
 
 from ..config import (
@@ -17,14 +19,6 @@ from ..config import (
     SOLIDITY_PELLET_FILE_NAME,
     SOLIDITY_Y3D_FILE_NAME,
 )
-
-
-def _stop_container() -> None:
-    if not _container or not _container.exists():
-        return
-
-    logging.info(f"Stopping Docker container ({_container})...")
-    _container.stop()
 
 
 def run_solidity(
@@ -102,7 +96,7 @@ def run_solidity(
     return _container
 
 
-class SolidityContainer(TemporaryDirectory):
+class SolidityTemporaryDirectory(TemporaryDirectory):
     """Provides a container for running the Solidity executable via docker.
 
     Before run() is called, the Y3D file, layout file, pellet file and materials file
@@ -141,9 +135,9 @@ class SolidityContainer(TemporaryDirectory):
         """Path to materials file (mat.txt)."""
         return self._file_path(SOLIDITY_MATERIALS_FILE_NAME)
 
-    def run(self) -> None:
+    def run(self) -> Container:
         """Invoke Solidity with the input files."""
-        run_solidity(
+        return run_solidity(
             self.y3d_file_path,
             self.layout_file_path,
             self.pellet_file_path,
@@ -151,8 +145,62 @@ class SolidityContainer(TemporaryDirectory):
         )
 
 
+def _start_solidity(
+    y3d_file_path: Path,
+    layout_file_path: Path,
+    pellet_file_path: Path,
+    materials_file_path: Path,
+) -> None:
+    """Run Solidity using the specified input files.
+
+    All the input files must be in the same directory as one another.
+
+    Args:
+        y3d_file_path: Path to Y3D file (BST.Y3D)
+        layout_file_path: Path to file with format for elements and particles
+                          (layout.txt)
+        pellet_file_path: Path to file with elements and particles (pellet.txt)
+        materials_file_path: Path to materials file (mat.txt)
+        docker_image: URL and tag/SHA of docker image
+
+    Returns:
+        The newly created Docker container
+
+    Raises:
+        ValueError: If input files are not in same directory
+        RuntimeError: If any of the input files do not exist or the Docker image is
+                      already running
+    """
+    global _temp_dir
+    _temp_dir = SolidityTemporaryDirectory()
+    copyfile(y3d_file_path, _temp_dir.y3d_file_path)
+    copyfile(layout_file_path, _temp_dir.layout_file_path)
+    copyfile(pellet_file_path, _temp_dir.pellet_file_path)
+    copyfile(materials_file_path, _temp_dir.materials_file_path)
+
+    _temp_dir.run()
+
+    pub.sendMessage("docker.started", container=_container)
+
+
+def _stop_container() -> None:
+    if not _container or not _container.exists():
+        return
+
+    logging.info(f"Stopping Docker container ({_container})...")
+    _container.stop()
+
+    pub.sendMessage("docker.stopped")
+
+
 _container: Optional[Container] = None
 """The running container (if any)."""
+
+_temp_dir: Optional[SolidityTemporaryDirectory] = None
+"""Temporary directory for Solidity input files."""
+
+# Listen for Docker-related messages
+pub.subscribe(_start_solidity, "docker.start")
 
 
 # Make sure container is always stopped on program exit
