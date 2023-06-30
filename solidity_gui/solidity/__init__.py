@@ -73,7 +73,7 @@ def run_solidity(
             str(path_on_container / pellet_file_path.name),
             str(path_on_container / materials_file_path.name),
         ],
-        volumes=[(input_files_path.absolute(), path_on_container)],
+        volumes=[(input_files_path.absolute(), str(path_on_container))],
     )
 
 
