@@ -1,11 +1,11 @@
 """Tests for the Solidity module."""
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
 
 from solidity_gui.config import SOLIDITY_DOCKER_IMAGE
-from solidity_gui.solidity import SolidityContainer, run_solidity
+from solidity_gui.solidity import SolidityTemporaryDirectory, run_solidity
 
 INPUT_DIR = Path(__file__).parent.absolute() / "solidity_input_files"
 INPUT_FILES = [
@@ -14,9 +14,9 @@ INPUT_FILES = [
 
 
 @pytest.fixture
-def container() -> SolidityContainer:
-    """Provides a SolidityContainer()."""
-    return SolidityContainer()
+def container() -> SolidityTemporaryDirectory:
+    """Provides a SolidityTemporaryDirectory()."""
+    return SolidityTemporaryDirectory()
 
 
 @patch("solidity_gui.solidity.docker")
@@ -34,11 +34,13 @@ def test_run_solidity_no_error(docker_mock: Mock) -> None:
             f"{RUN_DIR}/pellet.txt",
             f"{RUN_DIR}/mat.txt",
         ],
-        volumes=[(INPUT_DIR, PurePosixPath(RUN_DIR))],
+        volumes=[(INPUT_DIR, RUN_DIR)],
+        detach=True,
     )
 
 
 @pytest.mark.parametrize("missing_idx", range(4))
+@patch("solidity_gui.solidity._container", None)
 def test_run_solidity_missing_file(missing_idx: int) -> None:
     """Test that run_solidity() raises an error if an input file is missing."""
     files = INPUT_FILES.copy()
@@ -49,6 +51,7 @@ def test_run_solidity_missing_file(missing_idx: int) -> None:
 
 
 @pytest.mark.parametrize("diff_idx", range(4))
+@patch("solidity_gui.solidity._container", None)
 def test_run_solidity_diff_dir(diff_idx: int) -> None:
     """Test that run_solidity() raises an error if input files are in different dirs."""
     files = INPUT_FILES.copy()
@@ -68,15 +71,17 @@ def test_run_solidity_diff_dir(diff_idx: int) -> None:
     ),
 )
 def test_solidity_container_file_paths(
-    prop: str, filename: str, container: SolidityContainer
+    prop: str, filename: str, container: SolidityTemporaryDirectory
 ) -> None:
-    """Test SolidityContainer's file paths."""
+    """Test SolidityTemporaryDirectory's file paths."""
     assert getattr(container, prop) == container._input_files_path / filename
 
 
 @patch("solidity_gui.solidity.run_solidity")
-def test_solidity_container_run(run_mock: Mock, container: SolidityContainer) -> None:
-    """Test SolidityContainer's run() method."""
+def test_solidity_container_run(
+    run_mock: Mock, container: SolidityTemporaryDirectory
+) -> None:
+    """Test SolidityTemporaryDirectory's run() method."""
     container.run()
     run_mock.assert_called_once_with(
         container.y3d_file_path,
