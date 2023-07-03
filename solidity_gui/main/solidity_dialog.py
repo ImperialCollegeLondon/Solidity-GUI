@@ -19,7 +19,7 @@ def get_file_paths() -> list[str] | None:
     return file_paths
 
 
-def run_solidity_dialog() -> None:
+def run_solidity() -> None:
     """Run Solidity with the file paths selected by the user."""
     if file_paths := get_file_paths():
         pub.sendMessage(
