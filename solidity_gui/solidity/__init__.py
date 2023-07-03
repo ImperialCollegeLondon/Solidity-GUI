@@ -5,30 +5,26 @@ It achieves this by using the docker image.
 import atexit
 import logging
 from pathlib import Path, PurePosixPath
-from shutil import copyfile
-from tempfile import TemporaryDirectory
-from typing import Any, Optional, cast
+from typing import Iterable, cast
 
 from pubsub import pub
 from python_on_whales import Container, docker
+from python_on_whales.exceptions import NoSuchContainer
 
-from ..config import (
-    SOLIDITY_DOCKER_IMAGE,
-    SOLIDITY_LAYOUT_FILE_NAME,
-    SOLIDITY_MATERIALS_FILE_NAME,
-    SOLIDITY_PELLET_FILE_NAME,
-    SOLIDITY_Y3D_FILE_NAME,
-)
+from ..config import SOLIDITY_CONTAINER_NAME, SOLIDITY_DOCKER_IMAGE
+
+OutputStream = Iterable[tuple[str, bytes]]
 
 
-def run_solidity(
+def _run_solidity(
     y3d_file_path: Path,
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
-    docker_image: str = SOLIDITY_DOCKER_IMAGE,
-) -> Container:
-    """Run Solidity using the specified input files.
+    docker_image: str,
+    stream: bool,
+) -> Container | str | OutputStream:
+    """Run Solidity using the specified input files, using docker.run().
 
     All the input files must be in the same directory as one another.
 
@@ -39,19 +35,18 @@ def run_solidity(
         pellet_file_path: Path to file with elements and particles (pellet.txt)
         materials_file_path: Path to materials file (mat.txt)
         docker_image: URL and tag/SHA of docker image
+        stream: Whether to stream stdout and stderr as an iterator
 
     Returns:
-        The newly created Docker container
+        Return value from docker.run()
 
     Raises:
         ValueError: If input files are not in same directory
         RuntimeError: If any of the input files do not exist or the Docker image is
                       already running
     """
-    global _container
-
-    if _container and _container.exists():
-        raise RuntimeError("Only one Docker image can be running at a time")
+    # Remove the Solidity container if it already exists
+    _remove_container()
 
     logging.info("Starting Solidity")
 
@@ -77,81 +72,31 @@ def run_solidity(
     logging.info(f"Running Docker image: {docker_image}")
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
-    _container = cast(
-        Container,
-        docker.run(
-            docker_image,
-            [
-                "DEMPlus",
-                str(path_on_container / y3d_file_path.name),
-                str(path_on_container / layout_file_path.name),
-                str(path_on_container / pellet_file_path.name),
-                str(path_on_container / materials_file_path.name),
-            ],
-            volumes=[(input_files_path.absolute(), str(path_on_container))],
-            detach=True,
-        ),
+    return docker.run(
+        docker_image,
+        [
+            "DEMPlus",
+            str(path_on_container / y3d_file_path.name),
+            str(path_on_container / layout_file_path.name),
+            str(path_on_container / pellet_file_path.name),
+            str(path_on_container / materials_file_path.name),
+        ],
+        volumes=[(input_files_path.absolute(), str(path_on_container))],
+        detach=not stream,
+        name=SOLIDITY_CONTAINER_NAME,
+        stream=stream,
     )
 
-    return _container
 
-
-class SolidityTemporaryDirectory(TemporaryDirectory):
-    """Provides a container for running the Solidity executable via docker.
-
-    Before run() is called, the Y3D file, layout file, pellet file and materials file
-    must all have been saved into the correct paths.
-    """
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Create a new SolidityContainer."""
-        # By default, ignore errors when trying to delete temporary files
-        if "ignore_cleanup_errors" not in kwargs:
-            kwargs["ignore_cleanup_errors"] = True
-
-        super().__init__(*args, **kwargs)
-        self._input_files_path = Path(self.name)
-
-    def _file_path(self, filename: str) -> Path:
-        return self._input_files_path / filename
-
-    @property
-    def y3d_file_path(self) -> Path:
-        """Path to Y3D file (BST.Y3D)."""
-        return self._file_path(SOLIDITY_Y3D_FILE_NAME)
-
-    @property
-    def layout_file_path(self) -> Path:
-        """Path to file with format for elements and particles (layout.txt)."""
-        return self._file_path(SOLIDITY_LAYOUT_FILE_NAME)
-
-    @property
-    def pellet_file_path(self) -> Path:
-        """Path to file with elements and particles (pellet.txt)."""
-        return self._file_path(SOLIDITY_PELLET_FILE_NAME)
-
-    @property
-    def materials_file_path(self) -> Path:
-        """Path to materials file (mat.txt)."""
-        return self._file_path(SOLIDITY_MATERIALS_FILE_NAME)
-
-    def run(self) -> Container:
-        """Invoke Solidity with the input files."""
-        return run_solidity(
-            self.y3d_file_path,
-            self.layout_file_path,
-            self.pellet_file_path,
-            self.materials_file_path,
-        )
-
-
-def _start_solidity(
+def run_solidity_no_stream(
     y3d_file_path: Path,
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
-) -> None:
+) -> Container:
     """Run Solidity using the specified input files.
+
+    Stdout and stderr will be printed to the console.
 
     All the input files must be in the same directory as one another.
 
@@ -161,47 +106,98 @@ def _start_solidity(
                           (layout.txt)
         pellet_file_path: Path to file with elements and particles (pellet.txt)
         materials_file_path: Path to materials file (mat.txt)
-        docker_image: URL and tag/SHA of docker image
 
     Returns:
-        The newly created Docker container
+        The running container
 
     Raises:
         ValueError: If input files are not in same directory
         RuntimeError: If any of the input files do not exist or the Docker image is
                       already running
     """
-    global _temp_dir
-    _temp_dir = SolidityTemporaryDirectory()
-    copyfile(y3d_file_path, _temp_dir.y3d_file_path)
-    copyfile(layout_file_path, _temp_dir.layout_file_path)
-    copyfile(pellet_file_path, _temp_dir.pellet_file_path)
-    copyfile(materials_file_path, _temp_dir.materials_file_path)
+    # Start Solidity
+    return cast(
+        Container,
+        _run_solidity(
+            y3d_file_path,
+            layout_file_path,
+            pellet_file_path,
+            materials_file_path,
+            SOLIDITY_DOCKER_IMAGE,
+            stream=False,
+        ),
+    )
 
-    _temp_dir.run()
 
-    pub.sendMessage("docker.started", container=_container)
+def run_solidity_stream(
+    y3d_file_path: Path,
+    layout_file_path: Path,
+    pellet_file_path: Path,
+    materials_file_path: Path,
+) -> None:
+    """Run Solidity using the specified input files.
+
+    Stdout and stderr are output as an iterator broadcast on the docker.started signal.
+
+    All the input files must be in the same directory as one another.
+
+    Args:
+        y3d_file_path: Path to Y3D file (BST.Y3D)
+        layout_file_path: Path to file with format for elements and particles
+                          (layout.txt)
+        pellet_file_path: Path to file with elements and particles (pellet.txt)
+        materials_file_path: Path to materials file (mat.txt)
+
+    Raises:
+        ValueError: If input files are not in same directory
+        RuntimeError: If any of the input files do not exist or the Docker image is
+                      already running
+    """
+    # Start Solidity. TODO: Error handling
+    output_stream = cast(
+        OutputStream,
+        _run_solidity(
+            y3d_file_path,
+            layout_file_path,
+            pellet_file_path,
+            materials_file_path,
+            SOLIDITY_DOCKER_IMAGE,
+            stream=True,
+        ),
+    )
+
+    # Signal that the container has been started
+    pub.sendMessage("docker.started", output_stream=output_stream)
 
 
-def _stop_container() -> None:
-    if not _container or not _container.exists():
+def _remove_container() -> None:
+    """Remove the Solidity container.
+
+    If the container does not exist, nothing will happen.
+    """
+    try:
+        container = docker.container.inspect(SOLIDITY_CONTAINER_NAME)
+    except NoSuchContainer:
         return
 
-    logging.info(f"Stopping Docker container ({_container})...")
-    _container.stop()
+    logging.info(f"Stopping Docker container ({container})...")
+
+    try:
+        container.stop()
+    except Exception:
+        pass
+    try:
+        container.remove()
+    except Exception:
+        pass
 
     pub.sendMessage("docker.stopped")
 
 
-_container: Optional[Container] = None
-"""The running container (if any)."""
-
-_temp_dir: Optional[SolidityTemporaryDirectory] = None
-"""Temporary directory for Solidity input files."""
-
 # Listen for Docker-related messages
-pub.subscribe(_start_solidity, "docker.start")
+pub.subscribe(run_solidity_stream, "docker.start")
+pub.subscribe(_remove_container, "docker.stop")
 
 
-# Make sure container is always stopped on program exit
-atexit.register(_stop_container)
+# Make sure container is always removed on program exit
+atexit.register(_remove_container)
