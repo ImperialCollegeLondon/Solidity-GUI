@@ -26,7 +26,7 @@ def _mesher(name, component):
 
 PARAMETERS = dict(
     bit=dict(width=1.0, length=5.0, inserts=dict(length=0.5, width=0.5)),
-    piston=dict(length_ratio=1.5, width=1.5),
+    piston=dict(length=5.0, width=1.5),
 )
 
 
@@ -67,7 +67,7 @@ def test_create_drillco_system():
     assert np.isclose(
         piston_maxes - piston_mins,
         (
-            PARAMETERS["bit"]["length"] * PARAMETERS["piston"]["length_ratio"],
+            PARAMETERS["piston"]["length"],
             piston_width,
             piston_width,
         ),

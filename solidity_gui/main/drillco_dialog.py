@@ -18,8 +18,8 @@ from .meshes import DEFAULT_RESOLUTION
 class InsertForm(Form):
     """Data for drill bit inserts."""
 
-    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=1)])
     width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
+    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=1)])
 
 
 class BitForm(Form):
@@ -38,11 +38,8 @@ class BitForm(Form):
 class PistonForm(Form):
     """Data for piston."""
 
-    length_ratio = FloatField(
-        display_name="Bit to Piston Length Ratio",
-        validators=[validate.Range(min=0, min_inclusive=False)],
-    )
     width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
+    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=10)])
 
 
 class DrillCoForm(Form):

@@ -202,7 +202,7 @@ def _create_drillco_geometry(
         ),
     )
 
-    piston_axis = SYSTEM_AXIS * data["bit"]["length"] * data["piston"]["length_ratio"]
+    piston_axis = SYSTEM_AXIS * data["piston"]["length"]
     piston_x0 = bit_x0 - piston_axis - GAP_VECTOR
 
     meshes["piston"] = mesh_generator(
