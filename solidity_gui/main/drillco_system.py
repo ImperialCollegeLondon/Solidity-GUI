@@ -163,7 +163,7 @@ def _create_and_assign_conditions() -> (
 
 
 def _create_drillco_geometry(
-    data: Dict[str, Any], mesh_generator: Callable[[str, Component], meshio.Mesh]
+    data: Dict[str, Any], mesh_generator: Callable[[str, Component, float], meshio.Mesh]
 ) -> Dict[str, meshio.Mesh]:
     meshes = dict(
         ground=mesh_generator(
@@ -176,9 +176,10 @@ def _create_drillco_geometry(
                     axis=SYSTEM_AXIS * data["ground"]["height"],
                     radius=data["ground"]["width"] / 2,
                     contact_point=[0, 0, 0],
-                    contact_mesh_size=0.02,
+                    contact_mesh_size=0.0015,
                 ),
             ),
+            0.01,
         )
     )
 
@@ -201,6 +202,7 @@ def _create_drillco_geometry(
                 insert_length=data["bit"]["inserts"]["length"],
             ),
         ),
+        0.005,
     )
 
     piston_axis = SYSTEM_AXIS * data["piston"]["length"]
@@ -217,12 +219,14 @@ def _create_drillco_geometry(
                 radius=data["piston"]["width"] / 2,
             ),
         ),
+        0.005,
     )
     return meshes
 
 
 def create_drillco_system(
-    parameters: Dict[str, Any], mesh_generator: Callable[[str, Component], meshio.Mesh]
+    parameters: Dict[str, Any],
+    mesh_generator: Callable[[str, Component, float], meshio.Mesh],
 ) -> Tuple[
     Dict[str, meshio.Mesh],
     Dict[str, Material],

@@ -18,7 +18,7 @@ from solidity_gui.main.material import MaterialAssignmentDatastore, MaterialData
 from solidity_gui.main.solidity_file_generator import get_template_data
 
 
-def _mesher(name, component):
+def _mesher(name, component, resolution):
     with Geometry() as geom:
         wrapper = GeometryWrapper(geom)
         return wrapper.add_component(component, 0.4)

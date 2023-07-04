@@ -13,7 +13,6 @@ from .forms.widgets import DoubleSpinBoxWidget
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 from .material import material_assignment_datastore, material_datastore
-from .meshes import DEFAULT_RESOLUTION
 
 
 class WiderFloatField(FloatField):
@@ -68,7 +67,9 @@ class DrillCoForm(Form):
     ground = NestedForm(GroundForm)
 
 
-def _create_mesh(mesh_name: str, component: Component) -> meshio.Mesh:
+def _create_mesh(
+    mesh_name: str, component: Component, resolution: float
+) -> meshio.Mesh:
     """Helper function to synchronously create meshes."""
     try:
         gmsh_process = gmsh_process_datastore[mesh_name]
@@ -78,7 +79,7 @@ def _create_mesh(mesh_name: str, component: Component) -> meshio.Mesh:
         gmsh_process_datastore[mesh_name] = gmsh_process
 
     return gmsh_process.call_function(
-        "add_component", component=component, resolution=DEFAULT_RESOLUTION
+        "add_component", component=component, resolution=resolution
     )
 
 
