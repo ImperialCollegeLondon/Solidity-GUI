@@ -8,7 +8,7 @@ from .condition import Condition, ConditionAssignment
 from .geometry import Component
 from .material import Material, MaterialAssignment
 
-GAP_LENGTH = 0.5
+GAP_LENGTH = 0.0001
 """Length of gap between system components."""
 INSERT_DISPLACEMENT_FACTOR = 0.5
 """Distance of inserts from bit center as a factor of the radius of the bit."""
