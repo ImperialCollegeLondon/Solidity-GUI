@@ -5,11 +5,12 @@ It achieves this by using the docker image.
 import atexit
 import logging
 from pathlib import Path, PurePosixPath
+from threading import Thread
 from typing import Iterable, cast
 
 from pubsub import pub
 from python_on_whales import Container, docker
-from python_on_whales.exceptions import NoSuchContainer
+from python_on_whales.exceptions import DockerException, NoSuchContainer
 
 from ..config import SOLIDITY_CONTAINER_NAME, SOLIDITY_DOCKER_IMAGE
 
@@ -46,7 +47,7 @@ def _run_solidity(
                       already running
     """
     # Remove the Solidity container if it already exists
-    _remove_container()
+    _remove_container_sync()
 
     logging.info("Starting Solidity")
 
@@ -129,7 +130,35 @@ def run_solidity_no_stream(
     )
 
 
-def run_solidity_stream(
+class _OutputThread(Thread):
+    def __init__(self, stream: OutputStream) -> None:
+        super().__init__(target=self._run)
+        self._stream = stream
+        self.quitting = False
+
+    def _run(self) -> None:
+        try:
+            for type, output_bytes in self._stream:
+                if self.quitting:
+                    return
+
+                # Remove trailing newline
+                output = output_bytes[:-1].decode(errors="replace")
+
+                # We send different messages depending on whether output is stdout or
+                # stderr
+                pub.sendMessage(f"docker.output.{type}", output=output)
+        except DockerException:
+            # TODO: ERROR HANDLING
+            if not self.quitting:
+                raise
+        else:
+            # Otherwise the container has exited normally
+            if not self.quitting:
+                pub.sendMessage("docker.stop")
+
+
+def run_solidity_stream_sync(
     y3d_file_path: Path,
     layout_file_path: Path,
     pellet_file_path: Path,
@@ -153,6 +182,8 @@ def run_solidity_stream(
         RuntimeError: If any of the input files do not exist or the Docker image is
                       already running
     """
+    global _output_thread
+
     # Start Solidity. TODO: Error handling
     output_stream = cast(
         OutputStream,
@@ -167,20 +198,49 @@ def run_solidity_stream(
     )
 
     # Signal that the container has been started
-    pub.sendMessage("docker.started", output_stream=output_stream)
+    pub.sendMessage("docker.started")
+
+    # Listen for stdout and stderr in background
+    _output_thread = _OutputThread(output_stream)
+    _output_thread.start()
 
 
-def _remove_container() -> None:
+def run_solidity_stream_async(
+    y3d_file_path: Path,
+    layout_file_path: Path,
+    pellet_file_path: Path,
+    materials_file_path: Path,
+) -> None:
+    """Start Solidity in the background.
+
+    Args:
+        y3d_file_path: Path to Y3D file (BST.Y3D)
+        layout_file_path: Path to file with format for elements and particles
+                          (layout.txt)
+        pellet_file_path: Path to file with elements and particles (pellet.txt)
+        materials_file_path: Path to materials file (mat.txt)
+    """
+    Thread(
+        target=run_solidity_stream_sync,
+        args=(y3d_file_path, layout_file_path, pellet_file_path, materials_file_path),
+    ).start()
+
+
+def _remove_container_sync() -> None:
     """Remove the Solidity container.
 
     If the container does not exist, nothing will happen.
     """
+    global _output_thread
     try:
         container = docker.container.inspect(SOLIDITY_CONTAINER_NAME)
     except NoSuchContainer:
         return
 
     logging.info(f"Stopping Docker container ({container})...")
+
+    if _output_thread:
+        _output_thread.quitting = True
 
     try:
         container.stop()
@@ -191,13 +251,24 @@ def _remove_container() -> None:
     except Exception:
         pass
 
+    if _output_thread:
+        _output_thread.join()
+        _output_thread = None
+
     pub.sendMessage("docker.stopped")
 
 
+def _remove_container_async() -> None:
+    Thread(target=_remove_container_sync).start()
+
+
+_output_thread: _OutputThread | None = None
+
+
 # Listen for Docker-related messages
-pub.subscribe(run_solidity_stream, "docker.start")
-pub.subscribe(_remove_container, "docker.stop")
+pub.subscribe(run_solidity_stream_async, "docker.start")
+pub.subscribe(_remove_container_async, "docker.stop")
 
 
 # Make sure container is always removed on program exit
-atexit.register(_remove_container)
+atexit.register(_remove_container_sync)

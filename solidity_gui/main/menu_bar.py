@@ -1,4 +1,5 @@
 """Code to create the toolbar containing the visualisation controls."""
+from functools import partial
 from typing import Any
 
 from PySide6.QtGui import QAction
@@ -57,5 +58,5 @@ class MenuBar(QMenuBar):
         file_menu.addAction(export_bst_action)
 
         run_solidity_action = QAction("&Run Solidity", self)
-        run_solidity_action.triggered.connect(run_solidity)
+        run_solidity_action.triggered.connect(partial(run_solidity, self))
         job_menu.addAction(run_solidity_action)
