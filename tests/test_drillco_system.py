@@ -5,8 +5,7 @@ from solidity_gui.main.condition import ConditionAssignmentDatastore, ConditionD
 from solidity_gui.main.drillco_system import (
     DRILLCO_CONDITION_ASSIGNMENTS,
     DRILLCO_CONDITIONS,
-    DRILLCO_INITIAL_CONDITION_ASSIGNMENTS,
-    DRILLCO_INITIAL_CONDITIONS,
+    DRILLCO_INITIAL_CONDITION_CELL_SETS,
     DRILLCO_MATERIAL_ASSIGNMENTS,
     DRILLCO_MATERIALS,
     GAP_LENGTH,
@@ -34,7 +33,7 @@ def _mesher(name, component):
 
 PARAMETERS = dict(
     bit=dict(width=1.0, length=5.0, inserts=dict(length=0.5, width=0.5)),
-    piston=dict(length_ratio=1.5, width=1.5),
+    piston=dict(length_ratio=1.5, width=1.5, speed=3.2),
 )
 
 
@@ -93,10 +92,11 @@ def test_create_drillco_system():
         conditions, DRILLCO_CONDITIONS.items()
     ):
         assert condition == Condition(name=condition_name, properties=condition_data)
-    for initial_condition, (name, data) in zip(
-        initial_conditions, DRILLCO_INITIAL_CONDITIONS.items()
-    ):
-        assert initial_condition == InitialCondition(name=name, properties=data)
+
+    assert len(initial_conditions) == 1
+    assert initial_conditions[0] == InitialCondition(
+        name="condition0", properties=dict(x=PARAMETERS["piston"]["speed"], y=0, z=0)
+    )
 
     for material_assignment, (material_name, cell_set_name) in zip(
         material_assignments, DRILLCO_MATERIAL_ASSIGNMENTS
@@ -111,13 +111,17 @@ def test_create_drillco_system():
         assert condition_assignment == ConditionAssignment(
             condition=conditions[condition_id], cell_set_name=cell_set_name
         )
-    for initial_condition_assignment, (initial_condition_id, cell_set_name) in zip(
-        initial_condition_assignments, DRILLCO_INITIAL_CONDITION_ASSIGNMENTS
-    ):
-        assert initial_condition_assignment == InitialConditionAssignment(
-            initial_condition=initial_conditions[initial_condition_id],
-            cell_set_name=cell_set_name,
-        )
+    assert len(initial_condition_assignments) == 1
+    assert initial_condition_assignments[0] == InitialConditionAssignment(
+        initial_conditions[0], DRILLCO_INITIAL_CONDITION_CELL_SETS[0]
+    )
+    # for initial_condition_assignment, (initial_condition_id, cell_set_name) in zip(
+    #     initial_condition_assignments, DRILLCO_INITIAL_CONDITION_ASSIGNMENTS
+    # ):
+    #     assert initial_condition_assignment == InitialConditionAssignment(
+    #         initial_condition=initial_conditions[initial_condition_id],
+    #         cell_set_name=cell_set_name,
+    #     )
 
 
 def test_solidity_input_integration():

@@ -131,8 +131,7 @@ DRILLCO_CONDITION_ASSIGNMENTS = (
     (1, "ground_surface_1"),
 )
 
-DRILLCO_INITIAL_CONDITIONS = dict(condition1=dict(x=1.0, y=0.0, z=0.0))
-DRILLCO_INITIAL_CONDITION_ASSIGNMENTS = ((0, "piston_volume_0"),)
+DRILLCO_INITIAL_CONDITION_CELL_SETS = ["piston_volume_0"]
 
 
 def _create_and_assign_materials() -> (
@@ -166,17 +165,19 @@ def _create_and_assign_conditions() -> (
     return conditions, condition_assignments
 
 
-def _create_and_assign_initial_conditions() -> (
-    Tuple[List[InitialCondition], List[InitialConditionAssignment]]
-):
-    initial_conditions = [
-        InitialCondition(name=name, properties=properties)
-        for name, properties in DRILLCO_INITIAL_CONDITIONS.items()
-    ]
-    initial_condition_assignments = [
-        InitialConditionAssignment(initial_conditions[i], cell_set_name=cell_set_name)
-        for i, cell_set_name in DRILLCO_INITIAL_CONDITION_ASSIGNMENTS
-    ]
+def _create_and_assign_initial_conditions(
+    parameters: Dict[str, Any]
+) -> Tuple[List[InitialCondition], List[InitialConditionAssignment]]:
+    piston_speed = parameters["piston"]["speed"]
+    initial_conditions = []
+    initial_condition_assignments = []
+    for i, cell_set_name in enumerate(DRILLCO_INITIAL_CONDITION_CELL_SETS):
+        ic = InitialCondition(name=f"condition{i}")
+        ic.properties["x"] = piston_speed
+        initial_conditions.append(ic)
+        assignment = InitialConditionAssignment(ic, cell_set_name)
+        initial_condition_assignments.append(assignment)
+
     return initial_conditions, initial_condition_assignments
 
 
@@ -252,7 +253,7 @@ def create_drillco_system(
     (
         initial_conditions,
         initial_condition_assignments,
-    ) = _create_and_assign_initial_conditions()
+    ) = _create_and_assign_initial_conditions(parameters)
     return (
         meshes,
         materials,

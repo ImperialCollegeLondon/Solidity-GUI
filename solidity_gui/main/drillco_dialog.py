@@ -47,6 +47,10 @@ class PistonForm(Form):
         validators=[validate.Range(min=0, min_inclusive=False)],
     )
     width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
+    speed = FloatField(
+        display_name="Impact Speed",
+        validators=[validate.Range(min=0, min_inclusive=False)],
+    )
 
 
 class DrillCoForm(Form):
