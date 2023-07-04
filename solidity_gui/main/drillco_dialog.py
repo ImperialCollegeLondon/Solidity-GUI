@@ -80,7 +80,17 @@ class DrillCoDialog(SimpleFormDialog):
         Args:
           kwargs: passed to superclass constructor
         """
-        super().__init__(DrillCoForm, **kwargs)
+        super().__init__(
+            DrillCoForm,
+            initial_data=dict(
+                piston=dict(length=0.26, width=0.0265),
+                bit=dict(
+                    length=0.265, width=0.03, inserts=dict(width=0.02, length=0.005)
+                ),
+                ground=dict(width=0.250, height=0.15),
+            ),
+            **kwargs,
+        )
         self.setWindowTitle("Create DrillCo System Geometry")
 
     def _ok_clicked(self) -> None:
