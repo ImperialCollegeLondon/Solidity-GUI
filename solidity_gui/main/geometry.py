@@ -178,8 +178,9 @@ def add_drill_bit(
     )
     bit_base = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
     bit_volumes = geom.boolean_fragments(bit_base, insert)
-    for volume in bit_volumes:
-        geom._SIZE_QUEUE.append((volume, mesh_size))
+    geom._SIZE_QUEUE.extend(
+        [(bit_volumes[0], mesh_size), (bit_volumes[1], insert_radius / 10)]
+    )
     return bit_volumes
 
 
