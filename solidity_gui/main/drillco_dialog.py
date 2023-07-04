@@ -9,24 +9,31 @@ from .condition import condition_assignment_datastore, condition_datastore
 from .drillco_system import create_drillco_system
 from .forms import Form, NestedForm, SimpleFormDialog
 from .forms.fields import FloatField
+from .forms.widgets import DoubleSpinBoxWidget
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 from .material import material_assignment_datastore, material_datastore
 from .meshes import DEFAULT_RESOLUTION
 
 
+class WiderFloatField(FloatField):
+    """FloatField with widget providing more decimals."""
+
+    _default_widget = DoubleSpinBoxWidget(decimals=5)
+
+
 class InsertForm(Form):
     """Data for drill bit inserts."""
 
-    width = FloatField(validators=[validate.Range(min=0.01, max=0.045)])
-    length = FloatField(validators=[validate.Range(min=0.005, max=0.02)])
+    width = WiderFloatField(validators=[validate.Range(min=0.01, max=0.045)])
+    length = WiderFloatField(validators=[validate.Range(min=0.005, max=0.02)])
 
 
 class BitForm(Form):
     """Data for drill bits."""
 
-    width = FloatField(validators=[validate.Range(min=0.015, max=0.045)])
-    length = FloatField(validators=[validate.Range(min=0.13, max=0.39)])
+    width = WiderFloatField(validators=[validate.Range(min=0.015, max=0.045)])
+    length = WiderFloatField(validators=[validate.Range(min=0.13, max=0.39)])
     inserts = NestedForm(InsertForm)
 
     def validate(self, data: Dict[str, Any], **kwargs: Any) -> None:
@@ -38,15 +45,19 @@ class BitForm(Form):
 class PistonForm(Form):
     """Data for piston."""
 
-    width = FloatField(validators=[validate.Range(min=0.013, max=0.039)])
-    length = FloatField(validators=[validate.Range(min=0.13, max=0.39)])
+    width = WiderFloatField(validators=[validate.Range(min=0.013, max=0.039)])
+    length = WiderFloatField(validators=[validate.Range(min=0.13, max=0.39)])
 
 
 class GroundForm(Form):
     """Data for ground."""
 
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
-    height = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=3)])
+    width = WiderFloatField(
+        validators=[validate.Range(min=0, min_inclusive=False, max=5)]
+    )
+    height = WiderFloatField(
+        validators=[validate.Range(min=0, min_inclusive=False, max=3)]
+    )
 
 
 class DrillCoForm(Form):
