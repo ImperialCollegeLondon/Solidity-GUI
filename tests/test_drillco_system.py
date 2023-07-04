@@ -27,6 +27,7 @@ def _mesher(name, component):
 PARAMETERS = dict(
     bit=dict(width=1.0, length=5.0, inserts=dict(length=0.5, width=0.5)),
     piston=dict(length=5.0, width=1.5),
+    ground=dict(width=2.0, height=2),
 )
 
 

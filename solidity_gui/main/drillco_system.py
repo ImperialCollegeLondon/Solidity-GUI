@@ -173,8 +173,8 @@ def _create_drillco_geometry(
                 "ground",
                 dict(
                     x0=[0, 0, 0],
-                    axis=[2, 0, 0],
-                    radius=1,
+                    axis=SYSTEM_AXIS * data["ground"]["height"],
+                    radius=data["ground"]["width"] / 2,
                     contact_point=[0, 0, 0],
                     contact_mesh_size=0.02,
                 ),

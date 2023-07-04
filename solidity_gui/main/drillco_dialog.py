@@ -42,11 +42,19 @@ class PistonForm(Form):
     length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=10)])
 
 
+class GroundForm(Form):
+    """Data for ground."""
+
+    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
+    height = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=3)])
+
+
 class DrillCoForm(Form):
     """Form containing parameters for the DrillCo system geometry."""
 
     bit = NestedForm(BitForm)
     piston = NestedForm(PistonForm)
+    ground = NestedForm(GroundForm)
 
 
 def _create_mesh(mesh_name: str, component: Component) -> meshio.Mesh:
