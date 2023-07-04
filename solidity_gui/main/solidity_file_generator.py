@@ -221,10 +221,12 @@ def generate_elements_data(
         )
         check_unassigned_cells(cell_materials, mesh)
 
+        cell_materials[:, 0] += cell_id_offset
+
         cell_materials_sorted = np.concatenate(
             (
                 cell_materials_sorted,
-                cell_materials[cell_materials[:, 0].argsort()] + cell_id_offset,
+                cell_materials[cell_materials[:, 0].argsort()],
             )
         )
         cell_id_offset += cell_materials.shape[0]
