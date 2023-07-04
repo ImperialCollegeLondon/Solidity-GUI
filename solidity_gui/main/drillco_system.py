@@ -168,7 +168,16 @@ def _create_drillco_geometry(
     meshes = dict(
         ground=mesh_generator(
             "ground",
-            Component("box", "ground", dict(x0=[0, -1, -1], extents=[2, 2, 2])),
+            Component(
+                "ground",
+                "ground",
+                dict(
+                    x0=[0, -1, -1],
+                    extents=[2, 2, 2],
+                    contact_point=[0, 0, 0],
+                    contact_mesh_size=0.02,
+                ),
+            ),
         )
     )
 
