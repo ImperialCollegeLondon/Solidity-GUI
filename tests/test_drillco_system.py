@@ -5,6 +5,8 @@ from solidity_gui.main.condition import ConditionAssignmentDatastore, ConditionD
 from solidity_gui.main.drillco_system import (
     DRILLCO_CONDITION_ASSIGNMENTS,
     DRILLCO_CONDITIONS,
+    DRILLCO_INITIAL_CONDITION_ASSIGNMENTS,
+    DRILLCO_INITIAL_CONDITIONS,
     DRILLCO_MATERIAL_ASSIGNMENTS,
     DRILLCO_MATERIALS,
     GAP_LENGTH,
@@ -15,6 +17,8 @@ from solidity_gui.main.drillco_system import (
 )
 from solidity_gui.main.geometry import Geometry, GeometryWrapper
 from solidity_gui.main.initial_condition import (
+    InitialCondition,
+    InitialConditionAssignment,
     InitialConditionAssignmentDatastore,
     InitialConditionDatastore,
 )
@@ -42,6 +46,8 @@ def test_create_drillco_system():
         material_assignments,
         conditions,
         condition_assignments,
+        initial_conditions,
+        initial_condition_assignments,
     ) = create_drillco_system(PARAMETERS, _mesher)
 
     # do basic checks of meshes from the created geometry
@@ -87,6 +93,10 @@ def test_create_drillco_system():
         conditions, DRILLCO_CONDITIONS.items()
     ):
         assert condition == Condition(name=condition_name, properties=condition_data)
+    for initial_condition, (name, data) in zip(
+        initial_conditions, DRILLCO_INITIAL_CONDITIONS.items()
+    ):
+        assert initial_condition == InitialCondition(name=name, properties=data)
 
     for material_assignment, (material_name, cell_set_name) in zip(
         material_assignments, DRILLCO_MATERIAL_ASSIGNMENTS
@@ -101,6 +111,13 @@ def test_create_drillco_system():
         assert condition_assignment == ConditionAssignment(
             condition=conditions[condition_id], cell_set_name=cell_set_name
         )
+    for initial_condition_assignment, (initial_condition_id, cell_set_name) in zip(
+        initial_condition_assignments, DRILLCO_INITIAL_CONDITION_ASSIGNMENTS
+    ):
+        assert initial_condition_assignment == InitialConditionAssignment(
+            initial_condition=initial_conditions[initial_condition_id],
+            cell_set_name=cell_set_name,
+        )
 
 
 def test_solidity_input_integration():
@@ -111,6 +128,8 @@ def test_solidity_input_integration():
         material_assignments,
         conditions,
         condition_assignments,
+        initial_conditions,
+        initial_condition_assignments,
     ) = create_drillco_system(PARAMETERS, _mesher)
     surface_nodes = {mesh_name: np.array([]) for mesh_name in meshes}
 
@@ -131,9 +150,13 @@ def test_solidity_input_integration():
         condition_assignment_datastore.add(condition_assignment)
 
     initial_condition_datastore = InitialConditionDatastore("initial_conditions")
+    for initial_condition in initial_conditions:
+        initial_condition_datastore.add(initial_condition)
     initial_condition_assignment_datastore = InitialConditionAssignmentDatastore(
         "initial_condition_assignments"
     )
+    for initial_condition_assignment in initial_condition_assignments:
+        initial_condition_assignment_datastore.add(initial_condition_assignment)
 
     # just check that we can get the template data without raising any validation errors
     get_template_data(
