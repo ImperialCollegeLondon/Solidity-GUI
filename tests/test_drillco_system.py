@@ -14,6 +14,10 @@ from solidity_gui.main.drillco_system import (
     create_drillco_system,
 )
 from solidity_gui.main.geometry import Geometry, GeometryWrapper
+from solidity_gui.main.initial_condition import (
+    InitialConditionAssignmentDatastore,
+    InitialConditionDatastore,
+)
 from solidity_gui.main.material import MaterialAssignmentDatastore, MaterialDatastore
 from solidity_gui.main.solidity_file_generator import get_template_data
 
@@ -126,6 +130,11 @@ def test_solidity_input_integration():
     for condition_assignment in condition_assignments:
         condition_assignment_datastore.add(condition_assignment)
 
+    initial_condition_datastore = InitialConditionDatastore("initial_conditions")
+    initial_condition_assignment_datastore = InitialConditionAssignmentDatastore(
+        "initial_condition_assignments"
+    )
+
     # just check that we can get the template data without raising any validation errors
     get_template_data(
         meshes,
@@ -133,5 +142,7 @@ def test_solidity_input_integration():
         material_assignment_datastore,
         condition_datastore,
         condition_assignment_datastore,
+        initial_condition_datastore,
+        initial_condition_assignment_datastore,
         surface_nodes,
     )

@@ -18,6 +18,12 @@ from .condition import (
     condition_datastore,
 )
 from .gmsh_process import gmsh_process_datastore
+from .initial_condition import (
+    InitialConditionAssignmentDatastore,
+    InitialConditionDatastore,
+    initial_condition_assignment_datastore,
+    initial_condition_datastore,
+)
 from .material import (
     Material,
     MaterialAssignment,
@@ -81,6 +87,32 @@ def fetch_condition_assignments(
     return node_assignments
 
 
+def fetch_initial_conditions(
+    mesh: Mesh,
+    initial_conditions: InitialConditionDatastore,
+    initial_condition_assignments: InitialConditionAssignmentDatastore,
+) -> np.ndarray:
+    """Fetch the initial condition data applied to the nodes of a mesh.
+
+    Args:
+      mesh: the mesh of interest
+      initial_conditions: datastore containing initial condition data
+      initial_condition_assignments: datastore associating initial conditions with mesh
+    """
+    node_initial_conditions = np.zeros_like(mesh.points)
+    mesh_assignments = initial_condition_assignments.get_assignments_for_mesh(mesh)
+    for assignment in mesh_assignments:
+        cell_set = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
+        cell_id_offset = mesh.cells_dict["triangle"].shape[0]
+        cell_ids = cell_set - cell_id_offset
+        node_ids = np.unique(mesh.cells_dict["tetra"][cell_ids].flatten())
+        properties = assignment.initial_condition.properties
+        node_initial_conditions[node_ids] = np.array(
+            [properties["x"], properties["y"], properties["z"]]
+        )
+    return node_initial_conditions
+
+
 def check_unassigned_nodes(node_conditions: np.ndarray, mesh: Mesh) -> None:
     """Checks if there are any unassigned cells in the mesh."""
     if any(node_conditions[:, 1] == -1):
@@ -92,6 +124,8 @@ def generate_nodes_data(
     surface_nodes: Mapping[str, np.ndarray],
     conditions: ConditionDatastore,
     condition_assignments: ConditionAssignmentDatastore,
+    initial_conditions: InitialConditionDatastore,
+    initial_condition_assignments: InitialConditionAssignmentDatastore,
 ) -> Dict[str, object]:
     """Prepare data needed for template renderering."""
     num_nodes = sum(mesh.points.shape[0] for mesh in meshes.values())
@@ -100,6 +134,7 @@ def generate_nodes_data(
     combined_surface_nodes = np.array([])
     incr = 0
     all_node_conditions = np.empty((0, 2), dtype="int64")
+    all_node_initial_conditions = np.empty((0, 3))
     for mesh_name in meshes:
         mesh_surface_nodes = surface_nodes[mesh_name]
         mesh_surface_nodes = mesh_surface_nodes + incr
@@ -117,6 +152,13 @@ def generate_nodes_data(
             (all_node_conditions, mesh_node_conditions)
         )
 
+        mesh_node_initial_conditions = fetch_initial_conditions(
+            meshes[mesh_name], initial_conditions, initial_condition_assignments
+        )
+        all_node_initial_conditions = np.concatenate(
+            (all_node_initial_conditions, mesh_node_initial_conditions)
+        )
+
         incr += meshes[mesh_name].points.shape[0]
 
     surface_node_flags = np.zeros((num_nodes,), dtype="uint64")
@@ -127,6 +169,7 @@ def generate_nodes_data(
         nodes=all_nodes,
         surface_node_flags=surface_node_flags,
         node_conditions=all_node_conditions[:, 1],
+        node_initial_conditions=all_node_initial_conditions,
     )
 
 
@@ -382,6 +425,8 @@ def get_template_data(
     material_assignments: Mapping[int, MaterialAssignment],
     conditions: ConditionDatastore,
     condition_assignments: ConditionAssignmentDatastore,
+    initial_conditions: InitialConditionDatastore,
+    initial_condition_assignments: InitialConditionAssignmentDatastore,
     surface_nodes: Mapping[str, np.ndarray],
 ) -> Dict[str, object]:
     """Get the data needed to render the input file template."""
@@ -397,6 +442,8 @@ def get_template_data(
             surface_nodes,
             conditions,
             condition_assignments,
+            initial_conditions,
+            initial_condition_assignments,
         )
     )
     data.update(generate_material_data(materials))
@@ -435,6 +482,8 @@ def create_y3d_template() -> str:
         material_assignment_datastore,
         condition_datastore,
         condition_assignment_datastore,
+        initial_condition_datastore,
+        initial_condition_assignment_datastore,
         surface_nodes,
     )
     return template.render(data)
