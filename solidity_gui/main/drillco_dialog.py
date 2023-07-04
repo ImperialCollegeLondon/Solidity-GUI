@@ -18,15 +18,15 @@ from .meshes import DEFAULT_RESOLUTION
 class InsertForm(Form):
     """Data for drill bit inserts."""
 
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
-    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=1)])
+    width = FloatField(validators=[validate.Range(min=0.01, max=0.045)])
+    length = FloatField(validators=[validate.Range(min=0.005, max=0.02)])
 
 
 class BitForm(Form):
     """Data for drill bits."""
 
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
-    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=10)])
+    width = FloatField(validators=[validate.Range(min=0.015, max=0.045)])
+    length = FloatField(validators=[validate.Range(min=0.13, max=0.39)])
     inserts = NestedForm(InsertForm)
 
     def validate(self, data: Dict[str, Any], **kwargs: Any) -> None:
@@ -38,8 +38,8 @@ class BitForm(Form):
 class PistonForm(Form):
     """Data for piston."""
 
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
-    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=10)])
+    width = FloatField(validators=[validate.Range(min=0.013, max=0.039)])
+    length = FloatField(validators=[validate.Range(min=0.13, max=0.39)])
 
 
 class GroundForm(Form):
