@@ -186,7 +186,8 @@ def add_drill_bit(
 def add_ground(
     geom: Geometry,
     x0: Vector,
-    extents: Vector,
+    axis: Vector,
+    radius: float,
     contact_point: Vector,
     contact_mesh_size: float,
     mesh_size: float = 0.2,
@@ -196,11 +197,11 @@ def add_ground(
     Comprises a simple box with an embedded point at the site of impact of the drill bit
     used to set a smaller mesh size.
     """
-    box = geom.add_box(x0, extents, mesh_size=mesh_size)
-    surface_id = geom.env.get_surface_loops(box._id)[1][0][0]
+    cylinder = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
+    surface_id = geom.env.get_surface_loops(cylinder._id)[1][0][2]
     point = geom.add_point(contact_point, mesh_size=contact_mesh_size)
     geom.in_surface(point, Dummy(2, int(surface_id)))
-    return box
+    return cylinder
 
 
 @dataclass
