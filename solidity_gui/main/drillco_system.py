@@ -131,7 +131,7 @@ DRILLCO_CONDITION_ASSIGNMENTS = (
     (1, "ground_surface_1"),
 )
 
-DRILLCO_INITIAL_CONDITION_CELL_SETS = ["piston_volume_0"]
+DRILLCO_INITIAL_CONDITION_CELL_SETS = ("piston_volume_0",)
 
 
 def _create_and_assign_materials() -> (
