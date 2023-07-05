@@ -67,11 +67,13 @@ jobs:
       if: matrix.os == 'windows-latest'
 
     - name: Build executable
-      run: pyinstaller Solidity-GUI.spec
-      if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10'
+      run: |
+        pip install --force-reinstall vtk --index-url https://gitlab.kitware.com/api/v4/projects/13/packages/pypi/simple
+        pyinstaller Solidity-GUI.spec
+      if: github.ref == 'refs/heads/vtk-test' && matrix.python-version == '3.10'
 
     - uses: actions/upload-artifact@v3
-      if: github.ref == 'refs/heads/main' && success()
+      if: github.ref == 'refs/heads/vtk-test' && success()
       with:
         name: Solidity-GUI-${{ matrix.os }}
         path: dist/*
