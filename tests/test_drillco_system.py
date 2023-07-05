@@ -25,7 +25,7 @@ from solidity_gui.main.material import MaterialAssignmentDatastore, MaterialData
 from solidity_gui.main.solidity_file_generator import get_template_data
 
 
-def _mesher(name, component):
+def _mesher(name, component, resolution):
     with Geometry() as geom:
         wrapper = GeometryWrapper(geom)
         return wrapper.add_component(component, 0.4)
@@ -33,7 +33,8 @@ def _mesher(name, component):
 
 PARAMETERS = dict(
     bit=dict(width=1.0, length=5.0, inserts=dict(length=0.5, width=0.5)),
-    piston=dict(length_ratio=1.5, width=1.5, speed=3.2),
+    piston=dict(length=5.0, width=1.5, speed=3.2),
+    ground=dict(width=2.0, height=2),
 )
 
 
@@ -76,7 +77,7 @@ def test_create_drillco_system():
     assert np.isclose(
         piston_maxes - piston_mins,
         (
-            PARAMETERS["bit"]["length"] * PARAMETERS["piston"]["length_ratio"],
+            PARAMETERS["piston"]["length"],
             piston_width,
             piston_width,
         ),

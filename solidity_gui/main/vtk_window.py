@@ -153,6 +153,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
 
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
+        actor.GetProperty().EdgeVisibilityOn()
         self.ren.AddActor(actor)
         self.actors[mesh_name] = actor
 
