@@ -55,8 +55,13 @@ def _run_solidity(
         RuntimeError: If any of the input files do not exist or the Docker image is
                       already running
     """
+    global _quitting
+
     # Remove the Solidity container if it already exists
     _remove_container_sync()
+
+    # Reset flag
+    _quitting = False
 
     logging.info("Starting Solidity")
 
