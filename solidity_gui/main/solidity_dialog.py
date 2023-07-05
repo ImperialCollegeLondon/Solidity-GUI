@@ -41,8 +41,12 @@ def run_solidity(parent: QWidget) -> None:
     """Run Solidity with the file paths selected by the user."""
     global _solidity_dlg
     if file_paths := get_file_paths():
-        _solidity_dlg = SolidityDialog(
-            parent,
+        if not _solidity_dlg:
+            # Create dialog
+            _solidity_dlg = SolidityDialog(parent)
+
+        # Update dialog and show
+        _solidity_dlg.update_dialog(
             y3d_file_path=Path(file_paths[0]),
             layout_file_path=Path(file_paths[1]),
             pellet_file_path=Path(file_paths[2]),
@@ -56,14 +60,7 @@ class SolidityDialog(QDialog):
 
     log_updated = Signal(str, int)
 
-    def __init__(
-        self,
-        parent: QWidget | None,
-        y3d_file_path: Path,
-        layout_file_path: Path,
-        pellet_file_path: Path,
-        materials_file_path: Path,
-    ) -> None:
+    def __init__(self, parent: QWidget | None) -> None:
         """Create a new SolidityDialog.
 
         Args:
@@ -76,11 +73,6 @@ class SolidityDialog(QDialog):
         """
         super().__init__(parent)
         self.resize(350, 500)
-
-        self.y3d_file_path = y3d_file_path
-        self.layout_file_path = layout_file_path
-        self.pellet_file_path = pellet_file_path
-        self.materials_file_path = materials_file_path
 
         layout = QGridLayout()
         self._start_btn = QPushButton(qta.icon("ei.play"), "Start Solidity")
@@ -110,6 +102,19 @@ class SolidityDialog(QDialog):
 
         self._logger = self._create_logger()
         self.log_updated.connect(self._update_log_text_edit)
+
+    def update_dialog(
+        self,
+        y3d_file_path: Path,
+        layout_file_path: Path,
+        pellet_file_path: Path,
+        materials_file_path: Path,
+    ) -> None:
+        """Update parameters."""
+        self.y3d_file_path = y3d_file_path
+        self.layout_file_path = layout_file_path
+        self.pellet_file_path = pellet_file_path
+        self.materials_file_path = materials_file_path
 
     def hide(self) -> None:
         """Hide the dialog."""
@@ -188,4 +193,4 @@ class _DockerLogHandler(logging.Handler):
             dlg.log_updated.emit(self.format(record), record.levelno)
 
 
-_solidity_dlg: SolidityDialog
+_solidity_dlg: SolidityDialog | None = None
