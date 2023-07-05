@@ -14,6 +14,15 @@ from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 from .material import material_assignment_datastore, material_datastore
 
+INSERT_MIN_WIDTH, INSERT_MAX_WIDTH = 0.01, 0.045
+INSERT_MIN_LENGTH, INSERT_MAX_LENGTH = 0.005, 0.02
+BIT_MIN_WIDTH, BIT_MAX_WIDTH = 0.015, 0.045
+BIT_MIN_LENGTH, BIT_MAX_LENGTH = 0.13, 0.39
+PISTON_MIN_WIDTH, PISTON_MAX_WIDTH = 0.013, 0.039
+PISTON_MIN_LENGTH, PISTON_MAX_LENGTH = 0.13, 0.39
+GROUND_MIN_WIDTH, GROUND_MAX_WIDTH = 0.125, 0.375
+GROUND_MIN_HEIGHT, GROUND_MAX_HEIGHT = 0.075, 0.225
+
 
 class WiderFloatField(FloatField):
     """FloatField with widget providing more decimals."""
@@ -24,15 +33,23 @@ class WiderFloatField(FloatField):
 class InsertForm(Form):
     """Data for drill bit inserts."""
 
-    width = WiderFloatField(validators=[validate.Range(min=0.01, max=0.045)])
-    length = WiderFloatField(validators=[validate.Range(min=0.005, max=0.02)])
+    width = WiderFloatField(
+        validators=[validate.Range(min=INSERT_MIN_WIDTH, max=INSERT_MAX_WIDTH)]
+    )
+    length = WiderFloatField(
+        validators=[validate.Range(min=INSERT_MIN_LENGTH, max=INSERT_MAX_LENGTH)]
+    )
 
 
 class BitForm(Form):
     """Data for drill bits."""
 
-    width = WiderFloatField(validators=[validate.Range(min=0.015, max=0.045)])
-    length = WiderFloatField(validators=[validate.Range(min=0.13, max=0.39)])
+    width = WiderFloatField(
+        validators=[validate.Range(min=BIT_MIN_WIDTH, max=BIT_MAX_WIDTH)]
+    )
+    length = WiderFloatField(
+        validators=[validate.Range(min=BIT_MIN_LENGTH, max=BIT_MAX_LENGTH)]
+    )
     inserts = NestedForm(InsertForm)
 
     def validate(self, data: Dict[str, Any], **kwargs: Any) -> None:
@@ -44,18 +61,22 @@ class BitForm(Form):
 class PistonForm(Form):
     """Data for piston."""
 
-    width = WiderFloatField(validators=[validate.Range(min=0.013, max=0.039)])
-    length = WiderFloatField(validators=[validate.Range(min=0.13, max=0.39)])
+    width = WiderFloatField(
+        validators=[validate.Range(min=PISTON_MIN_WIDTH, max=PISTON_MAX_WIDTH)]
+    )
+    length = WiderFloatField(
+        validators=[validate.Range(min=PISTON_MIN_LENGTH, max=PISTON_MAX_LENGTH)]
+    )
 
 
 class GroundForm(Form):
     """Data for ground."""
 
     width = WiderFloatField(
-        validators=[validate.Range(min=0, min_inclusive=False, max=5)]
+        validators=[validate.Range(min=GROUND_MIN_WIDTH, max=GROUND_MAX_WIDTH)]
     )
     height = WiderFloatField(
-        validators=[validate.Range(min=0, min_inclusive=False, max=3)]
+        validators=[validate.Range(min=GROUND_MIN_HEIGHT, max=GROUND_MAX_HEIGHT)]
     )
 
 
