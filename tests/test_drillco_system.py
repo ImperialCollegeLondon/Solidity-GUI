@@ -116,13 +116,6 @@ def test_create_drillco_system():
     assert initial_condition_assignments[0] == InitialConditionAssignment(
         initial_conditions[0], DRILLCO_INITIAL_CONDITION_CELL_SETS[0]
     )
-    # for initial_condition_assignment, (initial_condition_id, cell_set_name) in zip(
-    #     initial_condition_assignments, DRILLCO_INITIAL_CONDITION_ASSIGNMENTS
-    # ):
-    #     assert initial_condition_assignment == InitialConditionAssignment(
-    #         initial_condition=initial_conditions[initial_condition_id],
-    #         cell_set_name=cell_set_name,
-    #     )
 
 
 def test_solidity_input_integration():
