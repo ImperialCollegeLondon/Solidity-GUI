@@ -5,7 +5,15 @@ import pytest
 from pubsub import pub
 from pytest import MonkeyPatch
 
+from solidity_gui.main.condition import (
+    condition_assignment_datastore,
+    condition_datastore,
+)
 from solidity_gui.main.gmsh_process import gmsh_process_datastore
+from solidity_gui.main.initial_condition import (
+    initial_condition_assignment_datastore,
+    initial_condition_datastore,
+)
 from solidity_gui.main.material import material_assignment_datastore, material_datastore
 from solidity_gui.main.meshes import mesh_datastore
 
@@ -35,6 +43,10 @@ def clear_datastores():
         gmsh_process_datastore.clear()
         material_datastore.clear()
         material_assignment_datastore.clear()
+        condition_datastore.clear()
+        condition_assignment_datastore.clear()
+        initial_condition_datastore.clear()
+        initial_condition_assignment_datastore.clear()
 
 
 @pytest.fixture(autouse=True)
