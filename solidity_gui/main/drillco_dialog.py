@@ -9,24 +9,47 @@ from .condition import condition_assignment_datastore, condition_datastore
 from .drillco_system import create_drillco_system
 from .forms import Form, NestedForm, SimpleFormDialog
 from .forms.fields import FloatField
+from .forms.widgets import DoubleSpinBoxWidget
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 from .material import material_assignment_datastore, material_datastore
-from .meshes import DEFAULT_RESOLUTION
+
+INSERT_MIN_WIDTH, INSERT_MAX_WIDTH = 0.01, 0.045
+INSERT_MIN_LENGTH, INSERT_MAX_LENGTH = 0.005, 0.02
+BIT_MIN_WIDTH, BIT_MAX_WIDTH = 0.015, 0.045
+BIT_MIN_LENGTH, BIT_MAX_LENGTH = 0.13, 0.39
+PISTON_MIN_WIDTH, PISTON_MAX_WIDTH = 0.013, 0.039
+PISTON_MIN_LENGTH, PISTON_MAX_LENGTH = 0.13, 0.39
+GROUND_MIN_WIDTH, GROUND_MAX_WIDTH = 0.125, 0.375
+GROUND_MIN_HEIGHT, GROUND_MAX_HEIGHT = 0.075, 0.225
+
+
+class WiderFloatField(FloatField):
+    """FloatField with widget providing more decimals."""
+
+    _default_widget = DoubleSpinBoxWidget(decimals=5)
 
 
 class InsertForm(Form):
     """Data for drill bit inserts."""
 
-    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=1)])
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
+    width = WiderFloatField(
+        validators=[validate.Range(min=INSERT_MIN_WIDTH, max=INSERT_MAX_WIDTH)]
+    )
+    length = WiderFloatField(
+        validators=[validate.Range(min=INSERT_MIN_LENGTH, max=INSERT_MAX_LENGTH)]
+    )
 
 
 class BitForm(Form):
     """Data for drill bits."""
 
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
-    length = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=10)])
+    width = WiderFloatField(
+        validators=[validate.Range(min=BIT_MIN_WIDTH, max=BIT_MAX_WIDTH)]
+    )
+    length = WiderFloatField(
+        validators=[validate.Range(min=BIT_MIN_LENGTH, max=BIT_MAX_LENGTH)]
+    )
     inserts = NestedForm(InsertForm)
 
     def validate(self, data: Dict[str, Any], **kwargs: Any) -> None:
@@ -38,11 +61,23 @@ class BitForm(Form):
 class PistonForm(Form):
     """Data for piston."""
 
-    length_ratio = FloatField(
-        display_name="Bit to Piston Length Ratio",
-        validators=[validate.Range(min=0, min_inclusive=False)],
+    width = WiderFloatField(
+        validators=[validate.Range(min=PISTON_MIN_WIDTH, max=PISTON_MAX_WIDTH)]
     )
-    width = FloatField(validators=[validate.Range(min=0, min_inclusive=False, max=5)])
+    length = WiderFloatField(
+        validators=[validate.Range(min=PISTON_MIN_LENGTH, max=PISTON_MAX_LENGTH)]
+    )
+
+
+class GroundForm(Form):
+    """Data for ground."""
+
+    width = WiderFloatField(
+        validators=[validate.Range(min=GROUND_MIN_WIDTH, max=GROUND_MAX_WIDTH)]
+    )
+    height = WiderFloatField(
+        validators=[validate.Range(min=GROUND_MIN_HEIGHT, max=GROUND_MAX_HEIGHT)]
+    )
 
 
 class DrillCoForm(Form):
@@ -50,9 +85,12 @@ class DrillCoForm(Form):
 
     bit = NestedForm(BitForm)
     piston = NestedForm(PistonForm)
+    ground = NestedForm(GroundForm)
 
 
-def _create_mesh(mesh_name: str, component: Component) -> meshio.Mesh:
+def _create_mesh(
+    mesh_name: str, component: Component, resolution: float
+) -> meshio.Mesh:
     """Helper function to synchronously create meshes."""
     try:
         gmsh_process = gmsh_process_datastore[mesh_name]
@@ -62,7 +100,7 @@ def _create_mesh(mesh_name: str, component: Component) -> meshio.Mesh:
         gmsh_process_datastore[mesh_name] = gmsh_process
 
     return gmsh_process.call_function(
-        "add_component", component=component, resolution=DEFAULT_RESOLUTION
+        "add_component", component=component, resolution=resolution
     )
 
 
@@ -75,7 +113,17 @@ class DrillCoDialog(SimpleFormDialog):
         Args:
           kwargs: passed to superclass constructor
         """
-        super().__init__(DrillCoForm, **kwargs)
+        super().__init__(
+            DrillCoForm,
+            initial_data=dict(
+                piston=dict(length=0.26, width=0.0265),
+                bit=dict(
+                    length=0.265, width=0.03, inserts=dict(width=0.02, length=0.005)
+                ),
+                ground=dict(width=0.250, height=0.15),
+            ),
+            **kwargs,
+        )
         self.setWindowTitle("Create DrillCo System Geometry")
 
     def _ok_clicked(self) -> None:
