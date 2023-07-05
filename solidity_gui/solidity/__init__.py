@@ -55,7 +55,10 @@ def _run_solidity(
         RuntimeError: If any of the input files do not exist or the Docker image is
                       already running
     """
-    global _quitting
+    global _quitting, _return_code
+
+    # Assume success until we hear otherwise (i.e. a DockerException is raised)
+    _return_code = 0
 
     # Remove the Solidity container if it already exists
     _remove_container_sync()
@@ -197,12 +200,9 @@ def run_solidity_stream_sync(
         RuntimeError: If any of the input files do not exist or the Docker image is
                       already running
     """
-    global _output_thread, _return_code
+    global _output_thread
 
-    # Assume success until we hear otherwise (i.e. a DockerException is raised)
-    _return_code = 0
-
-    # Start Solidity. TODO: Error handling
+    # Start Solidity
     output_stream = cast(
         OutputStream,
         _run_solidity(
@@ -253,9 +253,7 @@ def _remove_container_sync() -> int:
         return _return_code
 
     logging.info(f"Stopping Docker container ({container})...")
-
-    if _output_thread:
-        _quitting = True
+    _quitting = True
 
     try:
         container.stop()
