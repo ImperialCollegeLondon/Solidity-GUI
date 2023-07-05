@@ -7,6 +7,10 @@ from solidity_gui.main.condition import (
 )
 from solidity_gui.main.drillco_dialog import DrillCoDialog, DrillCoForm
 from solidity_gui.main.forms.info import FormInfo
+from solidity_gui.main.initial_condition import (
+    initial_condition_assignment_datastore,
+    initial_condition_datastore,
+)
 from solidity_gui.main.material import material_assignment_datastore, material_datastore
 
 
@@ -60,4 +64,10 @@ def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
     assert condition_datastore == {i: value for i, value in enumerate(TEST_DATA[3])}
     assert condition_assignment_datastore == {
         i: value for i, value in enumerate(TEST_DATA[4])
+    }
+    assert initial_condition_datastore == {
+        i: value for i, value in enumerate(TEST_DATA[5])
+    }
+    assert initial_condition_assignment_datastore == {
+        i: value for i, value in enumerate(TEST_DATA[6])
     }
