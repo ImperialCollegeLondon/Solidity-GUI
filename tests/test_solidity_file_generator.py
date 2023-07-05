@@ -11,6 +11,12 @@ from solidity_gui.main.condition import (
     ConditionDatastore,
 )
 from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
+from solidity_gui.main.initial_condition import (
+    InitialCondition,
+    InitialConditionAssignment,
+    InitialConditionAssignmentDatastore,
+    InitialConditionDatastore,
+)
 from solidity_gui.main.material import (
     PROPERTIES,
     Material,
@@ -65,11 +71,31 @@ def test_generate_nodes_data():
         },
     )
 
+    velocity = (0.0, 1.5, 2.0)
+    initial_conditions = InitialConditionDatastore(
+        "initial_conditions",
+        {
+            0: InitialCondition(
+                name="a", properties=dict(x=velocity[0], y=velocity[1], z=velocity[2])
+            )
+        },
+    )
+    initial_condition_assignments = InitialConditionAssignmentDatastore(
+        "initial_condition_assignments",
+        {
+            0: InitialConditionAssignment(
+                initial_conditions[0], cell_set_name="a_volume_0"
+            )
+        },
+    )
+
     data = generate_nodes_data(
         meshes,
         surface_nodes,
         conditions,
         condition_assignments,
+        initial_conditions,
+        initial_condition_assignments,
     )
 
     assert data["num_nodes"] == mesh_a.points.shape[0] + mesh_b.points.shape[0]
@@ -112,6 +138,15 @@ def test_generate_nodes_data():
         np.concatenate((mesh_a_node_ids, mesh_b_surface_1_node_ids)),
     )
     assert all(data["node_conditions"][mesh_b_other_node_ids] == 1)
+
+    # check initial conditions assigned only to mesh a
+    mesh_b_node_ids = np.arange(mesh_b.points.shape[0]) + mesh_a_node_ids.shape[0]
+    assert (
+        data["node_initial_conditions"][mesh_a_node_ids] == np.array(velocity)
+    ).all()
+    assert (
+        data["node_initial_conditions"][mesh_b_node_ids] == np.array((0.0, 0.0, 0.0))
+    ).all()
 
 
 def test_generate_material_data():

@@ -6,6 +6,7 @@ import numpy as np
 
 from .condition import Condition, ConditionAssignment
 from .geometry import Component
+from .initial_condition import InitialCondition, InitialConditionAssignment
 from .material import Material, MaterialAssignment
 
 GAP_LENGTH = 0.0001
@@ -130,6 +131,8 @@ DRILLCO_CONDITION_ASSIGNMENTS = (
     (1, "ground_surface_1"),
 )
 
+DRILLCO_INITIAL_CONDITION_CELL_SETS = ("piston_volume_0",)
+
 
 def _create_and_assign_materials() -> (
     Tuple[Dict[str, Material], List[MaterialAssignment]]
@@ -160,6 +163,22 @@ def _create_and_assign_conditions() -> (
         for i, cell_set_name in DRILLCO_CONDITION_ASSIGNMENTS
     ]
     return conditions, condition_assignments
+
+
+def _create_and_assign_initial_conditions(
+    parameters: Dict[str, Any]
+) -> Tuple[List[InitialCondition], List[InitialConditionAssignment]]:
+    piston_speed = parameters["piston"]["speed"]
+    initial_conditions = []
+    initial_condition_assignments = []
+    for i, cell_set_name in enumerate(DRILLCO_INITIAL_CONDITION_CELL_SETS):
+        ic = InitialCondition(name=f"condition{i}")
+        ic.properties["x"] = piston_speed
+        initial_conditions.append(ic)
+        assignment = InitialConditionAssignment(ic, cell_set_name)
+        initial_condition_assignments.append(assignment)
+
+    return initial_conditions, initial_condition_assignments
 
 
 def _create_drillco_geometry(
@@ -233,6 +252,8 @@ def create_drillco_system(
     List[MaterialAssignment],
     List[Condition],
     List[ConditionAssignment],
+    List[InitialCondition],
+    List[InitialConditionAssignment],
 ]:
     """Populate the provided datastores with a Drillco system setup.
 
@@ -243,4 +264,16 @@ def create_drillco_system(
     meshes = _create_drillco_geometry(parameters, mesh_generator)
     materials, material_assignments = _create_and_assign_materials()
     conditions, condition_assignments = _create_and_assign_conditions()
-    return meshes, materials, material_assignments, conditions, condition_assignments
+    (
+        initial_conditions,
+        initial_condition_assignments,
+    ) = _create_and_assign_initial_conditions(parameters)
+    return (
+        meshes,
+        materials,
+        material_assignments,
+        conditions,
+        condition_assignments,
+        initial_conditions,
+        initial_condition_assignments,
+    )

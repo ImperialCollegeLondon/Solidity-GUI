@@ -7,6 +7,10 @@ from solidity_gui.main.condition import (
 )
 from solidity_gui.main.drillco_dialog import DrillCoDialog, DrillCoForm
 from solidity_gui.main.forms.info import FormInfo
+from solidity_gui.main.initial_condition import (
+    initial_condition_assignment_datastore,
+    initial_condition_datastore,
+)
 from solidity_gui.main.material import material_assignment_datastore, material_datastore
 
 
@@ -17,7 +21,7 @@ def test_drill_co_dialog(qtbot):
     assert isinstance(dialog.form_info, FormInfo)
 
 
-TEST_DATA = (dict(a=0, b=1), dict(c=2, d=3), [4, 5], [6], [7, 8, 9])
+TEST_DATA = (dict(a=0, b=1), dict(c=2, d=3), [4, 5], [6], [7, 8, 9], [10], [11, 12])
 
 
 @patch(
@@ -35,7 +39,7 @@ def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
 
     data = dict(
         bit=dict(width=1.0, length=5.0, inserts=dict(length=1, width=0.15)),
-        piston=dict(length=5.0, width=1.5),
+        piston=dict(length=5.0, width=1.5, speed=2.3),
         ground=dict(width=1.0, height=1.0),
     )
     form_info = DrillCoForm().form_info(data=data)
@@ -60,4 +64,10 @@ def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
     assert condition_datastore == {i: value for i, value in enumerate(TEST_DATA[3])}
     assert condition_assignment_datastore == {
         i: value for i, value in enumerate(TEST_DATA[4])
+    }
+    assert initial_condition_datastore == {
+        i: value for i, value in enumerate(TEST_DATA[5])
+    }
+    assert initial_condition_assignment_datastore == {
+        i: value for i, value in enumerate(TEST_DATA[6])
     }

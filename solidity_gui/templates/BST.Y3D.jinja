@@ -72,7 +72,10 @@
 {%- endfor %}
 
 /YD/YDN/D2NCK 21 3 0
-/YD/YDN/D2NVC  21 0 0
+/YD/YDN/D2NVC  21 3 {{ num_nodes }}
+{%- for initial_condition in node_initial_conditions  %}
+{{ "%20.10e"|format(initial_condition.0) }} {{ "%20.10e"|format(initial_condition.1) }} {{ "%20.10e"|format(initial_condition.2) }}
+{%- endfor %}
 /YD/YDN/I1NOBF {{ num_nodes }}
 {{ surface_node_flags|join(' ') }}
 /YD/YDN/I1NOPR {{ num_nodes }}

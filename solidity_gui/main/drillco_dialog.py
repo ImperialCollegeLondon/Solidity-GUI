@@ -12,6 +12,10 @@ from .forms.fields import FloatField
 from .forms.widgets import DoubleSpinBoxWidget
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
+from .initial_condition import (
+    initial_condition_assignment_datastore,
+    initial_condition_datastore,
+)
 from .material import material_assignment_datastore, material_datastore
 
 INSERT_MIN_WIDTH, INSERT_MAX_WIDTH = 0.01, 0.045
@@ -66,6 +70,10 @@ class PistonForm(Form):
     )
     length = WiderFloatField(
         validators=[validate.Range(min=PISTON_MIN_LENGTH, max=PISTON_MAX_LENGTH)]
+    )
+    speed = FloatField(
+        display_name="Impact Speed",
+        validators=[validate.Range(min=0, min_inclusive=False)],
     )
 
 
@@ -136,6 +144,8 @@ class DrillCoDialog(SimpleFormDialog):
             material_assignments,
             conditions,
             condition_assignments,
+            initial_conditions,
+            initial_condition_assignments,
         ) = create_drillco_system(data, _create_mesh)
 
         for mesh_name, mesh in meshes.items():
@@ -148,4 +158,8 @@ class DrillCoDialog(SimpleFormDialog):
             condition_datastore.add(condition)
         for condition_assignment in condition_assignments:
             condition_assignment_datastore.add(condition_assignment)
+        for initial_condition in initial_conditions:
+            initial_condition_datastore.add(initial_condition)
+        for initial_condition_assignment in initial_condition_assignments:
+            initial_condition_assignment_datastore.add(initial_condition_assignment)
         self.close()
