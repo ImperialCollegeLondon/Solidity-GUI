@@ -7,7 +7,7 @@ from typing import Iterable
 
 import qtawesome as qta
 from pubsub import pub
-from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDialog,
@@ -49,19 +49,6 @@ def run_solidity(parent: QWidget) -> None:
             materials_file_path=Path(file_paths[3]),
         )
         _solidity_dlg.exec_()
-
-
-class _LogUpdateThread(QThread):
-    log_updated = Signal(str)
-
-    def __init__(self, parent: QObject, output_stream: OutputStream) -> None:
-        super().__init__(None)
-        self._output_stream = output_stream
-
-    def run(self) -> None:
-        for _, line in self._output_stream:
-            # Strip final newline char
-            self.log_updated.emit(line[:-1].decode(errors="replace"))
 
 
 class SolidityDialog(QDialog):
