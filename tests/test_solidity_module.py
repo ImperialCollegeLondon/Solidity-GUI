@@ -41,8 +41,9 @@ def test_run_solidity_missing_file(missing_idx: int) -> None:
     files = INPUT_FILES.copy()
     files[missing_idx] = INPUT_DIR / "madeup.txt"
 
-    with pytest.raises(RuntimeError):
-        run_solidity_no_stream(*files)
+    with patch("solidity_gui.solidity.docker"):
+        with pytest.raises(RuntimeError):
+            run_solidity_no_stream(*files)
 
 
 @pytest.mark.parametrize("diff_idx", range(4))
@@ -51,5 +52,6 @@ def test_run_solidity_diff_dir(diff_idx: int) -> None:
     files = INPUT_FILES.copy()
     files[diff_idx] = Path(".") / files[diff_idx].name
 
-    with pytest.raises(ValueError):
-        run_solidity_no_stream(*files)
+    with patch("solidity_gui.solidity.docker"):
+        with pytest.raises(ValueError):
+            run_solidity_no_stream(*files)
