@@ -65,11 +65,6 @@ class SolidityDialog(QDialog):
 
         Args:
             parent: Parent widget
-            y3d_file_path: Path to Y3D file (BST.Y3D)
-            layout_file_path: Path to file with format for elements and particles
-                            (layout.txt)
-            pellet_file_path: Path to file with elements and particles (pellet.txt)
-            materials_file_path: Path to materials file (mat.txt)
         """
         super().__init__(parent)
         self.resize(350, 500)
