@@ -1,4 +1,5 @@
 """This module provides functionality to run Solidity."""
+import html
 import logging
 import weakref
 from pathlib import Path
@@ -65,7 +66,7 @@ class _LogUpdateThread(QThread):
 class SolidityDialog(QDialog):
     """A dialog for interacting with the Solidity backend and viewing the output."""
 
-    log_updated = Signal(str)
+    log_updated = Signal(str, int)
 
     def __init__(
         self,
@@ -99,6 +100,7 @@ class SolidityDialog(QDialog):
         layout.addWidget(self._start_btn, 0, 0, Qt.AlignmentFlag.AlignCenter)
         self._stop_btn = QPushButton(qta.icon("ei.stop"), "Stop Solidity")
         self._stop_btn.clicked.connect(self._stop_solidity)
+        self._stop_btn.setEnabled(False)
         layout.addWidget(self._stop_btn, 0, 1, Qt.AlignmentFlag.AlignCenter)
 
         cancel_btn = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
@@ -114,6 +116,7 @@ class SolidityDialog(QDialog):
 
         pub.subscribe(self._on_docker_started, "docker.started")
         pub.subscribe(self._on_docker_stopped, "docker.stopped")
+        pub.subscribe(self._on_docker_error, "docker.error")
         pub.subscribe(self._log, "docker.output")
 
         self._logger = self._create_logger()
@@ -124,24 +127,23 @@ class SolidityDialog(QDialog):
         super().hide()
         pub.sendMessage("docker.stop")
 
-    def show(self) -> None:
-        """Show the dialog."""
-        super().show()
-        self._start_btn.setEnabled(True)
-        self._stop_btn.setEnabled(False)
-
     def _create_logger(self) -> logging.Logger:
         """Create a logger which outputs to stdout as well as a text box."""
         logger = logging.getLogger("Docker")
         logger.addHandler(_DockerLogHandler(self))
         return logger
 
-    def _log(self, output: str) -> None:
-        self._logger.log(logging.INFO, msg=output)
+    def _log(self, output: str, level: int = logging.INFO) -> None:
+        self._logger.log(level, msg=output)
 
     @Slot()
-    def _update_log_text_edit(self, msg: str) -> None:
-        self._log_text_edit.appendPlainText(msg)
+    def _update_log_text_edit(self, msg: str, level: int) -> None:
+        if level <= logging.INFO:
+            self._log_text_edit.appendPlainText(msg)
+        else:
+            self._log_text_edit.appendHtml(
+                f'<font color="red">{html.escape(msg)}</font>'
+            )
 
     def _start_solidity(self) -> None:
         self._start_btn.setEnabled(False)
@@ -163,9 +165,13 @@ class SolidityDialog(QDialog):
         self._log("==========\nStopping Solidity...")
         pub.sendMessage("docker.stop")
 
-    def _on_docker_stopped(self) -> None:
+    def _on_docker_stopped(self, return_code: int) -> None:
         self._start_btn.setEnabled(True)
-        self._log("Solidity stopped")
+        self._stop_btn.setEnabled(False)
+        self._log(f"Solidity stopped (exit code: {return_code})")
+
+    def _on_docker_error(self, error: BaseException) -> None:
+        self._log(f"Error occurred: {repr(error)}", level=logging.ERROR)
 
 
 class _DockerLogHandler(logging.Handler):
@@ -179,7 +185,7 @@ class _DockerLogHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         if dlg := self._dlg():
-            dlg.log_updated.emit(self.format(record))
+            dlg.log_updated.emit(self.format(record), record.levelno)
 
 
 _solidity_dlg: SolidityDialog

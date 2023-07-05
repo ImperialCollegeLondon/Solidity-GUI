@@ -5,7 +5,7 @@ It achieves this by using the docker image.
 import atexit
 import logging
 from pathlib import Path, PurePosixPath
-from threading import Thread
+from threading import Thread, current_thread
 from typing import Iterable, cast
 
 from pubsub import pub
@@ -13,6 +13,7 @@ from python_on_whales import Container, docker
 from python_on_whales.exceptions import DockerException, NoSuchContainer
 
 from ..config import SOLIDITY_CONTAINER_NAME, SOLIDITY_DOCKER_IMAGE
+from .pubsub_decorators import pubsub_broadcast
 
 OutputStream = Iterable[tuple[str, bytes]]
 
@@ -134,12 +135,13 @@ class _OutputThread(Thread):
     def __init__(self, stream: OutputStream) -> None:
         super().__init__(target=self._run)
         self._stream = stream
-        self.quitting = False
 
     def _run(self) -> None:
+        global _quitting
+
         try:
             for type, output_bytes in self._stream:
-                if self.quitting:
+                if _quitting:
                     return
 
                 # Remove trailing newline
@@ -148,16 +150,16 @@ class _OutputThread(Thread):
                 # We send different messages depending on whether output is stdout or
                 # stderr
                 pub.sendMessage(f"docker.output.{type}", output=output)
-        except DockerException:
-            # TODO: ERROR HANDLING
-            if not self.quitting:
-                raise
+        except DockerException as error:
+            if not _quitting:
+                pub.sendMessage("docker.error", error=error)
         else:
             # Otherwise the container has exited normally
-            if not self.quitting:
-                pub.sendMessage("docker.stop")
+            if not _quitting:
+                _quiet_quit()
 
 
+@pubsub_broadcast("docker.error", "docker.started")
 def run_solidity_stream_sync(
     y3d_file_path: Path,
     layout_file_path: Path,
@@ -182,7 +184,10 @@ def run_solidity_stream_sync(
         RuntimeError: If any of the input files do not exist or the Docker image is
                       already running
     """
-    global _output_thread
+    global _output_thread, _return_code
+
+    # Assume success until we hear otherwise (i.e. a DockerException is raised)
+    _return_code = 0
 
     # Start Solidity. TODO: Error handling
     output_stream = cast(
@@ -196,9 +201,6 @@ def run_solidity_stream_sync(
             stream=True,
         ),
     )
-
-    # Signal that the container has been started
-    pub.sendMessage("docker.started")
 
     # Listen for stdout and stderr in background
     _output_thread = _OutputThread(output_stream)
@@ -226,21 +228,21 @@ def run_solidity_stream_async(
     ).start()
 
 
-def _remove_container_sync() -> None:
+def _remove_container_sync() -> int:
     """Remove the Solidity container.
 
     If the container does not exist, nothing will happen.
     """
-    global _output_thread
+    global _output_thread, _quitting, _return_code
     try:
         container = docker.container.inspect(SOLIDITY_CONTAINER_NAME)
     except NoSuchContainer:
-        return
+        return _return_code
 
     logging.info(f"Stopping Docker container ({container})...")
 
     if _output_thread:
-        _output_thread.quitting = True
+        _quitting = True
 
     try:
         container.stop()
@@ -252,23 +254,55 @@ def _remove_container_sync() -> None:
         pass
 
     if _output_thread:
-        _output_thread.join()
+        # Threads can't join themselves
+        if _output_thread.ident != current_thread().ident:
+            _output_thread.join()
+
         _output_thread = None
 
-    pub.sendMessage("docker.stopped")
+    return _return_code
 
 
 def _remove_container_async() -> None:
-    Thread(target=_remove_container_sync).start()
+    """Remove the Solidity container on a background thread and signal when done."""
+    Thread(
+        target=pubsub_broadcast("docker.error", "docker.stopped", "return_code")(
+            _remove_container_sync
+        )
+    ).start()
 
+
+def _quiet_quit() -> None:
+    """Quit without catching errors."""
+    pub.sendMessage("docker.stopped", return_code=_return_code)
+    _remove_container_sync()
+
+
+def _on_docker_error(error: BaseException) -> None:
+    global _return_code
+    if isinstance(error, DockerException):
+        _return_code = error.return_code
+
+    # For now, assume all errors are fatal
+    _quiet_quit()
+
+
+_return_code: int = 0
+"""Return code from the Docker process."""
+
+_quitting: bool = False
+"""Whether the Docker container is exiting."""
 
 _output_thread: _OutputThread | None = None
+"""Thread to read container's stdout and stderr in background."""
 
 
 # Listen for Docker-related messages
 pub.subscribe(run_solidity_stream_async, "docker.start")
 pub.subscribe(_remove_container_async, "docker.stop")
 
+# Stop container if an error occurs
+pub.subscribe(_on_docker_error, "docker.error")
 
 # Make sure container is always removed on program exit
 atexit.register(_remove_container_sync)
