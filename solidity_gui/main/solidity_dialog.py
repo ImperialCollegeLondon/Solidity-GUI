@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
 )
+from python_on_whales.exceptions import DockerException
 
 OutputStream = Iterable[tuple[str, bytes]]
 
@@ -171,7 +172,14 @@ class SolidityDialog(QDialog):
         self._log(f"Solidity stopped (exit code: {return_code})")
 
     def _on_docker_error(self, error: BaseException) -> None:
-        self._log(f"Error occurred: {repr(error)}", level=logging.ERROR)
+        if isinstance(error, DockerException):
+            # Pretty printing for Docker errors
+            self._log(
+                f"Error occurred while running Docker command: {error.docker_command}",
+                level=logging.ERROR,
+            )
+        else:
+            self._log(f"Error occurred: {repr(error)}", level=logging.ERROR)
 
 
 class _DockerLogHandler(logging.Handler):
