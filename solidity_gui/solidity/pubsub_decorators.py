@@ -46,7 +46,7 @@ def pubsub_broadcast(
                 result = (result,)
 
             # Make sure we have the right number of return values
-            assert len(result) == len(kwarg_names)
+            assert len(result) >= len(kwarg_names)
 
             # Send message with arguments
             msg_kwargs = {name: res for name, res in zip(kwarg_names, result)}

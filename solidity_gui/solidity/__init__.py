@@ -18,6 +18,14 @@ from .pubsub_decorators import pubsub_broadcast
 OutputStream = Iterable[tuple[str, bytes]]
 
 
+def _pull_image_async(docker_image: str = SOLIDITY_DOCKER_IMAGE) -> None:
+    """Pull the Docker image in the background and send a message when done."""
+    Thread(
+        target=pubsub_broadcast("docker.error", "docker.pulled")(docker.pull),
+        args=(docker_image,),
+    ).start()
+
+
 def _run_solidity(
     y3d_file_path: Path,
     layout_file_path: Path,
@@ -298,6 +306,7 @@ _output_thread: _OutputThread | None = None
 
 
 # Listen for Docker-related messages
+pub.subscribe(_pull_image_async, "docker.pull")
 pub.subscribe(run_solidity_stream_async, "docker.start")
 pub.subscribe(_remove_container_async, "docker.stop")
 

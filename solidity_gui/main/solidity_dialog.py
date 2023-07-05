@@ -115,6 +115,7 @@ class SolidityDialog(QDialog):
 
         self.setLayout(layout)
 
+        pub.subscribe(self._on_docker_pulled, "docker.pulled")
         pub.subscribe(self._on_docker_started, "docker.started")
         pub.subscribe(self._on_docker_stopped, "docker.stopped")
         pub.subscribe(self._on_docker_error, "docker.error")
@@ -148,6 +149,10 @@ class SolidityDialog(QDialog):
 
     def _start_solidity(self) -> None:
         self._start_btn.setEnabled(False)
+        self._log("Downloading Solidity (this may take some time)...")
+        pub.sendMessage("docker.pull")
+
+    def _on_docker_pulled(self) -> None:
         self._log("Starting Solidity...")
         pub.sendMessage(
             "docker.start",
