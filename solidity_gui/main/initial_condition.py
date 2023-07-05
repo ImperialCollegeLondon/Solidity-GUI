@@ -53,10 +53,8 @@ class InitialConditionAssignmentDatastore(IndexDatastore[InitialConditionAssignm
         for assignment in self.values():
             if assignment.cell_set_name in mesh.cell_sets:
                 # should only ever be one cell type in a cell set
-                cell_type = list(mesh.cell_sets_dict[assignment.cell_set_name].keys())[
-                    0
-                ]
-                if cell_type != "tetra":
+                cell_type = list(mesh.cell_sets_dict[assignment.cell_set_name].keys())
+                if cell_type[0] != "tetra":
                     raise ValueError("Initial Conditions must be assigned to volumes.")
                 assignments.append(assignment)
         return assignments

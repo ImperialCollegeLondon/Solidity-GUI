@@ -153,8 +153,8 @@ def test_solidity_input_integration():
     initial_condition_assignment_datastore = InitialConditionAssignmentDatastore(
         "initial_condition_assignments"
     )
-    for initial_condition_assignment in initial_condition_assignments:
-        initial_condition_assignment_datastore.add(initial_condition_assignment)
+    for assignment in initial_condition_assignments:
+        initial_condition_assignment_datastore.add(assignment)
 
     # just check that we can get the template data without raising any validation errors
     get_template_data(
