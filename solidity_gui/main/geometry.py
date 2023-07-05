@@ -178,9 +178,31 @@ def add_drill_bit(
     )
     bit_base = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
     bit_volumes = geom.boolean_fragments(bit_base, insert)
-    for volume in bit_volumes:
-        geom._SIZE_QUEUE.append((volume, mesh_size))
+    geom._SIZE_QUEUE.extend(
+        [(bit_volumes[0], mesh_size), (bit_volumes[1], insert_radius / 10)]
+    )
     return bit_volumes
+
+
+def add_ground(
+    geom: Geometry,
+    x0: Vector,
+    axis: Vector,
+    radius: float,
+    contact_point: Vector,
+    contact_mesh_size: float,
+    mesh_size: float = 0.2,
+) -> Dummy:
+    """Add a geometry for the ground of a drillco system.
+
+    Comprises a simple box with an embedded point at the site of impact of the drill bit
+    used to set a smaller mesh size.
+    """
+    cylinder = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
+    surface_id = geom.env.get_surface_loops(cylinder._id)[1][0][2]
+    point = geom.add_point(contact_point, mesh_size=contact_mesh_size)
+    geom.in_surface(point, Dummy(2, int(surface_id)))
+    return cylinder
 
 
 @dataclass
@@ -295,6 +317,10 @@ class DrillBitForm(Form):
     )
 
 
+class GroundForm(Form):
+    """Placeholder form for the drillco ground component."""
+
+
 SHAPES = dict(
     box=Shape(name="box", method=pygmsh.occ.geometry.Geometry.add_box, form=BoxForm),
     ball=Shape(name="ball", method=pygmsh.occ.Geometry.add_ball, form=BallForm),
@@ -304,6 +330,7 @@ SHAPES = dict(
     ),
     dome=Shape(name="dome", method=add_dome, form=DomeForm),
     drillbit=Shape(name="drillbit", method=add_drill_bit, form=DrillBitForm),
+    ground=Shape(name="ground", method=add_ground, form=GroundForm),
 )
 """Library of supported shapes."""
 

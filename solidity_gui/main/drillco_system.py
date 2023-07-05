@@ -8,7 +8,7 @@ from .condition import Condition, ConditionAssignment
 from .geometry import Component
 from .material import Material, MaterialAssignment
 
-GAP_LENGTH = 0.5
+GAP_LENGTH = 0.0001
 """Length of gap between system components."""
 INSERT_DISPLACEMENT_FACTOR = 0.5
 """Distance of inserts from bit center as a factor of the radius of the bit."""
@@ -163,12 +163,23 @@ def _create_and_assign_conditions() -> (
 
 
 def _create_drillco_geometry(
-    data: Dict[str, Any], mesh_generator: Callable[[str, Component], meshio.Mesh]
+    data: Dict[str, Any], mesh_generator: Callable[[str, Component, float], meshio.Mesh]
 ) -> Dict[str, meshio.Mesh]:
     meshes = dict(
         ground=mesh_generator(
             "ground",
-            Component("box", "ground", dict(x0=[0, -1, -1], extents=[2, 2, 2])),
+            Component(
+                "ground",
+                "ground",
+                dict(
+                    x0=[0, 0, 0],
+                    axis=SYSTEM_AXIS * data["ground"]["height"],
+                    radius=data["ground"]["width"] / 2,
+                    contact_point=[0, 0, 0],
+                    contact_mesh_size=0.0015,
+                ),
+            ),
+            0.01,
         )
     )
 
@@ -191,9 +202,10 @@ def _create_drillco_geometry(
                 insert_length=data["bit"]["inserts"]["length"],
             ),
         ),
+        0.005,
     )
 
-    piston_axis = SYSTEM_AXIS * data["bit"]["length"] * data["piston"]["length_ratio"]
+    piston_axis = SYSTEM_AXIS * data["piston"]["length"]
     piston_x0 = bit_x0 - piston_axis - GAP_VECTOR
 
     meshes["piston"] = mesh_generator(
@@ -207,12 +219,14 @@ def _create_drillco_geometry(
                 radius=data["piston"]["width"] / 2,
             ),
         ),
+        0.005,
     )
     return meshes
 
 
 def create_drillco_system(
-    parameters: Dict[str, Any], mesh_generator: Callable[[str, Component], meshio.Mesh]
+    parameters: Dict[str, Any],
+    mesh_generator: Callable[[str, Component, float], meshio.Mesh],
 ) -> Tuple[
     Dict[str, meshio.Mesh],
     Dict[str, Material],
