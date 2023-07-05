@@ -185,9 +185,7 @@ def test_generate_elements_data():
     assert data["num_tetra"] == total_tetras
 
     assert np.all(data["cell_materials"][: num_tetras[0]] == 0)
-    # The material for the second mesh is offset by the number of tetras in the first
-    # plus one
-    assert np.all(data["cell_materials"][num_tetras[0] + 1 :] == num_tetras[0] + 1)
+    assert np.all(data["cell_materials"][num_tetras[0] :] == 1)
 
     # There is probably a better test we can do for this...
     assert data["tetra_node_ids"].shape == (total_tetras, 5)
