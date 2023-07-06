@@ -48,9 +48,12 @@ def test_drill_co_dialog_ok_clicked(qtbot, send_message_mock):
     dialog = DrillCoDialog()
 
     data = dict(
-        bit=dict(width=1.0, length=5.0, inserts=dict(length=1, width=0.15)),
-        piston=dict(length=5.0, width=1.5, speed=2.3),
-        ground=dict(width=1.0, height=1.0),
+        geometry=dict(
+            bit=dict(width=1.0, length=5.0, inserts=dict(length=1, width=0.15)),
+            piston=dict(length=5.0, width=1.5, speed=2.3),
+            ground=dict(width=1.0, height=1.0),
+        ),
+        control=dict(num_timesteps=22, time_step_size=0.04932),
     )
     form_info = DrillCoForm().form_info(data=data)
     dialog.form_info = form_info

@@ -134,8 +134,6 @@ DRILLCO_CONDITION_ASSIGNMENTS = (
 DRILLCO_INITIAL_CONDITION_CELL_SETS = ("piston_volume_0",)
 
 DRILLCO_CONTROL_PARAMETERS: Dict[str, object] = dict(
-    num_timesteps=2000000,
-    time_step_size=2.45000000000e-09,
     gravity_x=9.8,
     gravity_y=0.0,
     gravity_z=0.0,
@@ -251,8 +249,10 @@ def _create_drillco_geometry(
     return meshes
 
 
-def _create_simulation_control_parameters() -> Dict[str, object]:
-    return DRILLCO_CONTROL_PARAMETERS.copy()
+def _create_simulation_control_parameters(
+    parameters: Dict[str, object]
+) -> Dict[str, object]:
+    return DRILLCO_CONTROL_PARAMETERS | parameters
 
 
 def create_drillco_system(
@@ -274,14 +274,14 @@ def create_drillco_system(
       parameters: drillco system parameters,
       mesh_generator: function called to create meshes
     """
-    meshes = _create_drillco_geometry(parameters, mesh_generator)
+    meshes = _create_drillco_geometry(parameters["geometry"], mesh_generator)
     materials, material_assignments = _create_and_assign_materials()
     conditions, condition_assignments = _create_and_assign_conditions()
     (
         initial_conditions,
         initial_condition_assignments,
-    ) = _create_and_assign_initial_conditions(parameters)
-    control_parameters = _create_simulation_control_parameters()
+    ) = _create_and_assign_initial_conditions(parameters["geometry"])
+    control_parameters = _create_simulation_control_parameters(parameters["control"])
     return (
         meshes,
         materials,

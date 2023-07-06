@@ -9,7 +9,7 @@ from .condition import condition_assignment_datastore, condition_datastore
 from .control import control_datastore
 from .drillco_system import create_drillco_system
 from .forms import Form, NestedForm, SimpleFormDialog
-from .forms.fields import FloatField
+from .forms.fields import FloatField, IntField
 from .forms.widgets import DoubleSpinBoxWidget
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
@@ -89,12 +89,26 @@ class GroundForm(Form):
     )
 
 
-class DrillCoForm(Form):
+class DrillCoGeometryForm(Form):
     """Form containing parameters for the DrillCo system geometry."""
 
     bit = NestedForm(BitForm)
     piston = NestedForm(PistonForm)
     ground = NestedForm(GroundForm)
+
+
+class DrillCoControlForm(Form):
+    """Form collecting simulation control parameters."""
+
+    num_timesteps = IntField(display_name="Number of Timesteps")
+    time_step_size = FloatField(display_name="Size of Timestep")
+
+
+class DrillCoForm(Form):
+    """Form collecting drillco system parameters."""
+
+    geometry = NestedForm(DrillCoGeometryForm)
+    control = NestedForm(DrillCoControlForm)
 
 
 def _create_mesh(
@@ -125,11 +139,17 @@ class DrillCoDialog(SimpleFormDialog):
         super().__init__(
             DrillCoForm,
             initial_data=dict(
-                piston=dict(length=0.26, width=0.0265),
-                bit=dict(
-                    length=0.265, width=0.03, inserts=dict(width=0.02, length=0.005)
+                geometry=dict(
+                    piston=dict(length=0.26, width=0.0265),
+                    bit=dict(
+                        length=0.265, width=0.03, inserts=dict(width=0.02, length=0.005)
+                    ),
+                    ground=dict(width=0.250, height=0.15),
                 ),
-                ground=dict(width=0.250, height=0.15),
+                control=dict(
+                    num_timesteps=2000000,
+                    time_step_size=2.45000000000e-09,
+                ),
             ),
             **kwargs,
         )

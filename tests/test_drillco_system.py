@@ -33,9 +33,12 @@ def _mesher(name, component, resolution):
 
 
 PARAMETERS = dict(
-    bit=dict(width=1.0, length=5.0, inserts=dict(length=0.5, width=0.5)),
-    piston=dict(length=5.0, width=1.5, speed=3.2),
-    ground=dict(width=2.0, height=2),
+    geometry=dict(
+        bit=dict(width=1.0, length=5.0, inserts=dict(length=0.5, width=0.5)),
+        piston=dict(length=5.0, width=1.5, speed=3.2),
+        ground=dict(width=2.0, height=2),
+    ),
+    control=dict(num_timesteps=20, time_step_size=0.00001),
 )
 
 
@@ -59,14 +62,16 @@ def test_create_drillco_system():
     assert np.isclose(ground_maxes, (2, 1, 1)).all()
     assert np.isclose(ground_mins, (0, -1, -1)).all()
 
+    geometry_parameters = PARAMETERS["geometry"]
     bit_mesh = meshes["bit"]
     bit_maxes = bit_mesh.points.max(axis=0)
     bit_mins = bit_mesh.points.min(axis=0)
-    bit_width = PARAMETERS["bit"]["width"]
+    bit_width = geometry_parameters["bit"]["width"]
     assert np.isclose(
         bit_maxes - bit_mins,
         (
-            PARAMETERS["bit"]["length"] + PARAMETERS["bit"]["inserts"]["length"],
+            geometry_parameters["bit"]["length"]
+            + geometry_parameters["bit"]["inserts"]["length"],
             bit_width,
             bit_width,
         ),
@@ -75,11 +80,11 @@ def test_create_drillco_system():
     piston_mesh = meshes["piston"]
     piston_maxes = piston_mesh.points.max(axis=0)
     piston_mins = piston_mesh.points.min(axis=0)
-    piston_width = PARAMETERS["piston"]["width"]
+    piston_width = geometry_parameters["piston"]["width"]
     assert np.isclose(
         piston_maxes - piston_mins,
         (
-            PARAMETERS["piston"]["length"],
+            geometry_parameters["piston"]["length"],
             piston_width,
             piston_width,
         ),
@@ -98,7 +103,8 @@ def test_create_drillco_system():
 
     assert len(initial_conditions) == 1
     assert initial_conditions[0] == InitialCondition(
-        name="condition0", properties=dict(x=PARAMETERS["piston"]["speed"], y=0, z=0)
+        name="condition0",
+        properties=dict(x=geometry_parameters["piston"]["speed"], y=0, z=0),
     )
 
     for material_assignment, (material_name, cell_set_name) in zip(
@@ -119,7 +125,7 @@ def test_create_drillco_system():
         initial_conditions[0], DRILLCO_INITIAL_CONDITION_CELL_SETS[0]
     )
 
-    assert control_parameters == DRILLCO_CONTROL_PARAMETERS
+    assert control_parameters == DRILLCO_CONTROL_PARAMETERS | PARAMETERS["control"]
 
 
 def test_solidity_input_integration():
