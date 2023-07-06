@@ -165,5 +165,6 @@ def test_solidity_input_integration():
         condition_assignment_datastore,
         initial_condition_datastore,
         initial_condition_assignment_datastore,
+        {},
         surface_nodes,
     )
