@@ -24,17 +24,9 @@ class MenuBar(QMenuBar):
 
         file_menu = self.addMenu("&File")
         geometry_menu = self.addMenu("&Geometry")
-        self.addMenu("&Mesh")
         self.materials_menu = self.addMenu("Materia&ls")
-        self.addMenu("&Assembly")
-        self.addMenu("&Step")
         self.conditions_menu = self.addMenu("&Conditions")
-        self.addMenu("&Interaction")
         job_menu = self.addMenu("&Job")
-        self.addMenu("&Results")
-        self.addMenu("&Tools")
-        self.addMenu("&View")
-        self.addMenu("&Help")
 
         self.materials_manager_dialog = MaterialsManagerDialog()
         materials_manager_action = QAction("Create and Edit &Materials", self)
