@@ -4,7 +4,7 @@ from typing import Any
 
 from meshio import Mesh
 from pubsub import pub
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QGuiApplication
 from PySide6.QtWidgets import QMenuBar
 
 from .assign_conditions import assign_conditions
@@ -50,7 +50,10 @@ class MenuBar(QMenuBar):
         self.export_bst_action = QAction("&Export BST", self)
         self.export_bst_action.setEnabled(False)
         self.export_bst_action.triggered.connect(generate_y3d_file)
+        exit_action = QAction("E&xit", self)
+        exit_action.triggered.connect(QGuiApplication.quit)
         file_menu.addAction(self.export_bst_action)
+        file_menu.addAction(exit_action)
 
         # There's currently no way to remove meshes, so just enable the menu entry when
         # the first component is added
