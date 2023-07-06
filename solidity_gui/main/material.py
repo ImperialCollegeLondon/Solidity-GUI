@@ -8,7 +8,7 @@ from pubsub import pub
 
 from .datastore import IndexDatastore
 from .forms import Form
-from .forms.fields import FloatField
+from .forms.fields import FloatField, WiderFloatField
 from .meshes import mesh_datastore
 
 Attributes_Dict_Type = Dict[str, Type[float] | bool]
@@ -30,7 +30,7 @@ class ElasticityForm(Form):
 class FractureForm(Form):
     """Form for collecting properties related to fracturing."""
 
-    damage_delta_0 = FloatField(display_name="Damage Delta 0")
+    damage_delta_0 = WiderFloatField(display_name="Damage Delta 0")
     damage_delta_1 = FloatField(display_name="Damage Delta 1")
     damage_threshold = FloatField(display_name="Damage Threshold")
 
@@ -112,9 +112,9 @@ def PROPERTIES() -> Properties_Dict_Type:
             enabled=False,
             attributes=FractureForm,
             default_data=dict(
-                damage_delta_0=0.005,
-                damage_delta_1=1,
-                damage_threshold=0.5,
+                damage_delta_0=1.0,
+                damage_delta_1=1.0,
+                damage_threshold=0.0,
             ),
         ),
         "other": Property(
