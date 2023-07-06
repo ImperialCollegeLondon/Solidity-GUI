@@ -56,4 +56,7 @@ _DOCKER_IMAGE_DIGEST = (
 SOLIDITY_DOCKER_IMAGE = (
     f"ghcr.io/imperialcollegelondon/solidity_project_dev@sha256:{_DOCKER_IMAGE_DIGEST}"
 )
-"""The name of the Docker image to use when running Solidity."""
+"""The path to the Docker image to run."""
+
+SOLIDITY_CONTAINER_NAME = "solidity"
+"""The name to use for the Docker container running Solidity."""

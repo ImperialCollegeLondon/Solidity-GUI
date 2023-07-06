@@ -28,3 +28,4 @@ repos:
     hooks:
       - id: mypy
         exclude: "(tests/|.venv/)"
+        additional_dependencies: ["types-decorator"]
