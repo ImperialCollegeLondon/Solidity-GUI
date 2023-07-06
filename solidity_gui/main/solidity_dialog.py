@@ -8,7 +8,7 @@ from typing import Iterable
 import qtawesome as qta
 from pubsub import pub
 from PySide6.QtCore import Qt, Signal, Slot
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QCloseEvent, QFont
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -110,6 +110,11 @@ class SolidityDialog(QDialog):
         self.layout_file_path = layout_file_path
         self.pellet_file_path = pellet_file_path
         self.materials_file_path = materials_file_path
+
+    def closeEvent(self, evt: QCloseEvent) -> None:
+        """Hide the dialog if the user tries to close it."""
+        self.hide()
+        evt.ignore()
 
     def hide(self) -> None:
         """Hide the dialog."""

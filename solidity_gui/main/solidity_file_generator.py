@@ -277,14 +277,7 @@ def generate_elements_data(
 
         # We can now get the node ids for each cell, offset by the accumulated number of
         # nodes from previous meshes
-        node_ids = mesh.cells_dict["tetra"] + node_id_offset
-        # Append the mesh ID to each row
-        mesh_ids = np.full(
-            (mesh.cells_dict["tetra"].shape[0], 1), i + 1, dtype="uint64"
-        )
-        node_ids = np.concatenate((node_ids, mesh_ids), axis=1)
-
-        all_node_ids = np.concatenate((all_node_ids, node_ids), axis=0)
+        node_ids = mesh.cells_dict["tetra"]
 
         # Find the indices of tetra elements that contain surface nodes
         indices = np.where(
@@ -304,6 +297,14 @@ def generate_elements_data(
                 )
             )
         )
+
+        # Append the mesh ID to each row
+        mesh_ids = np.full(
+            (mesh.cells_dict["tetra"].shape[0], 1), i + 1, dtype="uint64"
+        )
+        node_ids = np.concatenate((node_ids + node_id_offset, mesh_ids), axis=1)
+
+        all_node_ids = np.concatenate((all_node_ids, node_ids), axis=0)
 
         node_id_offset += mesh.points.shape[0]
 
