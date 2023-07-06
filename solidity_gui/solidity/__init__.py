@@ -2,7 +2,6 @@
 
 It achieves this by using the docker image.
 """
-import atexit
 import logging
 from pathlib import Path, PurePosixPath
 from threading import Thread, current_thread
@@ -61,7 +60,7 @@ def _run_solidity(
     _return_code = 0
 
     # Remove the Solidity container if it already exists
-    _remove_container_sync()
+    remove_container_sync()
 
     # Reset flag
     _quitting = False
@@ -241,7 +240,7 @@ def run_solidity_stream_async(
     ).start()
 
 
-def _remove_container_sync() -> int:
+def remove_container_sync() -> int:
     """Remove the Solidity container.
 
     If the container does not exist, nothing will happen.
@@ -278,7 +277,7 @@ def _remove_container_async() -> None:
     """Remove the Solidity container on a background thread and signal when done."""
     Thread(
         target=pubsub_broadcast("docker.error", "docker.stopped", "return_code")(
-            _remove_container_sync
+            remove_container_sync
         )
     ).start()
 
@@ -286,7 +285,7 @@ def _remove_container_async() -> None:
 def _quiet_quit() -> None:
     """Quit without catching errors."""
     pub.sendMessage("docker.stopped", return_code=_return_code)
-    _remove_container_sync()
+    remove_container_sync()
 
 
 def _on_docker_error(error: BaseException) -> None:
@@ -315,6 +314,3 @@ pub.subscribe(_remove_container_async, "docker.stop")
 
 # Stop container if an error occurs
 pub.subscribe(_on_docker_error, "docker.error")
-
-# Make sure container is always removed on program exit
-atexit.register(_remove_container_sync)
