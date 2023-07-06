@@ -8,20 +8,65 @@ from threading import Thread, current_thread
 from typing import Iterable, cast
 
 from pubsub import pub
-from python_on_whales import Container, docker
-from python_on_whales.exceptions import DockerException, NoSuchContainer
+from python_on_whales import Container, Image, docker
+from python_on_whales.exceptions import DockerException, NoSuchContainer, NoSuchImage
 
-from ..config import SOLIDITY_CONTAINER_NAME, SOLIDITY_DOCKER_IMAGE
+from ..config import (
+    DOCKER_IMAGE_ID,
+    DOCKER_IMAGE_ID_SHORT,
+    SOLIDITY_CONTAINER_NAME,
+    SOLIDITY_DOCKER_IMAGE,
+)
 from .pubsub_decorators import pubsub_broadcast
 
 OutputStream = Iterable[tuple[str, bytes]]
 
 
+def _get_exe_folder() -> Path:
+    """Get the folder of the currently executing program."""
+    return Path(__file__).parent.parent.parent
+
+
+def _try_load_image() -> Image | None:
+    """Try to load the image from the local filesystem."""
+    exe_folder = _get_exe_folder()
+    image_path = exe_folder / f"solidity_image_{DOCKER_IMAGE_ID_SHORT}.tar.gz"
+    if not image_path.exists():
+        return None
+
+    logging.info(f"Loading docker image from {image_path}...")
+    docker.load(str(image_path))
+
+    try:
+        return docker.image.inspect(DOCKER_IMAGE_ID)
+    except NoSuchImage:
+        # This is an eminently unlikely outcome given that we embed the image ID in the
+        # filename, but let's be extra careful
+        logging.warn("Image ID for local file is wrong; ignoring")
+        return None
+
+
+def _pull_image_sync() -> Image:
+    """Pull the Docker image or load from local archive, if available."""
+    # Check if the image is already available in Docker
+    try:
+        return docker.image.inspect(DOCKER_IMAGE_ID)
+    except NoSuchImage:
+        pass
+
+    # Try to import from local filesystem
+    if image := _try_load_image():
+        return image
+
+    # Fall back on doing a docker pull
+    logging.info("Downloading Docker image")
+    return cast(Image, docker.pull(SOLIDITY_DOCKER_IMAGE))
+
+
 def _pull_image_async() -> None:
     """Pull the Docker image in the background and send a message when done."""
     Thread(
-        target=pubsub_broadcast("docker.error", "docker.pulled")(docker.pull),
-        args=(SOLIDITY_DOCKER_IMAGE,),
+        target=pubsub_broadcast("docker.error", "docker.pulled")(_pull_image_sync)
     ).start()
 
 
@@ -63,8 +108,6 @@ def _run_solidity(
     # Reset flag
     _quitting = False
 
-    logging.info("Starting Solidity")
-
     input_files_path = y3d_file_path.parent
     if not all(
         p.parent.samefile(input_files_path)
@@ -84,11 +127,14 @@ def _run_solidity(
         f"{pellet_file_path.name}, {materials_file_path.name})"
     )
 
-    logging.info(f"Running Docker image: {SOLIDITY_DOCKER_IMAGE}")
+    logging.info(f"Running Docker image: {DOCKER_IMAGE_ID_SHORT}")
+
+    # Get the Docker image
+    image = _pull_image_sync()
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
     return docker.run(
-        SOLIDITY_DOCKER_IMAGE,
+        image,
         [
             "DEMPlus",
             str(path_on_container / y3d_file_path.name),
