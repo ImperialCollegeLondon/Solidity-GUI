@@ -3,6 +3,7 @@
 It achieves this by using the docker image.
 """
 import logging
+import sys
 from pathlib import Path, PurePosixPath
 from threading import Thread, current_thread
 from typing import Iterable, cast
@@ -10,6 +11,8 @@ from typing import Iterable, cast
 from pubsub import pub
 from python_on_whales import Container, Image, docker
 from python_on_whales.exceptions import DockerException, NoSuchContainer, NoSuchImage
+
+import solidity_gui
 
 from ..config import (
     DOCKER_IMAGE_ID,
@@ -24,7 +27,12 @@ OutputStream = Iterable[tuple[str, bytes]]
 
 def _get_exe_folder() -> Path:
     """Get the folder of the currently executing program."""
-    return Path(__file__).parent.parent.parent
+    # Check whether we're in a Pyinstaller-bundled executable
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys.executable).parent.absolute()
+
+    # Use the parent path of the solidity_gui module
+    return Path(solidity_gui.__path__[0]).parent.absolute()
 
 
 def _try_load_image() -> Image | None:
