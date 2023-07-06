@@ -53,6 +53,14 @@ _DOCKER_IMAGE_DIGEST = (
 )
 """The SHA256 digest for the Docker image. Used to pull a specific version."""
 
+DOCKER_IMAGE_ID = "a499e398855f0897048477a5efbc54ee2f217626c330ca0495b8909433e4ab11"
+"""The content-addressable image ID for the Docker image. This is different from the
+image digest above. To check what the image ID is, use the get_docker_image_id.py
+script."""
+
+DOCKER_IMAGE_ID_SHORT = DOCKER_IMAGE_ID[:12]
+"""A shorter, more human-readable version of the image ID."""
+
 SOLIDITY_DOCKER_IMAGE = (
     f"ghcr.io/imperialcollegelondon/solidity_project_dev@sha256:{_DOCKER_IMAGE_DIGEST}"
 )

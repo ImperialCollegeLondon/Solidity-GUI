@@ -141,7 +141,7 @@ class SolidityDialog(QDialog):
 
     def _start_solidity(self) -> None:
         self._start_btn.setEnabled(False)
-        self._log("Downloading Solidity (this may take some time)...")
+        self._log("Setting up Solidity (this may take some time)...")
         pub.sendMessage("docker.pull")
 
     def _on_docker_pulled(self) -> None:
