@@ -17,11 +17,11 @@ from .pubsub_decorators import pubsub_broadcast
 OutputStream = Iterable[tuple[str, bytes]]
 
 
-def _pull_image_async(docker_image: str = SOLIDITY_DOCKER_IMAGE) -> None:
+def _pull_image_async() -> None:
     """Pull the Docker image in the background and send a message when done."""
     Thread(
         target=pubsub_broadcast("docker.error", "docker.pulled")(docker.pull),
-        args=(docker_image,),
+        args=(SOLIDITY_DOCKER_IMAGE,),
     ).start()
 
 
@@ -30,7 +30,6 @@ def _run_solidity(
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
-    docker_image: str,
     stream: bool,
 ) -> Container | str | OutputStream:
     """Run Solidity using the specified input files, using docker.run().
@@ -43,7 +42,6 @@ def _run_solidity(
                           (layout.txt)
         pellet_file_path: Path to file with elements and particles (pellet.txt)
         materials_file_path: Path to materials file (mat.txt)
-        docker_image: URL and tag/SHA of docker image
         stream: Whether to stream stdout and stderr as an iterator
 
     Returns:
@@ -86,11 +84,11 @@ def _run_solidity(
         f"{pellet_file_path.name}, {materials_file_path.name})"
     )
 
-    logging.info(f"Running Docker image: {docker_image}")
+    logging.info(f"Running Docker image: {SOLIDITY_DOCKER_IMAGE}")
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
     return docker.run(
-        docker_image,
+        SOLIDITY_DOCKER_IMAGE,
         [
             "DEMPlus",
             str(path_on_container / y3d_file_path.name),
@@ -140,7 +138,6 @@ def run_solidity_no_stream(
             layout_file_path,
             pellet_file_path,
             materials_file_path,
-            SOLIDITY_DOCKER_IMAGE,
             stream=False,
         ),
     )
@@ -209,7 +206,6 @@ def run_solidity_stream_sync(
             layout_file_path,
             pellet_file_path,
             materials_file_path,
-            SOLIDITY_DOCKER_IMAGE,
             stream=True,
         ),
     )
