@@ -2,6 +2,8 @@
 from functools import partial
 from typing import Any
 
+from meshio import Mesh
+from pubsub import pub
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenuBar
 
@@ -53,10 +55,18 @@ class MenuBar(QMenuBar):
         drill_action.triggered.connect(lambda: DrillCoDialog().exec_())
         geometry_menu.addAction(drill_action)
 
-        export_bst_action = QAction("&Export BST", self)
-        export_bst_action.triggered.connect(generate_y3d_file)
-        file_menu.addAction(export_bst_action)
+        self.export_bst_action = QAction("&Export BST", self)
+        self.export_bst_action.setEnabled(False)
+        self.export_bst_action.triggered.connect(generate_y3d_file)
+        file_menu.addAction(self.export_bst_action)
+
+        # There's currently no way to remove meshes, so just enable the menu entry when
+        # the first component is added
+        pub.subscribe(self._enable_export_bst, "add_component.finish")
 
         run_solidity_action = QAction("&Run Solidity", self)
         run_solidity_action.triggered.connect(partial(run_solidity, self))
         job_menu.addAction(run_solidity_action)
+
+    def _enable_export_bst(self, mesh_name: str, obj: Mesh) -> None:
+        self.export_bst_action.setEnabled(True)
