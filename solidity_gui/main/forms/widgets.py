@@ -118,8 +118,8 @@ class DoubleSpinBoxWidget(SpinBoxBase[QDoubleSpinBox, float]):
     """Widget for collecting floats via a QDoubleSpinBox."""
 
     qt_input_class = QDoubleSpinBox
-    _default_min = -1000000000000000
-    _default_max = 1000000000000000
+    _default_min = -1000000000
+    _default_max = 1000000000
 
     def __init__(self, decimals: int = 3):
         """Initialise a new instance.
