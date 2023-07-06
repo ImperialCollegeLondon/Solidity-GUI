@@ -12,6 +12,7 @@ def run() -> None:
     import multiprocessing
     import sys
 
+    from . import solidity  # noqa
     from .logger import initialise_logging
 
     # Configure program log
@@ -26,7 +27,6 @@ def run() -> None:
 
     # Needed if you're using multiprocessing within a pyinstaller-built exe on Windows,
     # otherwise your main window will repeatedly open
-
     multiprocessing.freeze_support()
 
     # NB: We import PySide *after* setting QT_QPA_PLATFORM

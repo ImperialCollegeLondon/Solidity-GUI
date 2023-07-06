@@ -1,4 +1,5 @@
 """Code to create the toolbar containing the visualisation controls."""
+from functools import partial
 from typing import Any
 
 from PySide6.QtGui import QAction
@@ -8,7 +9,7 @@ from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
 from .drillco_dialog import DrillCoDialog
 from .materials_manager_dialog import MaterialsManagerDialog
-from .run_solidity_dialog import run_solidity_dialog
+from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_y3d_file
 
 
@@ -57,5 +58,5 @@ class MenuBar(QMenuBar):
         file_menu.addAction(export_bst_action)
 
         run_solidity_action = QAction("&Run Solidity", self)
-        run_solidity_action.triggered.connect(run_solidity_dialog)
+        run_solidity_action.triggered.connect(partial(run_solidity, self))
         job_menu.addAction(run_solidity_action)

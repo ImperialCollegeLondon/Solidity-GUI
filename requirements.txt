@@ -14,6 +14,8 @@ contourpy==1.0.7
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
+decorator==5.1.1
+    # via SolidityGUI (pyproject.toml)
 fonttools==4.39.4
     # via matplotlib
 gmsh==4.11.1
