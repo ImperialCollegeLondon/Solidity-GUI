@@ -6,6 +6,7 @@ from marshmallow import ValidationError, validate
 from pubsub import pub
 
 from .condition import condition_assignment_datastore, condition_datastore
+from .control import control_datastore
 from .drillco_system import create_drillco_system
 from .forms import Form, NestedForm, SimpleFormDialog
 from .forms.fields import FloatField
@@ -146,6 +147,7 @@ class DrillCoDialog(SimpleFormDialog):
             condition_assignments,
             initial_conditions,
             initial_condition_assignments,
+            simulation_control_parameters,
         ) = create_drillco_system(data, _create_mesh)
 
         for mesh_name, mesh in meshes.items():
@@ -162,4 +164,5 @@ class DrillCoDialog(SimpleFormDialog):
             initial_condition_datastore.add(initial_condition)
         for initial_condition_assignment in initial_condition_assignments:
             initial_condition_assignment_datastore.add(initial_condition_assignment)
+        control_datastore.update(simulation_control_parameters)
         self.close()

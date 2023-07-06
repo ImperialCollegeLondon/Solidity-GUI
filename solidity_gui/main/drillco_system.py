@@ -133,6 +133,14 @@ DRILLCO_CONDITION_ASSIGNMENTS = (
 
 DRILLCO_INITIAL_CONDITION_CELL_SETS = ("piston_volume_0",)
 
+DRILLCO_CONTROL_PARAMETERS: Dict[str, object] = dict(
+    num_timesteps=2000000,
+    time_step_size=2.45000000000e-09,
+    gravity_x=9.8,
+    gravity_y=0.0,
+    gravity_z=0.0,
+)
+
 
 def _create_and_assign_materials() -> (
     Tuple[Dict[str, Material], List[MaterialAssignment]]
@@ -243,6 +251,10 @@ def _create_drillco_geometry(
     return meshes
 
 
+def _create_simulation_control_parameters() -> Dict[str, object]:
+    return DRILLCO_CONTROL_PARAMETERS.copy()
+
+
 def create_drillco_system(
     parameters: Dict[str, Any],
     mesh_generator: Callable[[str, Component, float], meshio.Mesh],
@@ -254,6 +266,7 @@ def create_drillco_system(
     List[ConditionAssignment],
     List[InitialCondition],
     List[InitialConditionAssignment],
+    Dict[str, object],
 ]:
     """Populate the provided datastores with a Drillco system setup.
 
@@ -268,6 +281,7 @@ def create_drillco_system(
         initial_conditions,
         initial_condition_assignments,
     ) = _create_and_assign_initial_conditions(parameters)
+    control_parameters = _create_simulation_control_parameters()
     return (
         meshes,
         materials,
@@ -276,4 +290,5 @@ def create_drillco_system(
         condition_assignments,
         initial_conditions,
         initial_condition_assignments,
+        control_parameters,
     )

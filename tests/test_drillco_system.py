@@ -5,6 +5,7 @@ from solidity_gui.main.condition import ConditionAssignmentDatastore, ConditionD
 from solidity_gui.main.drillco_system import (
     DRILLCO_CONDITION_ASSIGNMENTS,
     DRILLCO_CONDITIONS,
+    DRILLCO_CONTROL_PARAMETERS,
     DRILLCO_INITIAL_CONDITION_CELL_SETS,
     DRILLCO_MATERIAL_ASSIGNMENTS,
     DRILLCO_MATERIALS,
@@ -48,6 +49,7 @@ def test_create_drillco_system():
         condition_assignments,
         initial_conditions,
         initial_condition_assignments,
+        control_parameters,
     ) = create_drillco_system(PARAMETERS, _mesher)
 
     # do basic checks of meshes from the created geometry
@@ -117,6 +119,8 @@ def test_create_drillco_system():
         initial_conditions[0], DRILLCO_INITIAL_CONDITION_CELL_SETS[0]
     )
 
+    assert control_parameters == DRILLCO_CONTROL_PARAMETERS
+
 
 def test_solidity_input_integration():
     """Integration test checking we can get the Y3D file data for the Drillco system."""
@@ -128,6 +132,7 @@ def test_solidity_input_integration():
         condition_assignments,
         initial_conditions,
         initial_condition_assignments,
+        control_parameters,
     ) = create_drillco_system(PARAMETERS, _mesher)
     surface_nodes = {mesh_name: np.array([]) for mesh_name in meshes}
 
@@ -165,6 +170,6 @@ def test_solidity_input_integration():
         condition_assignment_datastore,
         initial_condition_datastore,
         initial_condition_assignment_datastore,
-        {},
+        control_parameters,
         surface_nodes,
     )
