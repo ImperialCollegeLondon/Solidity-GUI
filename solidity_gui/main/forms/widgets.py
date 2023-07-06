@@ -140,6 +140,11 @@ class DoubleSpinBoxWidget(SpinBoxBase[QDoubleSpinBox, float]):
         """
         qt_input = super().create(data, validators)
         qt_input.setDecimals(self.decimals)
+
+        # irritatingly we have to set the data again because it may have been rounded
+        # off before the number of decimals was set correctly
+        if data is not None:
+            qt_input.setValue(data)
         return qt_input
 
 

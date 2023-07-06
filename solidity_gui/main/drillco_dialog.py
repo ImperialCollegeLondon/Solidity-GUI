@@ -35,6 +35,12 @@ class WiderFloatField(FloatField):
     _default_widget = DoubleSpinBoxWidget(decimals=5)
 
 
+class EvenWiderFloatField(FloatField):
+    """FloatField with widget providing even more decimals."""
+
+    _default_widget = DoubleSpinBoxWidget(decimals=15)
+
+
 class InsertForm(Form):
     """Data for drill bit inserts."""
 
@@ -101,7 +107,9 @@ class DrillCoControlForm(Form):
     """Form collecting simulation control parameters."""
 
     num_timesteps = IntField(display_name="Number of Timesteps")
-    time_step_size = FloatField(display_name="Size of Timestep")
+    time_step_size = EvenWiderFloatField(
+        display_name="Size of Timestep", validators=[validate.Range(min=0, max=1)]
+    )
 
 
 class DrillCoForm(Form):
