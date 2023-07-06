@@ -70,8 +70,8 @@ SpinBoxType = TypeVar("SpinBoxType", bound=_SpinBoxProtocol)
 class SpinBoxBase(Widget, Generic[SpinBoxType, DataType]):
     """Base class encapsulating common logic for QAbstractSpinBox subclass Widgets."""
 
-    _default_min = -10000
-    _default_max = 10000
+    _default_min = -1000000000
+    _default_max = 1000000000
 
     def create(
         self, data: Optional[DataType], validators: Iterable[Callable]
@@ -118,6 +118,8 @@ class DoubleSpinBoxWidget(SpinBoxBase[QDoubleSpinBox, float]):
     """Widget for collecting floats via a QDoubleSpinBox."""
 
     qt_input_class = QDoubleSpinBox
+    _default_min = -1000000000
+    _default_max = 1000000000
 
     def __init__(self, decimals: int = 3):
         """Initialise a new instance.
@@ -138,6 +140,11 @@ class DoubleSpinBoxWidget(SpinBoxBase[QDoubleSpinBox, float]):
         """
         qt_input = super().create(data, validators)
         qt_input.setDecimals(self.decimals)
+
+        # irritatingly we have to set the data again because it may have been rounded
+        # off before the number of decimals was set correctly
+        if data is not None:
+            qt_input.setValue(data)
         return qt_input
 
 
