@@ -162,4 +162,6 @@ class DrillCoDialog(SimpleFormDialog):
             initial_condition_datastore.add(initial_condition)
         for initial_condition_assignment in initial_condition_assignments:
             initial_condition_assignment_datastore.add(initial_condition_assignment)
+        pub.sendMessage("geometry.finalise")
+        pub.sendMessage("mesh.finalise")
         self.close()
