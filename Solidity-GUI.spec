@@ -1,8 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from gmsh import libpath as gmsh_lib
+import logging
+from pathlib import Path
 
 block_cipher = None
+
+trial_expiry_hook = Path.cwd() / "setup_trial_expiry.py"
+runtime_hooks = []
+if trial_expiry_hook.exists():
+    logging.warn("setup_trial_expiry.py found. Adding expiry date to program.")
+    runtime_hooks.append(str(trial_expiry_hook))
+
 
 a = Analysis(
     ["stub.py"],
@@ -21,7 +30,7 @@ a = Analysis(
     ],
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=runtime_hooks,
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
