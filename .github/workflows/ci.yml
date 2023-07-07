@@ -2,6 +2,9 @@ name: Test
 
 on: [push]
 
+env:
+  TRIAL_EXPIRY_PERIOD: 60 # days
+
 jobs:
   qa:
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, ubuntu-20.04, macos-latest ]
+        os: [windows-latest, ubuntu-20.04, macos-latest]
         python-version: [ "3.10", "3.11" ]
 
     steps:
@@ -66,14 +69,18 @@ jobs:
       run: pytest -k "not test_main_window and not test_vtk_window"
       if: matrix.os == 'windows-latest'
 
+    - name: Setting trial expiry period to ${{env.TRIAL_EXPIRY_PERIOD}} days
+      run: python set_trial_expiry.py ${{env.TRIAL_EXPIRY_PERIOD}}
+      if: matrix.os == 'windows-latest'
+
     - name: Build executable
       run: pyinstaller Solidity-GUI.spec
       if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10'
 
     - uses: actions/upload-artifact@v3
-      if: github.ref == 'refs/heads/main' && success()
+      if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10' && success()
       with:
-        name: Solidity-GUI-${{ matrix.os }}
+        name: Solidity-GUI-${{matrix.os}}
         path: dist/*
 
     - name: Check for documentation errors with MkDocs
