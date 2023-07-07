@@ -1,4 +1,5 @@
 """Configuration settings for the program."""
+from datetime import date
 
 APP_NAME = "Solidity GUI"
 """The name of the app."""
@@ -68,3 +69,6 @@ SOLIDITY_DOCKER_IMAGE = (
 
 SOLIDITY_CONTAINER_NAME = "solidity"
 """The name to use for the Docker container running Solidity."""
+
+TRIAL_EXPIRY_DATE: date | None = None
+"""The expiry date for the program if it's a trial version."""
