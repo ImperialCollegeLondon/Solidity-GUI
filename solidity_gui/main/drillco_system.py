@@ -24,7 +24,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
         elasticity=dict(
             lames_first_parameter=2.233251e10, lames_second_parameter=2.419355e10
         ),
-        fracture=dict(damage_delta_0=0.005, damage_delta_1=1, damage_threshold=0.5),
+        fracture=dict(damage_delta_0=0.0095, damage_delta_1=1.0, damage_threshold=0.5),
         other=dict(
             mass_damping_coefficient=14000,
             penalty_number=3000e9,
@@ -40,6 +40,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
             pressure_factor=1.0,
             mass_ratio_coefficent=0.1,
         ),
+        joint=dict(),
     ),
     steel=dict(
         density=dict(density=7850.0),
@@ -47,6 +48,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
             lames_first_parameter=1.070506e11,
             lames_second_parameter=7.751938e10,
         ),
+        fracture=dict(damage_delta_0=0.8, damage_delta_1=1.0, damage_threshold=0.5),
         other=dict(
             mass_damping_coefficient=20000,
             penalty_number=3000e9,
@@ -69,6 +71,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
             lames_first_parameter=1.666667e11,
             lames_second_parameter=2.500000e11,
         ),
+        fracture=dict(damage_delta_0=0.8, damage_delta_1=1.0, damage_threshold=0.5),
         other=dict(
             mass_damping_coefficient=40000,
             penalty_number=3000e9,

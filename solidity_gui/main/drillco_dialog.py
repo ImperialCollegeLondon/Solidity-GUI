@@ -9,7 +9,7 @@ from .condition import condition_assignment_datastore, condition_datastore
 from .control import control_datastore
 from .drillco_system import create_drillco_system
 from .forms import Form, NestedForm, SimpleFormDialog
-from .forms.fields import FloatField, IntField
+from .forms.fields import FloatField, IntField, WiderFloatField
 from .forms.widgets import DoubleSpinBoxWidget
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
@@ -27,12 +27,6 @@ PISTON_MIN_WIDTH, PISTON_MAX_WIDTH = 0.013, 0.039
 PISTON_MIN_LENGTH, PISTON_MAX_LENGTH = 0.13, 0.39
 GROUND_MIN_WIDTH, GROUND_MAX_WIDTH = 0.125, 0.375
 GROUND_MIN_HEIGHT, GROUND_MAX_HEIGHT = 0.075, 0.225
-
-
-class WiderFloatField(FloatField):
-    """FloatField with widget providing more decimals."""
-
-    _default_widget = DoubleSpinBoxWidget(decimals=5)
 
 
 class EvenWiderFloatField(FloatField):
