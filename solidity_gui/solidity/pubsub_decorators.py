@@ -20,7 +20,7 @@ def _error_occurred(error_topic: str, error: BaseException) -> None:
 
 
 def pubsub_broadcast(
-    error_topic: str, success_topic: str, *kwarg_names: str
+    error_topic: str, success_topic: str, *return_value_names: str
 ) -> Callable:
     """Broadcast success or failure of function via pubsub.
 
@@ -30,7 +30,7 @@ def pubsub_broadcast(
     Args:
         error_topic: The topic name on which to broadcast errors
         success_topic: The topic name on which to broadcast function result(s)
-        kwarg_names: The names of each of the returned values
+        return_value_names: The names of each of the returned values
     """
 
     def wrapped(func: Callable, *args: Any, **kwargs: Any) -> None:
@@ -46,10 +46,10 @@ def pubsub_broadcast(
                 result = (result,)
 
             # Make sure we have the right number of return values
-            assert len(result) >= len(kwarg_names)
+            assert len(result) >= len(return_value_names)
 
             # Send message with arguments
-            msg_kwargs = {name: res for name, res in zip(kwarg_names, result)}
+            msg_kwargs = {name: res for name, res in zip(return_value_names, result)}
             pub.sendMessage(success_topic, **msg_kwargs)
 
     return decorator(wrapped)

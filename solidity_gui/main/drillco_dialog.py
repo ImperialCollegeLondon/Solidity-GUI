@@ -6,9 +6,11 @@ from marshmallow import ValidationError, validate
 from pubsub import pub
 
 from .condition import condition_assignment_datastore, condition_datastore
+from .control import control_datastore
 from .drillco_system import create_drillco_system
 from .forms import Form, NestedForm, SimpleFormDialog
-from .forms.fields import FloatField, WiderFloatField
+from .forms.fields import FloatField, IntField, WiderFloatField
+from .forms.widgets import DoubleSpinBoxWidget
 from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 from .initial_condition import (
@@ -25,6 +27,12 @@ PISTON_MIN_WIDTH, PISTON_MAX_WIDTH = 0.013, 0.039
 PISTON_MIN_LENGTH, PISTON_MAX_LENGTH = 0.13, 0.39
 GROUND_MIN_WIDTH, GROUND_MAX_WIDTH = 0.125, 0.375
 GROUND_MIN_HEIGHT, GROUND_MAX_HEIGHT = 0.075, 0.225
+
+
+class EvenWiderFloatField(FloatField):
+    """FloatField with widget providing even more decimals."""
+
+    _default_widget = DoubleSpinBoxWidget(decimals=15)
 
 
 class InsertForm(Form):
@@ -81,12 +89,28 @@ class GroundForm(Form):
     )
 
 
-class DrillCoForm(Form):
+class DrillCoGeometryForm(Form):
     """Form containing parameters for the DrillCo system geometry."""
 
     bit = NestedForm(BitForm)
     piston = NestedForm(PistonForm)
     ground = NestedForm(GroundForm)
+
+
+class DrillCoControlForm(Form):
+    """Form collecting simulation control parameters."""
+
+    num_timesteps = IntField(display_name="Number of Timesteps")
+    time_step_size = EvenWiderFloatField(
+        display_name="Size of Timestep", validators=[validate.Range(min=0, max=1)]
+    )
+
+
+class DrillCoForm(Form):
+    """Form collecting drillco system parameters."""
+
+    geometry = NestedForm(DrillCoGeometryForm)
+    control = NestedForm(DrillCoControlForm)
 
 
 def _create_mesh(
@@ -117,11 +141,17 @@ class DrillCoDialog(SimpleFormDialog):
         super().__init__(
             DrillCoForm,
             initial_data=dict(
-                piston=dict(length=0.26, width=0.0265),
-                bit=dict(
-                    length=0.265, width=0.03, inserts=dict(width=0.02, length=0.005)
+                geometry=dict(
+                    piston=dict(length=0.26, width=0.0265),
+                    bit=dict(
+                        length=0.265, width=0.03, inserts=dict(width=0.02, length=0.005)
+                    ),
+                    ground=dict(width=0.250, height=0.15),
                 ),
-                ground=dict(width=0.250, height=0.15),
+                control=dict(
+                    num_timesteps=2000000,
+                    time_step_size=2.45000000000e-09,
+                ),
             ),
             **kwargs,
         )
@@ -139,6 +169,7 @@ class DrillCoDialog(SimpleFormDialog):
             condition_assignments,
             initial_conditions,
             initial_condition_assignments,
+            simulation_control_parameters,
         ) = create_drillco_system(data, _create_mesh)
 
         for mesh_name, mesh in meshes.items():
@@ -155,4 +186,5 @@ class DrillCoDialog(SimpleFormDialog):
             initial_condition_datastore.add(initial_condition)
         for initial_condition_assignment in initial_condition_assignments:
             initial_condition_assignment_datastore.add(initial_condition_assignment)
+        control_datastore.update(simulation_control_parameters)
         self.close()
