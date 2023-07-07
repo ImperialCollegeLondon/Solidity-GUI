@@ -44,7 +44,7 @@ jobs:
             python-version: [ "3.10", "3.11" ]
           - platform: windows-trial
             os: windows-latest
-            python-version: "3.10"
+            python-version: [ "3.10" ]
 
     steps:
     - uses: actions/checkout@v3
