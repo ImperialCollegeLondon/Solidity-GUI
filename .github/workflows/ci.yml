@@ -28,8 +28,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, ubuntu-20.04, macos-latest ]
+        platform: [windows, linux, macos]
         python-version: [ "3.10", "3.11" ]
+        include:
+          - platform: windows
+            os: windows-latest
+          - platform: linux
+            os: ubuntu-20.04
+          - platform: macos
+            os: macos-latest
 
     steps:
     - uses: actions/checkout@v3
@@ -75,7 +82,7 @@ jobs:
       # if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10' && success()
       if: matrix.python-version == '3.10' && success()
       with:
-        name: Solidity-GUI-${{ matrix.os }}
+        name: Solidity-GUI-${{matrix.platform}}
         path: dist/*
 
     - name: Check for documentation errors with MkDocs
