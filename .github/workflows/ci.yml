@@ -71,7 +71,7 @@ jobs:
       if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10'
 
     - uses: actions/upload-artifact@v3
-      if: github.ref == 'refs/heads/main' && success()
+      if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10' && success()
       with:
         name: Solidity-GUI-${{ matrix.os }}
         path: dist/*
