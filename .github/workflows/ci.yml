@@ -33,19 +33,6 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-20.04, macos-latest]
         python-version: [ "3.10", "3.11" ]
-        # include:
-        #   - platform: windows
-        #     # os: windows-latest
-        #     python-version: [ "3.10", "3.11" ]
-        #   - platform: linux
-        #     # os: ubuntu-20.04
-        #     python-version: [ "3.10", "3.11" ]
-        #   - platform: macos
-        #     # os: macos-latest
-        #     python-version: [ "3.10", "3.11" ]
-        #   # - platform: windows-trial
-        #   #   os: windows-latest
-        #   #   python-version: [ "3.10" ]
 
     steps:
     - uses: actions/checkout@v3
@@ -85,16 +72,13 @@ jobs:
     - name: Setting trial expiry period to ${{env.TRIAL_EXPIRY_PERIOD}} days
       run: python set_trial_expiry.py ${{env.TRIAL_EXPIRY_PERIOD}}
       if: matrix.os == 'windows-latest'
-      # if: endsWith(matrix.platform, '-trial')
 
     - name: Build executable
       run: pyinstaller Solidity-GUI.spec
-      # if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10'
-      if: matrix.python-version == '3.10'
+      if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10'
 
     - uses: actions/upload-artifact@v3
-      # if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10' && success()
-      if: matrix.python-version == '3.10' && success()
+      if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10' && success()
       with:
         name: Solidity-GUI-${{matrix.os}}
         path: dist/*
