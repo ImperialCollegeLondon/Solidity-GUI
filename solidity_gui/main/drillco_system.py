@@ -40,6 +40,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
             pressure_factor=1.0,
             mass_ratio_coefficent=0.1,
         ),
+        joint=dict(),
     ),
     steel=dict(
         density=dict(density=7850.0),

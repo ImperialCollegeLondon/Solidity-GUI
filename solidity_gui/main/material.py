@@ -59,6 +59,10 @@ class OtherForm(Form):
     mass_ratio_coefficent = FloatField(display_name="Mass Ratio Coefficient")
 
 
+class JointForm(Form):
+    """Blank form relating to joint elements."""
+
+
 @dataclass
 class Property:
     """Definition of a Property.
@@ -137,6 +141,13 @@ def PROPERTIES() -> Properties_Dict_Type:
                 pressure_factor=1.0,
                 mass_ratio_coefficent=0.1,
             ),
+        ),
+        "joint": Property(
+            category="Joint",
+            name="Joint",
+            enabled=False,
+            attributes=JointForm,
+            default_data=dict(),
         ),
     }
 

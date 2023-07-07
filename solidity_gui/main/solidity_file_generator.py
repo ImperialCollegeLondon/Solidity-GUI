@@ -344,7 +344,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
     # add in additional copies of materials with joint elements
     extra_materials = 0
     for i, material in enumerate(materials.values()):
-        if not material.properties["fracture"].enabled:
+        if not material.properties["joint"].enabled:
             continue
         extra_materials += 1
         for property_label, property_ in material.properties.items():
