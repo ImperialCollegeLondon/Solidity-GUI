@@ -4,10 +4,9 @@ import logging
 from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow, QTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow
 
 from .. import config
-from .base_model_tree import BaseModelTree
 from .control_panel import ControlPanel
 from .geometry import Component
 from .menu_bar import MenuBar
@@ -34,12 +33,11 @@ class MainWindow(QMainWindow):
 
         menu_bar = MenuBar()
         self.setMenuBar(menu_bar)
-        self.create_main_frame()
+        self.setCentralWidget(self.create_main_frame())
+
         # create the toolbar containing the various visualisation buttons
         visualisation_toolbar = VisualisationToolbar()
         self.addToolBar(Qt.TopToolBarArea, visualisation_toolbar)
-
-        self.setCentralWidget(self.main_frame)
 
         logging.info("Creating main window")
 
@@ -52,41 +50,22 @@ class MainWindow(QMainWindow):
 
         logging.info("Main window closed")
 
-    def create_main_frame(self) -> None:
-        """Create the main frame of the window.
-
-        This contains the central frame, and the text box.
-        """
-        self.main_frame = QFrame()
-        main_layout = QVBoxLayout()
-
-        self.create_central_frame()
-
-        command_box = QTextEdit()
-        command_box.setPlaceholderText("Type command/scripts")
-        command_box.setMaximumHeight(config.COMMAND_BOX_MAXIMUM_HEIGHT)
-
-        main_layout.addWidget(self.central_frame)
-        main_layout.addWidget(command_box)
-
-        self.main_frame.setLayout(main_layout)
-
-    def create_central_frame(self) -> None:
-        """Create the central frame.
+    def create_main_frame(self) -> QFrame:
+        """Create the main frame.
 
         This is called and created inside the main frame.
 
         This contains the side control panel, and the VTK window.
         """
-        self.central_frame = QFrame()
+        main_frame = QFrame()
         central_layout = QHBoxLayout()
 
         central_layout.setSpacing(config.CENTRAL_LAYOUT_SPACING)
 
         self.vtk_window = VTKWindow()
         self.control_panel = ControlPanel()
-        self.model_tree = BaseModelTree(2)
-        central_layout.addLayout(self.model_tree)
         central_layout.addLayout(self.control_panel)
         central_layout.addWidget(self.vtk_window)
-        self.central_frame.setLayout(central_layout)
+        main_frame.setLayout(central_layout)
+
+        return main_frame
