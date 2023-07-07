@@ -2,6 +2,9 @@ name: Test
 
 on: [push]
 
+env:
+  TRIAL_EXPIRY_PERIOD: 60 # days
+
 jobs:
   qa:
     runs-on: ubuntu-latest
@@ -71,6 +74,10 @@ jobs:
     - name: Run tests (windows)
       # tests involving MainWindow and VTKWindow do not work on Windows CI runners
       run: pytest -k "not test_main_window and not test_vtk_window"
+      if: matrix.os == 'windows-latest'
+
+    - name: Setting trial expiry period to ${{env.TRIAL_EXPIRY_PERIOD}} days
+      run: python set_trial_expiry.py ${{env.TRIAL_EXPIRY_PERIOD}}
       if: matrix.os == 'windows-latest'
 
     - name: Build executable
