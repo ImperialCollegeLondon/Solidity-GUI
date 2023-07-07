@@ -10,6 +10,7 @@ from .. import config
 from .control_panel import ControlPanel
 from .geometry import Component
 from .menu_bar import MenuBar
+from .trial_expiry import quit_if_expired
 from .uncaught_exceptions import set_uncaught_exception_handler
 from .visualisation_toolbar import VisualisationToolbar
 from .vtk_window import VTKWindow
@@ -42,6 +43,13 @@ class MainWindow(QMainWindow):
         logging.info("Creating main window")
 
         pub.subscribe(_log_geometry_update, "geometry.update")
+
+    def show(self) -> None:
+        """Show the main window."""
+        super().show()
+
+        # For when running a trial version
+        quit_if_expired()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Send message when window is closed."""
