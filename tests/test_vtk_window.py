@@ -51,4 +51,4 @@ def test_vtk_window_render_mesh(vtk_window):
     # basic checks that mesh has converted to vtk unstructuredgrid properly
     ugrid = vtk_window.ugrids[mesh_name]
     assert ugrid.GetNumberOfPoints() == mesh.points.shape[0]
-    assert ugrid.GetNumberOfCells() == sum(block.data.shape[0] for block in mesh.cells)
+    assert ugrid.GetNumberOfCells() == mesh.cells_dict["tetra"].shape[0]
