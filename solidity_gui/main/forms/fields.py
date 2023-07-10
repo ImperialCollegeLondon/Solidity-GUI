@@ -17,7 +17,8 @@ however the Widget class may also be provided at initialisation time.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Type, TypeVar
+from collections.abc import Callable, Iterable
+from typing import Any, Generic, TypeVar
 
 from marshmallow import fields as marshmallow_fields
 from marshmallow import validate
@@ -39,17 +40,17 @@ DataType = TypeVar("DataType")
 class BaseField(ABC, Generic[DataType]):
     """Base class for all Fields."""
 
-    _marshmallow_field: Type[marshmallow_fields.Field]
+    _marshmallow_field: type[marshmallow_fields.Field]
     _default_widget: Widget
 
     def __init__(
         self,
         length: int,
-        display_name: Optional[str] = None,
-        description: Optional[str] = None,
+        display_name: str | None = None,
+        description: str | None = None,
         validators: Iterable[Callable] = [],
-        widget: Optional[Widget] = None,
-        field_validators: List[Callable] = [],
+        widget: Widget | None = None,
+        field_validators: list[Callable] = [],
     ):
         """Initialise a new instance.
 
@@ -68,7 +69,7 @@ class BaseField(ABC, Generic[DataType]):
         self.length = length
         self.field_validators = field_validators
 
-    def input(self, data: Optional[DataType] = None) -> QWidget:
+    def input(self, data: DataType | None = None) -> QWidget:
         """Generates the GUI widget for display to the user.
 
         Args:
@@ -79,8 +80,8 @@ class BaseField(ABC, Generic[DataType]):
     def field_info(
         self,
         name: str,
-        data: Optional[DataType | List[DataType]],
-        errors: Dict[int, List[str]] = {},
+        data: DataType | list[DataType] | None,
+        errors: dict[int, list[str]] = {},
     ) -> FieldInfo:
         """Return a FieldInfo object for this Field.
 
@@ -117,7 +118,7 @@ class BaseField(ABC, Generic[DataType]):
         pass
 
     @abstractmethod
-    def process(self, inputs: List[QWidget]) -> Any:
+    def process(self, inputs: list[QWidget]) -> Any:
         """Return data for the field.
 
         Args:
@@ -128,7 +129,7 @@ class BaseField(ABC, Generic[DataType]):
 class CompositeField(BaseField, Generic[DataType]):
     """Base class for all Fields that collect multiple values."""
 
-    def process(self, inputs: List[QWidget]) -> List[DataType]:
+    def process(self, inputs: list[QWidget]) -> list[DataType]:
         """Return data for the field.
 
         Args:
@@ -149,10 +150,10 @@ class SingleField(BaseField, Generic[DataType]):
 
     def __init__(
         self,
-        display_name: Optional[str] = None,
-        description: Optional[str] = None,
+        display_name: str | None = None,
+        description: str | None = None,
         validators: Iterable[Callable] = [],
-        widget: Optional[Widget] = None,
+        widget: Widget | None = None,
     ):
         """Initialise a new SingleField instance.
 
@@ -175,7 +176,7 @@ class SingleField(BaseField, Generic[DataType]):
         """Generates a corresponding Marshmallow Field for use in a Schema."""
         return self._marshmallow_field(validate=self.validators)
 
-    def process(self, inputs: List[QWidget]) -> DataType:
+    def process(self, inputs: list[QWidget]) -> DataType:
         """Return data for the field.
 
         Args:
@@ -227,11 +228,11 @@ class VectorField(CompositeField[Iterable[float]]):
     def __init__(
         self,
         length: int = 3,
-        display_name: Optional[str] = None,
-        description: Optional[str] = None,
+        display_name: str | None = None,
+        description: str | None = None,
         validators: Iterable[Callable] = [],
-        widget: Optional[Widget] = None,
-        vector_validators: List[Callable] = [],
+        widget: Widget | None = None,
+        vector_validators: list[Callable] = [],
     ):
         """Initialise a new VectorField instance."""
         super().__init__(
@@ -252,9 +253,9 @@ class BlankField(SingleField[bool]):
 
     def __init__(
         self,
-        display_name: Optional[str] = None,
-        description: Optional[str] = None,
-        widget: Optional[Widget] = None,
+        display_name: str | None = None,
+        description: str | None = None,
+        widget: Widget | None = None,
     ):
         """Initialise a new BlankField instance.
 

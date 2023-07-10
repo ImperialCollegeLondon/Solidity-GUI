@@ -1,6 +1,7 @@
 """Support for rendering Form objects as individual dialog boxes."""
 
-from typing import Any, Callable, Dict, Optional, Type
+from collections.abc import Callable
+from typing import Any
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -192,9 +193,9 @@ class SimpleFormDialog(QDialog):
 
     def __init__(
         self,
-        form_class: Type[Form],
+        form_class: type[Form],
         form_renderer: Callable[[FormInfo], QLayout] = default_form_renderer,
-        initial_data: Optional[Dict[str, Any]] = None,
+        initial_data: dict[str, Any] | None = None,
         **kwargs: Any,
     ):
         """Initialise a new SimpleFormDialog.
@@ -232,7 +233,7 @@ class SimpleFormDialog(QDialog):
         """Signal handler for clicking cancel button."""
         self.close()
 
-    def _ok_clicked(self) -> Optional[Dict[str, Any]]:
+    def _ok_clicked(self) -> dict[str, Any] | None:
         """Signal handler for clicking ok button.
 
         In case of form data passing validation, returns the data. In case of validation

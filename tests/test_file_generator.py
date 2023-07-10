@@ -14,5 +14,5 @@ def test_write_file():
         write_file(file_content, f.name)
 
     # Read the contents of the file and check that they match the expected value
-    with open(f.name, "r") as f:
+    with open(f.name) as f:
         assert f.read() == file_content
