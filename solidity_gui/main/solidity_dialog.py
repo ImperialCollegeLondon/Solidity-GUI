@@ -3,10 +3,10 @@ import html
 import logging
 import weakref
 from pathlib import Path
-from typing import Iterable
+from threading import Event, Thread
+from typing import Any, Iterable
 
 import qtawesome as qta
-from pubsub import pub
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QCloseEvent, QFont
 from PySide6.QtWidgets import (
@@ -18,7 +18,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
 )
-from python_on_whales.exceptions import DockerException
+from python_on_whales import Container, docker
+
+from ..solidity import _run_solidity, remove_container
 
 OutputStream = Iterable[tuple[str, bytes]]
 
@@ -39,28 +41,33 @@ def get_file_paths() -> list[str] | None:
 
 def run_solidity(parent: QWidget) -> None:
     """Run Solidity with the file paths selected by the user."""
-    global _solidity_dlg
     if file_paths := get_file_paths():
-        if not _solidity_dlg:
-            # Create dialog
-            _solidity_dlg = SolidityDialog(parent)
-
         # Update dialog and show
-        _solidity_dlg.update_dialog(
+        solidity_dlg = SolidityDialog(
+            parent,
             y3d_file_path=Path(file_paths[0]),
             layout_file_path=Path(file_paths[1]),
             pellet_file_path=Path(file_paths[2]),
             materials_file_path=Path(file_paths[3]),
         )
-        _solidity_dlg.exec_()
+        solidity_dlg.exec_()
 
 
 class SolidityDialog(QDialog):
     """A dialog for interacting with the Solidity backend and viewing the output."""
 
     log_updated = Signal(str, int)
+    solidity_pulled = Signal()
+    solidity_stopped = Signal()
 
-    def __init__(self, parent: QWidget | None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None,
+        y3d_file_path: Path,
+        layout_file_path: Path,
+        pellet_file_path: Path,
+        materials_file_path: Path,
+    ) -> None:
         """Create a new SolidityDialog.
 
         Args:
@@ -68,6 +75,11 @@ class SolidityDialog(QDialog):
         """
         super().__init__(parent)
         self.resize(350, 500)
+
+        self.y3d_file_path = y3d_file_path
+        self.layout_file_path = layout_file_path
+        self.pellet_file_path = pellet_file_path
+        self.materials_file_path = materials_file_path
 
         layout = QGridLayout()
         self._start_btn = QPushButton(qta.icon("ei.play"), "Start Solidity")
@@ -78,9 +90,9 @@ class SolidityDialog(QDialog):
         self._stop_btn.setEnabled(False)
         layout.addWidget(self._stop_btn, 0, 1, Qt.AlignmentFlag.AlignCenter)
 
-        cancel_btn = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
-        cancel_btn.rejected.connect(self.hide)
-        layout.addWidget(cancel_btn, 0, 2, Qt.AlignmentFlag.AlignCenter)
+        self._close_btn = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        self._close_btn.rejected.connect(self.close)
+        layout.addWidget(self._close_btn, 0, 2, Qt.AlignmentFlag.AlignCenter)
 
         self._log_text_edit = QPlainTextEdit()
         self._log_text_edit.setFont(QFont("monospace"))
@@ -89,37 +101,25 @@ class SolidityDialog(QDialog):
 
         self.setLayout(layout)
 
-        pub.subscribe(self._on_docker_pulled, "docker.pulled")
-        pub.subscribe(self._on_docker_started, "docker.started")
-        pub.subscribe(self._on_docker_stopped, "docker.stopped")
-        pub.subscribe(self._on_docker_error, "docker.error")
-        pub.subscribe(self._log, "docker.output")
-
         self._logger = self._create_logger()
         self.log_updated.connect(self._update_log_text_edit)
+        self.solidity_pulled.connect(self._solidity_setup_finished)
+        self.solidity_stopped.connect(self._container_finish)
+        self.background_thread = BackgroundThread(self)
 
-    def update_dialog(
-        self,
-        y3d_file_path: Path,
-        layout_file_path: Path,
-        pellet_file_path: Path,
-        materials_file_path: Path,
-    ) -> None:
-        """Update parameters."""
-        self.y3d_file_path = y3d_file_path
-        self.layout_file_path = layout_file_path
-        self.pellet_file_path = pellet_file_path
-        self.materials_file_path = materials_file_path
+    def closeEvent(self, event: QCloseEvent) -> None:
+        if self.background_thread.is_alive():
+            event.ignore()
+            return
+        event.accept()
 
-    def closeEvent(self, evt: QCloseEvent) -> None:
-        """Hide the dialog if the user tries to close it."""
-        self.hide()
-        evt.ignore()
+    def _solidity_setup_finished(self) -> None:
+        self._stop_btn.setEnabled(True)
 
-    def hide(self) -> None:
-        """Hide the dialog."""
-        super().hide()
-        pub.sendMessage("docker.stop")
+    def _container_finish(self) -> None:
+        self._close_btn.setEnabled(True)
+        self._start_btn.setEnabled(True)
+        self._stop_btn.setEnabled(False)
 
     def _create_logger(self) -> logging.Logger:
         """Create a logger which outputs to stdout as well as a text box."""
@@ -141,42 +141,27 @@ class SolidityDialog(QDialog):
 
     def _start_solidity(self) -> None:
         self._start_btn.setEnabled(False)
+        self._stop_btn.setEnabled(False)
+        self._close_btn.setEnabled(False)
         self._log("Setting up Solidity (this may take some time)...")
-        pub.sendMessage("docker.pull")
+        self.stop_event = Event()
+        self.background_thread.start()
 
-    def _on_docker_pulled(self) -> None:
-        self._log("Starting Solidity...")
-        pub.sendMessage(
-            "docker.start",
-            y3d_file_path=self.y3d_file_path,
-            layout_file_path=self.layout_file_path,
-            pellet_file_path=self.pellet_file_path,
-            materials_file_path=self.materials_file_path,
+    def run_solidity(self) -> Container:
+        container = _run_solidity(
+            self.y3d_file_path,
+            self.layout_file_path,
+            self.pellet_file_path,
+            self.materials_file_path,
+            detach=True,
         )
-
-    def _on_docker_started(self) -> None:
-        self._stop_btn.setEnabled(True)
-        self._log("Solidity started\n==========")
+        assert isinstance(container, Container)
+        return container
 
     def _stop_solidity(self) -> None:
         self._stop_btn.setEnabled(False)
         self._log("==========\nStopping Solidity...")
-        pub.sendMessage("docker.stop")
-
-    def _on_docker_stopped(self, return_code: int) -> None:
-        self._start_btn.setEnabled(True)
-        self._stop_btn.setEnabled(False)
-        self._log(f"Solidity stopped (exit code: {return_code})")
-
-    def _on_docker_error(self, error: BaseException) -> None:
-        if isinstance(error, DockerException):
-            # Pretty printing for Docker errors
-            self._log(
-                f"Error occurred while running Docker command: {error.docker_command}",
-                level=logging.ERROR,
-            )
-        else:
-            self._log(f"Error occurred: {repr(error)}", level=logging.ERROR)
+        self.stop_event.set()
 
 
 class _DockerLogHandler(logging.Handler):
@@ -193,4 +178,53 @@ class _DockerLogHandler(logging.Handler):
             dlg.log_updated.emit(self.format(record), record.levelno)
 
 
-_solidity_dlg: SolidityDialog | None = None
+class BackgroundThread(Thread):
+    def __init__(self, dialog: SolidityDialog, **kwargs: Any):
+        self.dialog = dialog
+        super().__init__(**kwargs)
+
+    def run(self) -> None:
+        try:
+            container = self.dialog.run_solidity()
+        except Exception as e:
+            self.dialog._log(e.args[0], level=logging.ERROR)
+            return
+        self.dialog.solidity_pulled.emit()
+
+        self.dialog._log("==========\nStarting Solidity...")
+        from datetime import datetime
+        from time import sleep
+
+        log_timestamp = datetime.now()
+        try:
+            while True:
+                sleep(1)
+                next_timestamp = datetime.now()
+                logs = docker.container.logs(
+                    container, since=log_timestamp, until=next_timestamp
+                )
+                assert isinstance(logs, str)
+                log_timestamp = next_timestamp
+                if logs:
+                    self.dialog._log(logs)
+                if (
+                    self.dialog.stop_event.is_set()
+                    or container.state.status == "exited"
+                ):
+                    exit_code = container.state.exit_code
+                    break
+        finally:
+            remove_container(container)
+
+        if self.dialog.stop_event.is_set():
+            self.dialog._log("==========\nStopped Solidity...")
+        else:
+            if exit_code:
+                self.dialog._log(
+                    "==========\nSolidity encountered an error and stopped...",
+                    level=logging.ERROR,
+                )
+            else:
+                self.dialog._log("==========\nSolidity finished normally...")
+
+        self.dialog.solidity_stopped.emit()
