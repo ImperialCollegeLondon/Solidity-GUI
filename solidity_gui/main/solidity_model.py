@@ -4,8 +4,9 @@ It achieves this by using the docker image.
 """
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path, PurePosixPath
-from typing import Iterable, cast
+from typing import Any, Generator, Iterable, cast
 
 from python_on_whales import Container, Image, docker
 from python_on_whales.exceptions import NoSuchImage
@@ -68,13 +69,12 @@ def pull_image() -> Image:
     return cast(Image, docker.pull(SOLIDITY_DOCKER_IMAGE))
 
 
-def _run_solidity(
+def run_solidity(
     y3d_file_path: Path,
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
-    detach: bool,
-) -> Container | str | OutputStream:
+) -> Container:
     """Run Solidity using the specified input files, using docker.run().
 
     All the input files must be in the same directory as one another.
@@ -120,7 +120,7 @@ def _run_solidity(
     image = pull_image()
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
-    return docker.run(
+    container = docker.run(
         image,
         [
             "DEMPlus",
@@ -130,9 +130,11 @@ def _run_solidity(
             str(path_on_container / materials_file_path.name),
         ],
         volumes=[(input_files_path.absolute(), str(path_on_container))],
-        detach=detach,
+        detach=True,
         name=SOLIDITY_CONTAINER_NAME,
     )
+    assert isinstance(container, Container)
+    return container
 
 
 def remove_container(container: Container) -> None:
@@ -150,3 +152,33 @@ def remove_container(container: Container) -> None:
         container.remove()
     except Exception:
         pass
+
+
+# this class handles the workflow of creating, getting output from and then destroying
+# the container
+class SolidityContainerManager:
+    def __init__(self, file_paths: tuple[Path, Path, Path, Path]):
+        self.file_paths = file_paths
+        self.exit_code: int | None = None
+
+    def __enter__(self) -> "SolidityContainerManager":
+        pull_image()
+        self._start_time = datetime.now()
+        self._container = run_solidity(*self.file_paths)
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.exit_code = self._container.state.exit_code
+        remove_container(self._container)
+
+    def __iter__(self) -> Generator[str, None, None]:
+        while True:
+            self._end_time = datetime.now()
+            logs = docker.container.logs(
+                self._container, since=self._start_time, until=self._end_time
+            )
+            self._start_time = self._end_time
+            assert isinstance(logs, str)
+            yield logs
+            if self._container.state.status == "exited":
+                return

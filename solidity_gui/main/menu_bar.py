@@ -11,7 +11,7 @@ from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
 from .drillco_dialog import DrillCoDialog
 from .materials_manager_dialog import MaterialsManagerDialog
-from .solidity_dialog import run_solidity
+from .solidity_presenter import run_solidity_dialog
 from .solidity_file_generator import generate_y3d_file
 
 
@@ -60,7 +60,7 @@ class MenuBar(QMenuBar):
         pub.subscribe(self._enable_export_bst, "add_component.finish")
 
         run_solidity_action = QAction("&Run Solidity", self)
-        run_solidity_action.triggered.connect(partial(run_solidity, self))
+        run_solidity_action.triggered.connect(partial(run_solidity_dialog, self))
         job_menu.addAction(run_solidity_action)
 
     def _enable_export_bst(self, mesh_name: str, obj: Mesh) -> None:
