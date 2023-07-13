@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple, Type
 
+from marshmallow import validate
 from meshio import Mesh
 from pubsub import pub
 
@@ -23,8 +24,14 @@ class DensityForm(Form):
 class ElasticityForm(Form):
     """Form for collecting material properties related to elasticity."""
 
-    lames_first_parameter = FloatField(display_name="Lamé's First Parameter")
-    lames_second_parameter = FloatField(display_name="Lamé's Second Parameter")
+    lames_first_parameter = FloatField(
+        display_name="Lamé's First Parameter",
+        validators=[validate.Range(min=0, max=1e11)],
+    )
+    lames_second_parameter = FloatField(
+        display_name="Lamé's Second Parameter",
+        validators=[validate.Range(min=0, max=1e11)],
+    )
 
 
 class FractureForm(Form):
