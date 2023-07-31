@@ -195,7 +195,7 @@ pyproject-hooks==1.0.0
     # via build
 pypubsub==4.0.3
     # via SolidityGUI (pyproject.toml)
-pyside6==6.5.0
+pyside6==6.5.2
     # via SolidityGUI (pyproject.toml)
 pyside6-addons==6.5.0
     # via pyside6
