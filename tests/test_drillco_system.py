@@ -15,7 +15,7 @@ from solidity_gui.main.drillco_system import (
     MaterialAssignment,
     create_drillco_system,
 )
-from solidity_gui.main.geometry import Geometry, GeometryWrapper
+from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
 from solidity_gui.main.initial_condition import (
     InitialCondition,
     InitialConditionAssignment,
@@ -179,3 +179,34 @@ def test_solidity_input_integration():
         control_parameters,
         surface_nodes,
     )
+
+
+def test_drillbit_surface_nodes():
+    """Test there is no internal surface nodes in drillbit geometry."""
+    with Geometry() as geom:
+        wrapper = GeometryWrapper(geom)
+        insert_radius = 0.6
+        mesh = wrapper.add_component(
+            Component(
+                "drillbit",
+                "bit",
+                dict(
+                    x0=[0, 0, 0],
+                    axis=[2, 0, 0],
+                    radius=1,
+                    insert_radius=insert_radius,
+                    insert_length=2,
+                ),
+            ),
+            0.1,
+        )
+        surface_node_ids = wrapper.get_surface_nodes()
+        surface_nodes = mesh.points[surface_node_ids]
+
+        # get only the surface nodes in the plane at the top of the cylinder
+        top_surface_nodes = surface_nodes[np.isclose(surface_nodes[:, 0], 2)]
+        dists = np.linalg.norm(top_surface_nodes - np.array([2, 0, 0]), axis=1)
+
+        # put a little fudge factor on the insert_radius as meshing is a numerical
+        # process that can lead to small floating point discrepancies
+        assert (dists >= insert_radius - 0.01).all()
