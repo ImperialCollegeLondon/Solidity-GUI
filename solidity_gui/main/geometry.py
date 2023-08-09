@@ -398,7 +398,10 @@ class GeometryWrapper:
 
     def get_surface_nodes(self) -> np.ndarray:
         """Get the indices of the mesh nodes that are on the system surface."""
-        return (
-            np.sort(np.unique(gmsh.model.mesh.getNodes(2, -1, includeBoundary=True)[0]))
-            - 1
-        )
+        volume_dim_tags = gmsh.model.get_entities(dim=3)
+        surface_dim_tags = gmsh.model.get_boundary(volume_dim_tags, oriented=False)
+        nodes = [
+            gmsh.model.mesh.getNodes(*dim_tags, includeBoundary=True)[0]
+            for dim_tags in surface_dim_tags
+        ]
+        return np.sort(np.unique(np.concatenate(nodes))) - 1

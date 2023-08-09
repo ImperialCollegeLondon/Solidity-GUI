@@ -29,5 +29,6 @@ class MeshSizeDialog(SimpleFormDialog):
         """Process form and send 'mesh.create' signal via pubsub."""
         if data := super()._ok_clicked():
             logging.info(f"Creating mesh with resolution {data['size']}")
+            pub.sendMessage("geometry.finalise")
             pub.sendMessage("mesh.create", size=data["size"])
             self.close()
