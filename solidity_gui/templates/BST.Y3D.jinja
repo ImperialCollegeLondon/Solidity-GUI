@@ -54,8 +54,8 @@
 /YD/YDI/D1DELTAT1 0
 /YD/YDI/D1DELTAT2 0
 /YD/YDI/D1DELTAN 0
-/YD/YDI/D2NV 21 3 0 
-/YD/YDI/D2T1V 21 3 0 
+/YD/YDI/D2NV 21 3 0
+/YD/YDI/D2T1V 21 3 0
 /YD/YDI/D2T2V 21 3 0
      /*   Nodes     */
 /YD/YDN/MNODIM 4
@@ -124,7 +124,7 @@
 /YD/YDB/D1BNVX {{ num_conditions}}
 {% for condition in conditions -%}{{ condition.properties.velocity_x }} {% endfor %}
 /YD/YDB/D1BNVY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_y }} {% endfor %} 
+{% for condition in conditions -%}{{ condition.properties.velocity_y }} {% endfor %}
 /YD/YDB/D1BNVZ {{ num_conditions }}
 {% for condition in conditions -%}{{ condition.properties.velocity_z }} {% endfor %}
 /YD/YDB/I1BNVX {{ num_conditions }}

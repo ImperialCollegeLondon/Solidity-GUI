@@ -1,5 +1,5 @@
 """A dialog for creating a DrillCo system geometry."""
-from typing import Any, Dict
+from typing import Any
 
 import meshio
 from marshmallow import ValidationError, validate
@@ -57,7 +57,7 @@ class BitForm(Form):
     )
     inserts = NestedForm(InsertForm)
 
-    def validate(self, data: Dict[str, Any], **kwargs: Any) -> None:
+    def validate(self, data: dict[str, Any], **kwargs: Any) -> None:
         """Schema level validator."""
         if data["inserts"]["width"] > data["width"]:
             raise ValidationError("Insert cannot be wider than bit.")

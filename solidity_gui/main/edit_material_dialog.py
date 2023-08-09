@@ -1,7 +1,6 @@
 """Dialog for adding simple geometric shapes."""
 
 import logging
-from typing import Dict, Set
 
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
@@ -34,7 +33,7 @@ class PropertiesTree(QTreeView):
         self.base_model = QStandardItemModel()
         self.root_node = self.base_model.invisibleRootItem()
 
-        self.categories: Dict[str, QStandardItem] = {}
+        self.categories: dict[str, QStandardItem] = {}
         for property_name, property_settings in material.properties.items():
             if property_settings.enabled is enabled_properties:
                 property_node = QStandardItem(property_name)
@@ -121,7 +120,7 @@ class EditMaterialDialog(QDialog):
         # If the user presses the save button, then we can iterate over this set later
         # and send the toggle signal for the materials dict for each set element.
         # If the user cancels then we simply do nothing with this set.
-        self.toggled_properties: Set[str] = set()
+        self.toggled_properties: set[str] = set()
 
     def _add_clicked(self) -> None:
         self._toggle_property(
