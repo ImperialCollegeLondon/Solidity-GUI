@@ -1,7 +1,5 @@
 """Code to display a mesh within a VTK window."""
 import logging
-import os
-from tempfile import NamedTemporaryFile
 from typing import Any
 
 import numpy as np
@@ -13,6 +11,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 from vtk.util import numpy_support
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtkmodules.vtkCommonDataModel import VTK_TETRA
 from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 
@@ -117,22 +116,20 @@ class VTKWindow(QVTKRenderWindowInteractor):
         """
         logging.info("Rendering mesh")
 
-        # Create the temporary file, but don't leave the file handle open
-        with NamedTemporaryFile(suffix=".vtu", delete=False) as f:
-            filename = f.name
+        ugrid = vtk.vtkUnstructuredGrid()
 
-        try:
-            # Save the mesh to disk...
-            save_as_vtu(mesh, filename)
+        points = vtk.vtkPoints()
+        for p in mesh.points:
+            points.InsertNextPoint(p)
+        ugrid.SetPoints(points)
 
-            # ...and read it back in again
-            reader = vtk.vtkXMLUnstructuredGridReader()
-            reader.SetFileName(filename)
-            reader.Update()
-            ugrid = reader.GetOutput()
-        finally:
-            # Delete the file now that we've finished with it
-            os.unlink(filename)
+        cellArray = vtk.vtkCellArray()
+        for point_ids in mesh.cells_dict["tetra"]:
+            tetra = vtk.vtkTetra()
+            for i, point_id in enumerate(point_ids):
+                tetra.GetPointIds().SetId(i, point_id)
+            cellArray.InsertNextCell(tetra)
+        ugrid.SetCells(VTK_TETRA, cellArray)
 
         self.ugrids[mesh_name] = ugrid
         # Create the LUT for scalars to colors
