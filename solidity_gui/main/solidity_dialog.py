@@ -2,8 +2,8 @@
 import html
 import logging
 import weakref
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import qtawesome as qta
 from pubsub import pub

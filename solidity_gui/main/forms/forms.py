@@ -4,20 +4,9 @@ Form classes aim to provide a simple, declarative approach to defining GUI compo
 that gather structured data from the user.
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import Any, Union, cast
 
 from marshmallow import Schema
 from marshmallow import ValidationError as MarshmallowValidationError
@@ -37,9 +26,9 @@ class ValidationError(Exception):
 
     def __init__(
         self,
-        field_errors: Dict[str, Dict[int, List[str]]],
-        schema_errors: List[str],
-        form_data: Dict[str, Any],
+        field_errors: dict[str, dict[int, list[str]]],
+        schema_errors: list[str],
+        form_data: dict[str, Any],
     ):
         """Initialise a new ValidationError."""
         self.field_errors = field_errors
@@ -48,10 +37,10 @@ class ValidationError(Exception):
 
 
 # Define some custom recursive types to support nested forms
-FormFieldType = Dict[str, Union[BaseField, "FormFieldType"]]
+FormFieldType = dict[str, Union[BaseField, "FormFieldType"]]
 # Using Mapping instead of Dict below as MyPy was complaining about Dicts being
 # invariant, not totally sure why that came up here only
-FormErrorsType = Mapping[str, Union[Mapping[int, List[str]], "FormErrorsType"]]
+FormErrorsType = Mapping[str, Union[Mapping[int, list[str]], "FormErrorsType"]]
 
 
 class Form:
@@ -74,7 +63,7 @@ class Form:
 
     fields: FormFieldType
     _marshmallow_class: type
-    field_order: Optional[List[str]] = None
+    field_order: list[str] | None = None
 
     def __init_subclass__(cls) -> None:
         """Initialise subclasses with additional attributes.
@@ -85,7 +74,7 @@ class Form:
         construct a Marshmallow Schema class for data validation.
         """
         super().__init_subclass__()
-        marshmallow_attrs: Dict[str, marshmallow_fields.Field | Callable] = {}
+        marshmallow_attrs: dict[str, marshmallow_fields.Field | Callable] = {}
         cls.fields = {}
 
         # iter through __dict__ for bases using __mro__ in order to preserve
@@ -111,7 +100,7 @@ class Form:
             f"{cls.__name__}Schema", (Schema,), marshmallow_attrs
         )
 
-    def _iter_ordered_field_items(self) -> Iterable[Tuple[str, BaseField]]:
+    def _iter_ordered_field_items(self) -> Iterable[tuple[str, BaseField]]:
         """Iterate over fields respecting the value of self.field_order."""
         keys = self.field_order if self.field_order else []
         for key in self.fields.keys():
@@ -121,14 +110,14 @@ class Form:
 
     def form_info(
         self,
-        data: Dict[str, Any] = {},
+        data: dict[str, Any] = {},
         errors: FormErrorsType = {},
-        schema_errors: List[str] = [],
-        header: Optional[str] = None,
+        schema_errors: list[str] = [],
+        header: str | None = None,
         single_choice: bool = False,
     ) -> FormInfo:
         """Return a FormInfo object for this Form."""
-        fields: Dict[str, FieldInfo | FormInfo] = {}
+        fields: dict[str, FieldInfo | FormInfo] = {}
         for name, field in self._iter_ordered_field_items():
             # below casts differentiate between the expected datastructures
             # for fields and nested forms.
@@ -137,7 +126,7 @@ class Form:
                 fields[name] = field.form_class().form_info(
                     data.get(name, dict()),
                     errors=cast(FormErrorsType, nested_errors),
-                    schema_errors=cast(List[str], nested_errors.get("_schema", [])),
+                    schema_errors=cast(list[str], nested_errors.get("_schema", [])),
                     header=field.display_name if field.display_name else name,
                     single_choice=isinstance(field, SingleChoiceNestedForm),
                 )
@@ -145,7 +134,7 @@ class Form:
                 fields[name] = field.field_info(
                     name,
                     data.get(name, None),
-                    errors=cast(Dict[int, List[str]], errors.get(name, dict())),
+                    errors=cast(dict[int, list[str]], errors.get(name, dict())),
                 )
         return FormInfo(
             fields=fields,
@@ -154,7 +143,7 @@ class Form:
             single_choice=single_choice,
         )
 
-    def _extract_data(self, form_info: FormInfo) -> Dict[str, Any]:
+    def _extract_data(self, form_info: FormInfo) -> dict[str, Any]:
         """Extract form data from the provide FormInfo object.
 
         Args:
@@ -172,7 +161,7 @@ class Form:
                 data[name] = field.form_class()._extract_data(form_info.fields[name])
         return data
 
-    def process(self, form_info: FormInfo) -> Dict[str, Any]:
+    def process(self, form_info: FormInfo) -> dict[str, Any]:
         """Extract form data from the provided FormInfo object and validate it.
 
         Args:
@@ -184,9 +173,9 @@ class Form:
         except MarshmallowValidationError as e:
             # casts below are used to narrow expected return types as many=True is not
             # used by the underlying Marshmallow schema
-            errors = cast(Dict[str, List[str] | Dict[int, List[str]]], e.messages)
-            data = cast(Dict[str, Any], e.data)
-            schema_errors = cast(List[str], errors.pop("_schema", []))
+            errors = cast(dict[str, list[str] | dict[int, list[str]]], e.messages)
+            data = cast(dict[str, Any], e.data)
+            schema_errors = cast(list[str], errors.pop("_schema", []))
             field_errors = {}
             for key, value in errors.items():
                 if isinstance(value, list):
@@ -201,9 +190,7 @@ class Form:
 class NestedForm:
     """Special Field Class denoting a NestedForm."""
 
-    def __init__(
-        self, form_class: Type[Form], display_name: Optional[str] = None
-    ) -> None:
+    def __init__(self, form_class: type[Form], display_name: str | None = None) -> None:
         """Create a new NestedForm.
 
         Args:

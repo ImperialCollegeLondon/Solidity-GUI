@@ -1,6 +1,6 @@
 """Code to display a mesh within a VTK window."""
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 import vtk
@@ -90,8 +90,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.iren.SetInteractorStyle(self.inter_style)
         self.iren.Initialize()
         self.reset_camera()
-        self.ugrids: Dict[str, vtk.vtkUnstructuredGrid] = {}
-        self.actors: Dict[str, vtk.vtkActor] = {}
+        self.ugrids: dict[str, vtk.vtkUnstructuredGrid] = {}
+        self.actors: dict[str, vtk.vtkActor] = {}
         self._create_orientation_marker()
 
         pub.subscribe(self._colour_mesh_selection, "mesh.select")

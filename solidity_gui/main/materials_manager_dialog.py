@@ -1,7 +1,6 @@
 """Module for the MaterialsManagerDialog class."""
 import logging
 from copy import deepcopy
-from typing import Optional
 
 from pubsub import pub
 from PySide6.QtWidgets import (
@@ -117,7 +116,7 @@ class MaterialsManagerDialog(QDialog):
         self.materials_table.blockSignals(False)
         return value
 
-    def _get_selected_material_id(self) -> Optional[int]:
+    def _get_selected_material_id(self) -> int | None:
         if not self.materials_table.selectedIndexes():
             return None
         return int(

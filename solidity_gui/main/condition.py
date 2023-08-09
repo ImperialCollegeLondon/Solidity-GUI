@@ -1,6 +1,5 @@
 """Module defining Condition and ConditionAssignment datastructures."""
 from dataclasses import dataclass, field
-from typing import Dict, List, Type
 
 from meshio import Mesh
 from pubsub import pub
@@ -8,10 +7,10 @@ from pubsub import pub
 from .datastore import IndexDatastore
 from .meshes import mesh_datastore
 
-Attributes_Dict_Type = Dict[str, Type[float] | bool]
+Attributes_Dict_Type = dict[str, type[float] | bool]
 
 
-Properties_Dict_Type = Dict[str, float]
+Properties_Dict_Type = dict[str, float]
 
 
 def PROPERTIES() -> Properties_Dict_Type:
@@ -62,9 +61,9 @@ class ConditionAssignmentDatastore(IndexDatastore[ConditionAssignment]):
 
     def get_assignments_for_mesh(
         self, mesh: Mesh
-    ) -> Dict[str, List[ConditionAssignment]]:
+    ) -> dict[str, list[ConditionAssignment]]:
         """Returns all ConditionAssignments associated with a particular mesh."""
-        assignments: Dict[str, List[ConditionAssignment]] = dict()
+        assignments: dict[str, list[ConditionAssignment]] = dict()
         for assignment in self.values():
             if assignment.cell_set_name in mesh.cell_sets:
                 # should only ever be one cell type in a cell set

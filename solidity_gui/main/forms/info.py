@@ -5,7 +5,7 @@ render a form within the GUI and to pass data back to Form classes for processin
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union
+from typing import Union
 
 from PySide6.QtWidgets import QWidget
 
@@ -14,10 +14,10 @@ from PySide6.QtWidgets import QWidget
 class FieldInfo:
     """Required data to render a form field within the GUI."""
 
-    input: List[QWidget]
-    header: Optional[str] = None
-    errors: Dict[int, List[str]] = field(default_factory=dict)
-    description: Optional[str] = None
+    input: list[QWidget]
+    header: str | None = None
+    errors: dict[int, list[str]] = field(default_factory=dict)
+    description: str | None = None
     _enabled: bool = True
 
     @property
@@ -37,7 +37,7 @@ class FieldInfo:
 class FormInfo:
     """Required data to render a form within the GUI."""
 
-    fields: Dict[str, Union[FieldInfo, "FormInfo"]]
-    schema_errors: List[str] = field(default_factory=list)
-    header: Optional[str] = None
+    fields: dict[str, Union[FieldInfo, "FormInfo"]]
+    schema_errors: list[str] = field(default_factory=list)
+    header: str | None = None
     single_choice: bool = False

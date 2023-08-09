@@ -5,7 +5,6 @@ This module is only a temporary placeholder for demonstration purposes.
 
 from typing import Any
 
-from meshio import Mesh
 from pubsub import pub
 from PySide6.QtWidgets import QPushButton
 
@@ -26,11 +25,11 @@ class AddShapeButton(QPushButton):
         self.shape_name = shape_name
         self.clicked.connect(self._click_handler)
 
-        pub.subscribe(self._disable, "mesh.meshing.begin")
+        pub.subscribe(self._disable, "geometry.finalise")
 
     def _click_handler(self) -> None:
         """Create dialog on click."""
         AddShapeDialog(SHAPES[self.shape_name]).exec_()
 
-    def _disable(self, mesh: Mesh = None) -> None:
+    def _disable(self) -> None:
         self.setDisabled(True)

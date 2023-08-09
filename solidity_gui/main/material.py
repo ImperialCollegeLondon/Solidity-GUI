@@ -1,8 +1,8 @@
 """Module containing definitions for bundling material and properties data."""
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple, Type
 
+from marshmallow import validate
 from meshio import Mesh
 from pubsub import pub
 
@@ -11,7 +11,7 @@ from .forms import Form
 from .forms.fields import FloatField, WiderFloatField
 from .meshes import mesh_datastore
 
-Attributes_Dict_Type = Dict[str, Type[float] | bool]
+Attributes_Dict_Type = dict[str, type[float] | bool]
 
 
 class DensityForm(Form):
@@ -23,8 +23,14 @@ class DensityForm(Form):
 class ElasticityForm(Form):
     """Form for collecting material properties related to elasticity."""
 
-    lames_first_parameter = FloatField(display_name="Lamé's First Parameter")
-    lames_second_parameter = FloatField(display_name="Lamé's Second Parameter")
+    lames_first_parameter = FloatField(
+        display_name="Lamé's First Parameter",
+        validators=[validate.Range(min=0, max=1e11)],
+    )
+    lames_second_parameter = FloatField(
+        display_name="Lamé's Second Parameter",
+        validators=[validate.Range(min=0, max=1e11)],
+    )
 
 
 class FractureForm(Form):
@@ -82,9 +88,9 @@ class Property:
     name: str
     category: str
     enabled: bool
-    attributes: Type[Form]
-    data: Optional[Dict[str, object]] = None
-    default_data: Dict[str, object] = field(default_factory=dict)
+    attributes: type[Form]
+    data: dict[str, object] | None = None
+    default_data: dict[str, object] = field(default_factory=dict)
 
 
 Properties_Dict_Type = dict[str, Property]
@@ -166,7 +172,7 @@ class Material:
 
     @classmethod
     def from_properties_dict(
-        cls, name: str, properties_data: Dict[str, Dict[str, object]]
+        cls, name: str, properties_data: dict[str, dict[str, object]]
     ) -> "Material":
         """Construct a Material instance from a dictionary of property data."""
         material = cls(name=name)
@@ -188,7 +194,7 @@ class MaterialAssignment:
 class MaterialDatastore(IndexDatastore[Material]):
     """Convenience IndexDatastore subclass with concretised type."""
 
-    def get_by_name(self, name: str) -> Tuple[int, Material]:
+    def get_by_name(self, name: str) -> tuple[int, Material]:
         """Retrieve a material using its name.
 
         Args:
