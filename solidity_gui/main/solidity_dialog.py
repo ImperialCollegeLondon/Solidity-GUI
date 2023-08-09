@@ -8,7 +8,7 @@ from typing import Iterable
 import qtawesome as qta
 from pubsub import pub
 from PySide6.QtCore import Qt, Signal, Slot
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QCloseEvent, QFont
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -111,6 +111,11 @@ class SolidityDialog(QDialog):
         self.pellet_file_path = pellet_file_path
         self.materials_file_path = materials_file_path
 
+    def closeEvent(self, evt: QCloseEvent) -> None:
+        """Hide the dialog if the user tries to close it."""
+        self.hide()
+        evt.ignore()
+
     def hide(self) -> None:
         """Hide the dialog."""
         super().hide()
@@ -136,7 +141,7 @@ class SolidityDialog(QDialog):
 
     def _start_solidity(self) -> None:
         self._start_btn.setEnabled(False)
-        self._log("Downloading Solidity (this may take some time)...")
+        self._log("Setting up Solidity (this may take some time)...")
         pub.sendMessage("docker.pull")
 
     def _on_docker_pulled(self) -> None:

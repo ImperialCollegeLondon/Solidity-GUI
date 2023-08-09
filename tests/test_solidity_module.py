@@ -1,10 +1,10 @@
 """Tests for the Solidity module."""
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from solidity_gui.config import SOLIDITY_CONTAINER_NAME, SOLIDITY_DOCKER_IMAGE
+from solidity_gui.config import SOLIDITY_CONTAINER_NAME
 from solidity_gui.solidity import run_solidity_no_stream
 
 INPUT_DIR = Path(__file__).parent.absolute() / "solidity_input_files"
@@ -13,14 +13,18 @@ INPUT_FILES = [
 ]
 
 
+@patch("solidity_gui.solidity._pull_image_sync")
 @patch("solidity_gui.solidity.docker")
-def test_run_solidity_no_error(docker_mock: Mock) -> None:
+def test_run_solidity_no_error(docker_mock: Mock, pull_mock: Mock) -> None:
     """Test that run_solidity() passes the correct args to the docker wrapper."""
+    image = MagicMock()
+    pull_mock.return_value = image
     run_solidity_no_stream(*INPUT_FILES)
+    pull_mock.assert_called_once_with()
 
     RUN_DIR = "/home/software/solidity/run"
     docker_mock.run.assert_called_once_with(
-        SOLIDITY_DOCKER_IMAGE,
+        image,
         [
             "DEMPlus",
             f"{RUN_DIR}/BST.Y3D",

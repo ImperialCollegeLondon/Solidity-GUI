@@ -2,27 +2,79 @@
 
 It achieves this by using the docker image.
 """
-import atexit
 import logging
+import sys
 from pathlib import Path, PurePosixPath
 from threading import Thread, current_thread
 from typing import Iterable, cast
 
 from pubsub import pub
-from python_on_whales import Container, docker
-from python_on_whales.exceptions import DockerException, NoSuchContainer
+from python_on_whales import Container, Image, docker
+from python_on_whales.exceptions import DockerException, NoSuchContainer, NoSuchImage
 
-from ..config import SOLIDITY_CONTAINER_NAME, SOLIDITY_DOCKER_IMAGE
+import solidity_gui
+
+from ..config import (
+    DOCKER_IMAGE_ID,
+    DOCKER_IMAGE_ID_SHORT,
+    SOLIDITY_CONTAINER_NAME,
+    SOLIDITY_DOCKER_IMAGE,
+)
 from .pubsub_decorators import pubsub_broadcast
 
 OutputStream = Iterable[tuple[str, bytes]]
 
 
-def _pull_image_async(docker_image: str = SOLIDITY_DOCKER_IMAGE) -> None:
+def _get_exe_folder() -> Path:
+    """Get the folder of the currently executing program."""
+    # Check whether we're in a Pyinstaller-bundled executable
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys.executable).parent.absolute()
+
+    # Use the parent path of the solidity_gui module
+    return Path(solidity_gui.__path__[0]).parent.absolute()
+
+
+def _try_load_image() -> Image | None:
+    """Try to load the image from the local filesystem."""
+    exe_folder = _get_exe_folder()
+    image_path = exe_folder / f"solidity_image_{DOCKER_IMAGE_ID_SHORT}.tar.gz"
+    if not image_path.exists():
+        return None
+
+    logging.info(f"Loading docker image from {image_path}...")
+    docker.load(str(image_path))
+
+    try:
+        return docker.image.inspect(DOCKER_IMAGE_ID)
+    except NoSuchImage:
+        # This is an eminently unlikely outcome given that we embed the image ID in the
+        # filename, but let's be extra careful
+        logging.warn("Image ID for local file is wrong; ignoring")
+        return None
+
+
+def _pull_image_sync() -> Image:
+    """Pull the Docker image or load from local archive, if available."""
+    # Check if the image is already available in Docker
+    try:
+        return docker.image.inspect(DOCKER_IMAGE_ID)
+    except NoSuchImage:
+        pass
+
+    # Try to import from local filesystem
+    if image := _try_load_image():
+        return image
+
+    # Fall back on doing a docker pull
+    logging.info("Downloading Docker image")
+    return cast(Image, docker.pull(SOLIDITY_DOCKER_IMAGE))
+
+
+def _pull_image_async() -> None:
     """Pull the Docker image in the background and send a message when done."""
     Thread(
-        target=pubsub_broadcast("docker.error", "docker.pulled")(docker.pull),
-        args=(docker_image,),
+        target=pubsub_broadcast("docker.error", "docker.pulled")(_pull_image_sync)
     ).start()
 
 
@@ -31,7 +83,6 @@ def _run_solidity(
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
-    docker_image: str,
     stream: bool,
 ) -> Container | str | OutputStream:
     """Run Solidity using the specified input files, using docker.run().
@@ -44,7 +95,6 @@ def _run_solidity(
                           (layout.txt)
         pellet_file_path: Path to file with elements and particles (pellet.txt)
         materials_file_path: Path to materials file (mat.txt)
-        docker_image: URL and tag/SHA of docker image
         stream: Whether to stream stdout and stderr as an iterator
 
     Returns:
@@ -61,12 +111,10 @@ def _run_solidity(
     _return_code = 0
 
     # Remove the Solidity container if it already exists
-    _remove_container_sync()
+    remove_container_sync()
 
     # Reset flag
     _quitting = False
-
-    logging.info("Starting Solidity")
 
     input_files_path = y3d_file_path.parent
     if not all(
@@ -87,11 +135,14 @@ def _run_solidity(
         f"{pellet_file_path.name}, {materials_file_path.name})"
     )
 
-    logging.info(f"Running Docker image: {docker_image}")
+    logging.info(f"Running Docker image: {DOCKER_IMAGE_ID_SHORT}")
+
+    # Get the Docker image
+    image = _pull_image_sync()
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
     return docker.run(
-        docker_image,
+        image,
         [
             "DEMPlus",
             str(path_on_container / y3d_file_path.name),
@@ -141,7 +192,6 @@ def run_solidity_no_stream(
             layout_file_path,
             pellet_file_path,
             materials_file_path,
-            SOLIDITY_DOCKER_IMAGE,
             stream=False,
         ),
     )
@@ -210,7 +260,6 @@ def run_solidity_stream_sync(
             layout_file_path,
             pellet_file_path,
             materials_file_path,
-            SOLIDITY_DOCKER_IMAGE,
             stream=True,
         ),
     )
@@ -241,7 +290,7 @@ def run_solidity_stream_async(
     ).start()
 
 
-def _remove_container_sync() -> int:
+def remove_container_sync() -> int:
     """Remove the Solidity container.
 
     If the container does not exist, nothing will happen.
@@ -278,7 +327,7 @@ def _remove_container_async() -> None:
     """Remove the Solidity container on a background thread and signal when done."""
     Thread(
         target=pubsub_broadcast("docker.error", "docker.stopped", "return_code")(
-            _remove_container_sync
+            remove_container_sync
         )
     ).start()
 
@@ -286,7 +335,7 @@ def _remove_container_async() -> None:
 def _quiet_quit() -> None:
     """Quit without catching errors."""
     pub.sendMessage("docker.stopped", return_code=_return_code)
-    _remove_container_sync()
+    remove_container_sync()
 
 
 def _on_docker_error(error: BaseException) -> None:
@@ -315,6 +364,3 @@ pub.subscribe(_remove_container_async, "docker.stop")
 
 # Stop container if an error occurs
 pub.subscribe(_on_docker_error, "docker.error")
-
-# Make sure container is always removed on program exit
-atexit.register(_remove_container_sync)

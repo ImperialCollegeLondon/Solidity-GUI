@@ -24,7 +24,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
         elasticity=dict(
             lames_first_parameter=2.233251e10, lames_second_parameter=2.419355e10
         ),
-        fracture=dict(damage_delta_0=0.005, damage_delta_1=1, damage_threshold=0.5),
+        fracture=dict(damage_delta_0=0.0095, damage_delta_1=1.0, damage_threshold=0.5),
         other=dict(
             mass_damping_coefficient=14000,
             penalty_number=3000e9,
@@ -40,6 +40,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
             pressure_factor=1.0,
             mass_ratio_coefficent=0.1,
         ),
+        joint=dict(),
     ),
     steel=dict(
         density=dict(density=7850.0),
@@ -47,6 +48,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
             lames_first_parameter=1.070506e11,
             lames_second_parameter=7.751938e10,
         ),
+        fracture=dict(damage_delta_0=0.8, damage_delta_1=1.0, damage_threshold=0.5),
         other=dict(
             mass_damping_coefficient=20000,
             penalty_number=3000e9,
@@ -69,6 +71,7 @@ DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
             lames_first_parameter=1.666667e11,
             lames_second_parameter=2.500000e11,
         ),
+        fracture=dict(damage_delta_0=0.8, damage_delta_1=1.0, damage_threshold=0.5),
         other=dict(
             mass_damping_coefficient=40000,
             penalty_number=3000e9,
@@ -132,6 +135,12 @@ DRILLCO_CONDITION_ASSIGNMENTS = (
 )
 
 DRILLCO_INITIAL_CONDITION_CELL_SETS = ("piston_volume_0",)
+
+DRILLCO_CONTROL_PARAMETERS: Dict[str, object] = dict(
+    gravity_x=9.8,
+    gravity_y=0.0,
+    gravity_z=0.0,
+)
 
 
 def _create_and_assign_materials() -> (
@@ -243,6 +252,12 @@ def _create_drillco_geometry(
     return meshes
 
 
+def _create_simulation_control_parameters(
+    parameters: Dict[str, object]
+) -> Dict[str, object]:
+    return DRILLCO_CONTROL_PARAMETERS | parameters
+
+
 def create_drillco_system(
     parameters: Dict[str, Any],
     mesh_generator: Callable[[str, Component, float], meshio.Mesh],
@@ -254,6 +269,7 @@ def create_drillco_system(
     List[ConditionAssignment],
     List[InitialCondition],
     List[InitialConditionAssignment],
+    Dict[str, object],
 ]:
     """Populate the provided datastores with a Drillco system setup.
 
@@ -261,13 +277,14 @@ def create_drillco_system(
       parameters: drillco system parameters,
       mesh_generator: function called to create meshes
     """
-    meshes = _create_drillco_geometry(parameters, mesh_generator)
+    meshes = _create_drillco_geometry(parameters["geometry"], mesh_generator)
     materials, material_assignments = _create_and_assign_materials()
     conditions, condition_assignments = _create_and_assign_conditions()
     (
         initial_conditions,
         initial_condition_assignments,
-    ) = _create_and_assign_initial_conditions(parameters)
+    ) = _create_and_assign_initial_conditions(parameters["geometry"])
+    control_parameters = _create_simulation_control_parameters(parameters["control"])
     return (
         meshes,
         materials,
@@ -276,4 +293,5 @@ def create_drillco_system(
         condition_assignments,
         initial_conditions,
         initial_condition_assignments,
+        control_parameters,
     )

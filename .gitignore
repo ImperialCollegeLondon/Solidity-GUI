@@ -1,3 +1,10 @@
+# Generated file
+setup_trial_expiry.py
+
+# Archives
+*.tar
+*.tar.gz
+
 # Visual Studio Code workspace settings
 .vscode/settings.json
 

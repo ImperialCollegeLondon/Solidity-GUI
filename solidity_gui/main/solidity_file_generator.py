@@ -17,6 +17,7 @@ from .condition import (
     condition_assignment_datastore,
     condition_datastore,
 )
+from .control import control_datastore
 from .gmsh_process import gmsh_process_datastore
 from .initial_condition import (
     InitialConditionAssignmentDatastore,
@@ -336,14 +337,14 @@ def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
         calculated_properties = property_lines.setdefault("_calculated", {})
         calculated_properties.setdefault("is_joint", []).append(13)
         calculated_properties.setdefault("is_fracture", []).append(
-            3 if material.properties["fracture"].enabled else 0
+            3 if material.properties["joint"].enabled else 0
         )
         calculated_properties.setdefault("material_index", []).append(i)
 
     # add in additional copies of materials with joint elements
     extra_materials = 0
     for i, material in enumerate(materials.values()):
-        if not material.properties["fracture"].enabled:
+        if not material.properties["joint"].enabled:
             continue
         extra_materials += 1
         for property_label, property_ in material.properties.items():
@@ -430,10 +431,11 @@ def get_template_data(
     condition_assignments: ConditionAssignmentDatastore,
     initial_conditions: InitialConditionDatastore,
     initial_condition_assignments: InitialConditionAssignmentDatastore,
+    control_parameters: Mapping[str, object],
     surface_nodes: Mapping[str, np.ndarray],
 ) -> Dict[str, object]:
     """Get the data needed to render the input file template."""
-    data: Dict[str, object] = {"num_timesteps": 2000000}
+    data: Dict[str, object] = {}
     element_data = generate_elements_data(
         meshes, materials, material_assignments, surface_nodes
     )
@@ -463,6 +465,7 @@ def get_template_data(
         ((element_data["num_tetra"] * 4) - num_triangles) // 2
     ) + num_triangles
     data.update(dict(num_joint_elements=num_joint_elements))
+    data.update(control_parameters)
     return data
 
 
@@ -487,6 +490,7 @@ def create_y3d_template() -> str:
         condition_assignment_datastore,
         initial_condition_datastore,
         initial_condition_assignment_datastore,
+        control_datastore,
         surface_nodes,
     )
     return template.render(data)
