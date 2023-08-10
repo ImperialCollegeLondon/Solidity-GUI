@@ -11,7 +11,8 @@ minimum and maximum values for a QSpinBox.
 """
 
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Iterable, Optional, Type, TypeVar
+from collections.abc import Callable, Iterable
+from typing import Generic, TypeVar
 
 from marshmallow import validate
 from PySide6.QtWidgets import QCheckBox, QDoubleSpinBox, QLineEdit, QSpinBox
@@ -47,7 +48,7 @@ WidgetType = TypeVar("WidgetType")
 class Widget(ABC, Generic[WidgetType, DataType]):
     """Abstract base class for Widgets."""
 
-    qt_input_class: Type[WidgetType]
+    qt_input_class: type[WidgetType]
     """QWidget class."""
 
     @staticmethod
@@ -58,7 +59,7 @@ class Widget(ABC, Generic[WidgetType, DataType]):
 
     @abstractmethod
     def create(
-        self, data: Optional[DataType], validators: Iterable[Callable]
+        self, data: DataType | None, validators: Iterable[Callable]
     ) -> WidgetType:
         """Return a WidgetType instance."""
         pass
@@ -74,7 +75,7 @@ class SpinBoxBase(Widget, Generic[SpinBoxType, DataType]):
     _default_max = 1000000000
 
     def create(
-        self, data: Optional[DataType], validators: Iterable[Callable]
+        self, data: DataType | None, validators: Iterable[Callable]
     ) -> SpinBoxType:
         """Return a SpinBoxType instance.
 
@@ -130,7 +131,7 @@ class DoubleSpinBoxWidget(SpinBoxBase[QDoubleSpinBox, float]):
         self.decimals = decimals
 
     def create(
-        self, data: Optional[float], validators: Iterable[Callable]
+        self, data: float | None, validators: Iterable[Callable]
     ) -> QDoubleSpinBox:
         """Return a QDoubleSpinBox instance.
 
@@ -153,7 +154,7 @@ class LineEditWidget(Widget[QLineEdit, str]):
 
     qt_input_class = QLineEdit
 
-    def create(self, data: Optional[str], validators: Iterable[Callable]) -> QLineEdit:
+    def create(self, data: str | None, validators: Iterable[Callable]) -> QLineEdit:
         """Return a QLineEdit instance.
 
         Args:
@@ -180,7 +181,7 @@ class CheckBoxWidget(Widget[QCheckBox, bool]):
 
     qt_input_class = QCheckBox
 
-    def create(self, data: Optional[bool], validators: Iterable[Callable]) -> QCheckBox:
+    def create(self, data: bool | None, validators: Iterable[Callable]) -> QCheckBox:
         """Return a QCheckBox instance.
 
         Args:
@@ -205,7 +206,7 @@ class CheckBoxWidget(Widget[QCheckBox, bool]):
 class TrueWidget(CheckBoxWidget):
     """Widget that always provides a value of True."""
 
-    def create(self, data: Optional[bool], validators: Iterable[Callable]) -> QCheckBox:
+    def create(self, data: bool | None, validators: Iterable[Callable]) -> QCheckBox:
         """Return a QCheckBox instance that is not visible.
 
         Args:

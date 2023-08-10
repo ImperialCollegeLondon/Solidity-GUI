@@ -20,14 +20,18 @@ class CreateMeshButton(QPushButton):
         super().__init__("Generate mesh", *args, **kwargs)
         self.clicked.connect(self._click_handler)
         self.setDisabled(True)
-        pub.subscribe(self._disable, "generate_mesh.start")
+        pub.subscribe(self._disable, "mesh.create")
         pub.subscribe(self._enable, "geometry.updated")
+        pub.subscribe(self._disable_no_args, "mesh.finalise")
+
+    def _disable_no_args(self) -> None:
+        self.setDisabled(True)
 
     def _click_handler(self) -> None:
         """Display a MeshSizeDialog to the user."""
         MeshSizeDialog().exec_()
 
-    def _disable(self, mesh: Mesh = None) -> None:
+    def _disable(self, size: float) -> None:
         self.setDisabled(True)
 
     def _enable(self, mesh_name: str, mesh: Mesh = None) -> None:

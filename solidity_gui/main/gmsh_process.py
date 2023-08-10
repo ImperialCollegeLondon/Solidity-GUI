@@ -3,7 +3,7 @@
 import logging
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from meshio import Mesh
 from pubsub import pub
@@ -18,7 +18,7 @@ class _FunctionCall:
     """Datastructure used internally to pass information between processes."""
 
     name: str
-    kwargs: Dict[str, Any]
+    kwargs: dict[str, Any]
     asynchronous: bool
 
 
@@ -46,7 +46,7 @@ class GmshListener(QThread):
         Returns:
             False if thread is being stopped, True if item was retrieved successfully
         """
-        item: Optional[Tuple[str, Mesh]] = self._queue.get()
+        item: tuple[str, Mesh] | None = self._queue.get()
         if not item:
             return False
 
