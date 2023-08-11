@@ -176,7 +176,7 @@ pydantic==1.10.9
     # via python-on-whales
 pydocstyle==6.3.0
     # via flake8-docstrings
-pyflakes==2.4.0
+pyflakes==3.1.0
     # via
     #   SolidityGUI (pyproject.toml)
     #   flake8
