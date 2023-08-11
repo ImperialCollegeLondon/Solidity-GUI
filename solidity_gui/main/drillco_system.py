@@ -1,5 +1,6 @@
 """Controller components for creating drillco systems."""
-from typing import Any, Callable, Dict, List, Tuple
+from collections.abc import Callable
+from typing import Any
 
 import meshio
 import numpy as np
@@ -18,7 +19,7 @@ SYSTEM_AXIS = np.array([1, 0, 0])
 GAP_VECTOR = SYSTEM_AXIS * GAP_LENGTH
 """Vector added to space out system components."""
 
-DRILLCO_MATERIALS: Dict[str, Dict[str, Dict[str, object]]] = dict(
+DRILLCO_MATERIALS: dict[str, dict[str, dict[str, object]]] = dict(
     granite=dict(
         density=dict(density=2626.0),
         elasticity=dict(
@@ -136,7 +137,7 @@ DRILLCO_CONDITION_ASSIGNMENTS = (
 
 DRILLCO_INITIAL_CONDITION_CELL_SETS = ("piston_volume_0",)
 
-DRILLCO_CONTROL_PARAMETERS: Dict[str, object] = dict(
+DRILLCO_CONTROL_PARAMETERS: dict[str, object] = dict(
     gravity_x=9.8,
     gravity_y=0.0,
     gravity_z=0.0,
@@ -144,7 +145,7 @@ DRILLCO_CONTROL_PARAMETERS: Dict[str, object] = dict(
 
 
 def _create_and_assign_materials() -> (
-    Tuple[Dict[str, Material], List[MaterialAssignment]]
+    tuple[dict[str, Material], list[MaterialAssignment]]
 ):
     materials = {
         name: Material.from_properties_dict(name, data)
@@ -161,7 +162,7 @@ def _create_and_assign_materials() -> (
 
 
 def _create_and_assign_conditions() -> (
-    Tuple[List[Condition], List[ConditionAssignment]]
+    tuple[list[Condition], list[ConditionAssignment]]
 ):
     conditions = [
         Condition(name=name, properties=properties)
@@ -175,8 +176,8 @@ def _create_and_assign_conditions() -> (
 
 
 def _create_and_assign_initial_conditions(
-    parameters: Dict[str, Any]
-) -> Tuple[List[InitialCondition], List[InitialConditionAssignment]]:
+    parameters: dict[str, Any]
+) -> tuple[list[InitialCondition], list[InitialConditionAssignment]]:
     piston_speed = parameters["piston"]["speed"]
     initial_conditions = []
     initial_condition_assignments = []
@@ -191,8 +192,8 @@ def _create_and_assign_initial_conditions(
 
 
 def _create_drillco_geometry(
-    data: Dict[str, Any], mesh_generator: Callable[[str, Component, float], meshio.Mesh]
-) -> Dict[str, meshio.Mesh]:
+    data: dict[str, Any], mesh_generator: Callable[[str, Component, float], meshio.Mesh]
+) -> dict[str, meshio.Mesh]:
     meshes = dict(
         ground=mesh_generator(
             "ground",
@@ -253,23 +254,23 @@ def _create_drillco_geometry(
 
 
 def _create_simulation_control_parameters(
-    parameters: Dict[str, object]
-) -> Dict[str, object]:
+    parameters: dict[str, object]
+) -> dict[str, object]:
     return DRILLCO_CONTROL_PARAMETERS | parameters
 
 
 def create_drillco_system(
-    parameters: Dict[str, Any],
+    parameters: dict[str, Any],
     mesh_generator: Callable[[str, Component, float], meshio.Mesh],
-) -> Tuple[
-    Dict[str, meshio.Mesh],
-    Dict[str, Material],
-    List[MaterialAssignment],
-    List[Condition],
-    List[ConditionAssignment],
-    List[InitialCondition],
-    List[InitialConditionAssignment],
-    Dict[str, object],
+) -> tuple[
+    dict[str, meshio.Mesh],
+    dict[str, Material],
+    list[MaterialAssignment],
+    list[Condition],
+    list[ConditionAssignment],
+    list[InitialCondition],
+    list[InitialConditionAssignment],
+    dict[str, object],
 ]:
     """Populate the provided datastores with a Drillco system setup.
 

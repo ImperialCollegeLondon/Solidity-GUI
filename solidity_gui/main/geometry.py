@@ -1,8 +1,9 @@
 """Creation and manipulation of system geometries."""
 
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Tuple, Type
+from typing import Any
 
 import gmsh
 import numpy as np
@@ -14,7 +15,7 @@ from pygmsh.common.dummy import Dummy
 from .forms import Form
 from .forms.fields import FloatField, IntField, VectorField
 
-Vector = Tuple[float, float, float]
+Vector = tuple[float, float, float]
 
 
 class Surface(pygmsh.common.surface.Surface):
@@ -57,10 +58,10 @@ class Geometry(pygmsh.occ.Geometry):
 
     def boolean_union(
         self,
-        entities: List[Dummy],
+        entities: list[Dummy],
         delete_first: bool = True,
         delete_other: bool = True,
-    ) -> List[Dummy]:
+    ) -> list[Dummy]:
         """Perform a boolean union of geometric entities.
 
         A thin wrapper around pygmsh.occ.Geometry that suppresses warnings.
@@ -77,7 +78,7 @@ class Geometry(pygmsh.occ.Geometry):
         d1: Dummy,
         delete_first: bool = True,
         delete_other: bool = True,
-    ) -> List[Dummy]:
+    ) -> list[Dummy]:
         """Perform a boolean union of geometric entities.
 
         A thin wrapper around pygmsh.occ.Geometry that suppresses warnings.
@@ -101,7 +102,7 @@ class Component:
 
     shape: str
     label: str
-    kwargs: Dict[str, float | List[float]]
+    kwargs: dict[str, float | list[float]]
 
 
 def add_dome(
@@ -220,7 +221,7 @@ class Shape:
 
     name: str
     method: Callable
-    form: Type[Form]
+    form: type[Form]
 
 
 greater_than_zero = validate.Range(min=0, min_inclusive=False)
@@ -247,7 +248,7 @@ class BallForm(Form):
     )
 
 
-def non_zero_magnitude(vector: List[float], **kwargs: Any) -> None:
+def non_zero_magnitude(vector: list[float], **kwargs: Any) -> None:
     """Validate vector data has a magnitude greater than zero.
 
     Args:
@@ -274,7 +275,7 @@ class ConeForm(Form):
         validators=[validate.Range(min=0, min_inclusive=True)],
     )
 
-    def validate(self, data: Dict[str, Any], **kwargs: Any) -> None:
+    def validate(self, data: dict[str, Any], **kwargs: Any) -> None:
         """Schema level validator."""
         if data["radius1"] >= data["radius0"]:
             raise ValidationError("Base radius must be larger than tip radius.")
@@ -397,7 +398,10 @@ class GeometryWrapper:
 
     def get_surface_nodes(self) -> np.ndarray:
         """Get the indices of the mesh nodes that are on the system surface."""
-        return (
-            np.sort(np.unique(gmsh.model.mesh.getNodes(2, -1, includeBoundary=True)[0]))
-            - 1
-        )
+        volume_dim_tags = gmsh.model.get_entities(dim=3)
+        surface_dim_tags = gmsh.model.get_boundary(volume_dim_tags, oriented=False)
+        nodes = [
+            gmsh.model.mesh.getNodes(*dim_tags, includeBoundary=True)[0]
+            for dim_tags in surface_dim_tags
+        ]
+        return np.sort(np.unique(np.concatenate(nodes))) - 1

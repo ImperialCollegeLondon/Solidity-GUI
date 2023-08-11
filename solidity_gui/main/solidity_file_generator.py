@@ -1,8 +1,9 @@
 """This module provides functionality to generate an input file for Solidity."""
 import logging
+from collections.abc import Mapping
 from itertools import combinations
 from pathlib import Path
-from typing import Any, Dict, Mapping
+from typing import Any
 
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
@@ -127,7 +128,7 @@ def generate_nodes_data(
     condition_assignments: ConditionAssignmentDatastore,
     initial_conditions: InitialConditionDatastore,
     initial_condition_assignments: InitialConditionAssignmentDatastore,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """Prepare data needed for template renderering."""
     num_nodes = sum(mesh.points.shape[0] for mesh in meshes.values())
     all_nodes = np.concatenate([mesh.points for mesh in meshes.values()], axis=0)
@@ -291,10 +292,8 @@ def generate_elements_data(
         boundary_tetra_layer[indices] = i + 1
         boundary_tetra = np.concatenate(
             (
-                (
-                    boundary_tetra,
-                    boundary_tetra_layer,
-                )
+                boundary_tetra,
+                boundary_tetra_layer,
             )
         )
 
@@ -318,9 +317,9 @@ def generate_elements_data(
     )
 
 
-def generate_material_data(materials: Mapping[int, Material]) -> Dict[str, Any]:
+def generate_material_data(materials: Mapping[int, Material]) -> dict[str, Any]:
     """Generates data for the material properties section of the input file."""
-    property_lines: Dict[str, Any] = {}
+    property_lines: dict[str, Any] = {}
     for i, material in enumerate(materials.values(), 1):
         for property_label, property_ in material.properties.items():
             property_line_dict = property_lines.setdefault(property_label, {})
@@ -382,7 +381,7 @@ def get_tetra_side_lengths(meshes: Mapping[str, Mesh]) -> np.ndarray:
     return lengths
 
 
-def generate_interactions_data(meshes: Mapping[str, Mesh]) -> Dict[str, Any]:
+def generate_interactions_data(meshes: Mapping[str, Mesh]) -> dict[str, Any]:
     """Generates the interactions section data for the Solidity input file."""
     tetra_side_lengths = get_tetra_side_lengths(meshes)
 
@@ -433,9 +432,9 @@ def get_template_data(
     initial_condition_assignments: InitialConditionAssignmentDatastore,
     control_parameters: Mapping[str, object],
     surface_nodes: Mapping[str, np.ndarray],
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """Get the data needed to render the input file template."""
-    data: Dict[str, object] = {}
+    data: dict[str, object] = {}
     element_data = generate_elements_data(
         meshes, materials, material_assignments, surface_nodes
     )
@@ -474,7 +473,7 @@ def create_y3d_template() -> str:
     template = env.get_template(config.SOLIDITY_Y3D_TEMPLATE_FILE)
     logging.info(f"Generating Y3D file from {template.filename}")
 
-    surface_nodes: Dict[str, np.ndarray] = dict()
+    surface_nodes: dict[str, np.ndarray] = dict()
     for mesh_name in mesh_datastore:
         gmsh_process = gmsh_process_datastore[mesh_name]
         mesh_surface_nodes = gmsh_process.call_function("get_surface_nodes")

@@ -4,9 +4,10 @@ It achieves this by using the docker image.
 """
 import logging
 import sys
+from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
 from threading import Thread, current_thread
-from typing import Iterable, cast
+from typing import cast
 
 from pubsub import pub
 from python_on_whales import Container, Image, docker

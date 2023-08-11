@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: "v4.4.0"
     hooks:
       - id: check-merge-conflict
       - id: debug-statements
@@ -10,11 +10,11 @@ repos:
       - id: isort
         additional_dependencies: [toml]
   - repo: https://github.com/psf/black
-    rev: "23.3.0"
+    rev: "23.7.0"
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: 6.1.0
     hooks:
       - id: flake8
         additional_dependencies: ["flake8-docstrings"]
@@ -24,8 +24,30 @@ repos:
       - id: markdownlint
         args: ["--disable", "MD013", "MD041", "--"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.4.0"
+    rev: "v1.4.1"
     hooks:
       - id: mypy
         exclude: "(tests/|.venv/)"
         additional_dependencies: ["types-decorator"]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.4.0"
+    hooks:
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.9.0
+    hooks:
+      - id: pyupgrade
+        args: ["--py310-plus"]
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: "v0.13"
+    hooks:
+      - id: validate-pyproject
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: "0.23.2"
+    hooks:
+      - id: check-github-workflows
