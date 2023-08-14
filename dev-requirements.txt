@@ -128,7 +128,7 @@ mkdocstrings==0.21.2
     #   mkdocstrings-python
 mkdocstrings-python==1.0.0
     # via SolidityGUI (pyproject.toml)
-mypy==1.3.0
+mypy==1.5.0
     # via SolidityGUI (pyproject.toml)
 mypy-extensions==1.0.0
     # via
