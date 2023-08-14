@@ -166,7 +166,7 @@ platformdirs==3.5.1
     #   SolidityGUI (pyproject.toml)
     #   black
     #   virtualenv
-pluggy==1.0.0
+pluggy==1.2.0
     # via pytest
 pre-commit==3.3.2
     # via SolidityGUI (pyproject.toml)
