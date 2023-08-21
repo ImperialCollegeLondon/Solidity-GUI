@@ -1,4 +1,5 @@
 """Code to create the toolbar containing the visualisation controls."""
+from collections.abc import Callable
 from functools import partial
 from typing import Any
 
@@ -9,10 +10,11 @@ from PySide6.QtWidgets import QMenuBar
 
 from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
-from .drillco_dialog import DrillCoDialog
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_y3d_file
+
+extra_menu_items: list[tuple[str, list[tuple[str, Callable]]]] = []
 
 
 class MenuBar(QMenuBar):
@@ -23,7 +25,7 @@ class MenuBar(QMenuBar):
         super().__init__(*args, **kwargs)
 
         file_menu = self.addMenu("&File")
-        geometry_menu = self.addMenu("&Geometry")
+        self.addMenu("&Geometry")
         self.materials_menu = self.addMenu("Materia&ls")
         self.conditions_menu = self.addMenu("&Conditions")
         job_menu = self.addMenu("&Job")
@@ -43,10 +45,6 @@ class MenuBar(QMenuBar):
         conditions_action.triggered.connect(assign_conditions)
         self.conditions_menu.addAction(conditions_action)
 
-        drill_action = QAction("Create &drill system", self)
-        drill_action.triggered.connect(lambda: DrillCoDialog().exec_())
-        geometry_menu.addAction(drill_action)
-
         self.export_bst_action = QAction("&Export BST", self)
         self.export_bst_action.setEnabled(False)
         self.export_bst_action.triggered.connect(generate_y3d_file)
@@ -59,9 +57,20 @@ class MenuBar(QMenuBar):
         # the first component is added
         pub.subscribe(self._enable_export_bst, "add_component.finish")
 
+        export_bst_action = QAction("&Export BST", self)
+        export_bst_action.triggered.connect(generate_y3d_file)
+        file_menu.addAction(export_bst_action)
+
         run_solidity_action = QAction("&Run Solidity", self)
         run_solidity_action.triggered.connect(partial(run_solidity, self))
         job_menu.addAction(run_solidity_action)
+
+        for menu_name, actions_info in extra_menu_items:
+            menu = self.addMenu(menu_name)
+            for action_name, callback in actions_info:
+                action = QAction(action_name, self)
+                action.triggered.connect(callback)
+                menu.addAction(action)
 
     def _enable_export_bst(self, mesh_name: str, obj: Mesh) -> None:
         self.export_bst_action.setEnabled(True)
