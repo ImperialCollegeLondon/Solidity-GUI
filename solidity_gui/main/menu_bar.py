@@ -57,10 +57,6 @@ class MenuBar(QMenuBar):
         # the first component is added
         pub.subscribe(self._enable_export_bst, "add_component.finish")
 
-        export_bst_action = QAction("&Export BST", self)
-        export_bst_action.triggered.connect(generate_y3d_file)
-        file_menu.addAction(export_bst_action)
-
         run_solidity_action = QAction("&Run Solidity", self)
         run_solidity_action.triggered.connect(partial(run_solidity, self))
         job_menu.addAction(run_solidity_action)
