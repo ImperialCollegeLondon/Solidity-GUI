@@ -75,6 +75,8 @@ class MaterialsManagerDialog(QDialog):
 
         self.materials_table.cellChanged.connect(self._material_renamed)
 
+        for key, material in material_datastore.items():
+            self._add_material(key, material)
         pub.subscribe(self._add_material, material_datastore.update_topic)
 
     def _create_click_handler(self) -> None:
@@ -103,16 +105,14 @@ class MaterialsManagerDialog(QDialog):
         logging.info(f"Material {old_name} renamed to {new_name}")
 
     def _add_material(self, key: int, value: Material) -> Material:
-        materials_count = len(material_datastore)
+        row_id = self.materials_table.rowCount()
         # we want to use the cellChanged signal for when a material is renamed but,
         # using insertRow emits that signal, so we can temporarily block signals whilst
         # we're doing this
         self.materials_table.blockSignals(True)
-        self.materials_table.insertRow(materials_count - 1)
-        self.materials_table.setItem(
-            materials_count - 1, 0, QTableWidgetItem(value.name)
-        )
-        self.materials_table.setItem(materials_count - 1, 1, QTableWidgetItem(str(key)))
+        self.materials_table.insertRow(row_id)
+        self.materials_table.setItem(row_id, 0, QTableWidgetItem(value.name))
+        self.materials_table.setItem(row_id, 1, QTableWidgetItem(str(key)))
         self.materials_table.blockSignals(False)
         return value
 
