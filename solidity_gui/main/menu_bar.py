@@ -38,22 +38,22 @@ class MenuBar(QMenuBar):
 
         file_menu = self.addMenu("&File")
         self.addMenu("&Geometry")
-        self.materials_menu = self.addMenu("Materia&ls")
-        self.conditions_menu = self.addMenu("&Conditions")
+        materials_menu = self.addMenu("Materia&ls")
+        conditions_menu = self.addMenu("&Conditions")
         job_menu = self.addMenu("&Job")
 
         self.materials_manager_dialog = MaterialsManagerDialog()
-        self.materials_menu.addAction(
+        materials_menu.addAction(
             self._create_action(
                 "Create and Edit &Materials", self.materials_manager_dialog.open
             )
         )
 
-        self.materials_menu.addAction(
+        materials_menu.addAction(
             "&Assign Properties", lambda: AssignPropertiesDialog().exec_()
         )
 
-        self.conditions_menu.addAction(
+        conditions_menu.addAction(
             self._create_action("&Assign Conditions", assign_conditions)
         )
 
