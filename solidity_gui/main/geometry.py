@@ -13,7 +13,7 @@ from meshio import Mesh
 from pygmsh.common.dummy import Dummy
 
 from .forms import Form
-from .forms.fields import FloatField, IntField, VectorField
+from .forms.fields import FloatField, VectorField
 
 Vector = tuple[float, float, float]
 
@@ -105,107 +105,6 @@ class Component:
     kwargs: dict[str, float | list[float]]
 
 
-def add_dome(
-    geom: pygmsh.occ.Geometry,
-    x0: Vector,
-    axis: Vector,
-    radius: float,
-    mesh_size: float = 0.2,
-) -> Dummy:
-    """Add curved dome shape to a geometry.
-
-    Args:
-      geom: the geometry to modify
-      x0: the centre of the circular base of the dome
-      axis: the central axis of the dome
-      radius: radius of the base of the dome
-      mesh_size: resolution of the mesh
-    """
-    x0_array = np.array(x0)
-    axis_array = np.array(axis)
-    p0 = geom.add_point(x0, mesh_size=mesh_size)
-
-    # generate an arbitrary unit vector perpendicular to axis
-    perp_vector = np.random.rand(3)
-    perp_vector -= (
-        perp_vector.dot(axis_array) * axis_array / np.linalg.norm(axis_array) ** 2
-    )
-    perp_vector /= np.linalg.norm(perp_vector)
-
-    xs = np.linspace(-radius, 0, 10)
-
-    def _curve(x: float) -> float:
-        """Simple quadratic function giving the shape of the curved surface."""
-        return -(x**2) + 1
-
-    curve_points = [
-        geom.add_point(x0_array + perp_vector * x + _curve(x / radius) * axis_array)
-        for x in xs
-    ]
-
-    lines = [
-        geom.add_line(p0, curve_points[0]),
-        geom.add_bspline(curve_points),
-        geom.add_line(curve_points[-1], p0),
-    ]
-    cv = geom.add_curve_loop(lines)
-    surface = geom.add_surface(cv)
-    _, dome_volume, _ = geom.revolve(surface, axis_array, x0_array, -2 * np.pi)
-
-    # remove unneeded parts of the geometry
-    geom.remove(surface, recursive=True)
-    for cp in curve_points:
-        geom.remove(cp)
-    return [dome_volume]
-
-
-def add_drill_bit(
-    geom: pygmsh.occ.Geometry,
-    x0: Vector,
-    axis: Vector,
-    radius: float,
-    insert_radius: float,
-    insert_length: float,
-    mesh_size: float = 0.2,
-) -> Dummy:
-    """Add a drill bit shape for drillco systems."""
-    insert_base = np.array(x0) + np.array(axis)
-    insert_axis = np.array(axis) / np.linalg.norm(axis) * insert_length
-    insert = add_dome(
-        geom,
-        x0=insert_base,
-        axis=insert_axis,
-        radius=insert_radius,
-    )
-    bit_base = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
-    bit_volumes = geom.boolean_fragments(bit_base, insert)
-    geom._SIZE_QUEUE.extend(
-        [(bit_volumes[0], mesh_size), (bit_volumes[1], insert_radius / 10)]
-    )
-    return bit_volumes
-
-
-def add_ground(
-    geom: Geometry,
-    x0: Vector,
-    axis: Vector,
-    radius: float,
-    contact_point: Vector,
-    contact_mesh_size: float,
-    mesh_size: float = 0.2,
-) -> Dummy:
-    """Add a geometry for the ground of a drillco system.
-
-    Comprises a simple box with an embedded point at the site of impact of the drill bit
-    used to set a smaller mesh size.
-    """
-    cylinder = geom.add_cylinder(x0=x0, axis=axis, radius=radius, mesh_size=mesh_size)
-    surface_id = geom.env.get_surface_loops(cylinder._id)[1][0][2]
-    point = geom.add_point(contact_point, mesh_size=contact_mesh_size)
-    geom.in_surface(point, Dummy(2, int(surface_id)))
-    return cylinder
-
-
 @dataclass
 class Shape:
     """Definition of a shape.
@@ -291,37 +190,6 @@ class CylinderForm(Form):
     radius = FloatField(validators=[greater_than_zero])
 
 
-class DomeForm(CylinderForm):
-    """Form defining data required for dome shape creation."""
-
-
-class DrillBitForm(Form):
-    """Form defining data for drill bit shape creation."""
-
-    insert_number = IntField(
-        display_name="Insert Number", validators=[validate.Range(min=1)]
-    )
-    x0 = VectorField(display_name="Center Coordinates")
-    axis = VectorField(
-        display_name="Axis Vector", vector_validators=[non_zero_magnitude]
-    )
-    face_height = FloatField(display_name="Face Height", validators=[greater_than_zero])
-    radius = FloatField(validators=[greater_than_zero])
-    insert_radius = FloatField(
-        display_name="Insert Radius", validators=[greater_than_zero]
-    )
-    insert_length = FloatField(
-        display_name="Insert Length", validators=[greater_than_zero]
-    )
-    insert_displacement = FloatField(
-        display_name="Insert Displacement", validators=[greater_than_zero]
-    )
-
-
-class GroundForm(Form):
-    """Placeholder form for the drillco ground component."""
-
-
 SHAPES = dict(
     box=Shape(name="box", method=pygmsh.occ.geometry.Geometry.add_box, form=BoxForm),
     ball=Shape(name="ball", method=pygmsh.occ.Geometry.add_ball, form=BallForm),
@@ -329,9 +197,6 @@ SHAPES = dict(
     cylinder=Shape(
         name="cylinder", method=pygmsh.occ.Geometry.add_cylinder, form=CylinderForm
     ),
-    dome=Shape(name="dome", method=add_dome, form=DomeForm),
-    drillbit=Shape(name="drillbit", method=add_drill_bit, form=DrillBitForm),
-    ground=Shape(name="ground", method=add_ground, form=GroundForm),
 )
 """Library of supported shapes."""
 
