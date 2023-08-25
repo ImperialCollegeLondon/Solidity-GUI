@@ -8,7 +8,6 @@ from typing import Any
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from meshio import Mesh
-from PySide6.QtWidgets import QMessageBox
 from typing_extensions import TypedDict
 
 from .. import config
@@ -19,6 +18,7 @@ from .condition import (
     condition_datastore,
 )
 from .control import control_datastore
+from .error_message import display_error_message
 from .gmsh_process import gmsh_process_datastore
 from .initial_condition import (
     InitialConditionAssignmentDatastore,
@@ -217,16 +217,6 @@ def check_unassigned_cells(cell_materials: np.ndarray, mesh: Mesh) -> None:
         ]
     ):
         raise SystemValidationError("One or more tetrahedra have unassigned materials!")
-
-
-def error_message(message: str) -> None:
-    """Displays an error message to the user."""
-    msg_box = QMessageBox()
-    msg_box.setIcon(QMessageBox.Critical)
-    msg_box.setText("Error")
-    msg_box.setInformativeText(message)
-    msg_box.setWindowTitle("Error")
-    msg_box.exec_()
 
 
 class ElementData(TypedDict):
@@ -501,4 +491,4 @@ def generate_y3d_file() -> None:
         file_content = create_y3d_template()
         write_file(file_content, config.SOLIDITY_Y3D_FILE_NAME)
     except SystemValidationError as e:
-        error_message(e.args[0])
+        display_error_message(e.args[0])

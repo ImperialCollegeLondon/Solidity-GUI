@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QMenu, QMenuBar
 
 from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
+from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_y3d_file
@@ -37,7 +38,7 @@ class MenuBar(QMenuBar):
         super().__init__(*args, **kwargs)
 
         file_menu = self.addMenu("&File")
-        self.addMenu("&Geometry")
+        geometry_menu = self.addMenu("&Geometry")
         self.materials_menu = self.addMenu("Materia&ls")
         self.conditions_menu = self.addMenu("&Conditions")
         job_menu = self.addMenu("&Job")
@@ -78,6 +79,10 @@ class MenuBar(QMenuBar):
             action = QAction(item.action_label, self)
             action.triggered.connect(item.callback)  # type: ignore[attr-defined]
             menu.addAction(action)
+
+        import_geometry_action = QAction("&Import Geometry from file", self)
+        import_geometry_action.triggered.connect(partial(load_geometry, self))
+        geometry_menu.addAction(import_geometry_action)
 
     def _enable_export_bst(self, mesh_name: str, obj: Mesh) -> None:
         self.export_bst_action.setEnabled(True)
