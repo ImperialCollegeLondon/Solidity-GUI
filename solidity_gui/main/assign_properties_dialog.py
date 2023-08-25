@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QPushButton,
     QTableWidget,
@@ -63,6 +64,10 @@ class AssignPropertiesDialog(QDialog):
             QAbstractItemView.SingleSelection
         )
 
+        self.material_assignment_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch
+        )
+
         layout.addWidget(self.material_assignment_table)
 
         for assignment in material_assignment_datastore.values():
@@ -88,12 +93,19 @@ class AssignPropertiesDialog(QDialog):
         layout.addLayout(button_layout)
 
     def _populate_combos(self) -> None:
+        self.select_component_combo.clear()
+
         self.select_component_combo.addItems(
             [
                 key
                 for mesh in mesh_datastore.values()
                 for key, value in mesh.cell_sets.items()
                 if value[2] is not None
+                and key
+                not in [
+                    assignment.cell_set_name
+                    for assignment in material_assignment_datastore.values()
+                ]
             ]
         )
         for key, material in material_datastore.items():
@@ -120,6 +132,8 @@ class AssignPropertiesDialog(QDialog):
             row, 1, QTableWidgetItem(assignment.material.name)
         )
 
+        self._populate_combos()
+
         logging.info(f"Assigned material {material.name} to {assignment.cell_set_name}")
 
     def _remove_clicked(self) -> None:
@@ -144,3 +158,5 @@ class AssignPropertiesDialog(QDialog):
                     )
 
                     break
+
+        self._populate_combos()
