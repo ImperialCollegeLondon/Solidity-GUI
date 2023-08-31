@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QMenuBar
 
 from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
+from .conditions_manager_dialog import ConditionsManagerDialog
 from .drillco_dialog import DrillCoDialog
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_dialog import run_solidity
@@ -38,6 +39,11 @@ class MenuBar(QMenuBar):
             lambda: AssignPropertiesDialog().exec_()
         )
         self.materials_menu.addAction(assign_properties_action)
+
+        self.conditions_manager_dialog = ConditionsManagerDialog()
+        conditions_manager_action = QAction("Create and Edit &Conditions", self)
+        conditions_manager_action.triggered.connect(self.conditions_manager_dialog.open)
+        self.conditions_menu.addAction(conditions_manager_action)
 
         conditions_action = QAction("&Assign Conditions", self)
         conditions_action.triggered.connect(assign_conditions)
