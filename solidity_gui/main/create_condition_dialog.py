@@ -4,7 +4,7 @@ import logging
 
 from solidity_gui.main.forms import SimpleFormDialog
 
-from .condition import Condition, ConditionForm
+from .condition import Condition, ConditionForm, condition_datastore
 
 
 class CreateConditionDialog(SimpleFormDialog):
@@ -20,6 +20,9 @@ class CreateConditionDialog(SimpleFormDialog):
         if data := super()._ok_clicked():
             condition = Condition(data["name"])
             condition.properties = data
+
+            condition_datastore.add(condition)
+
             self.close()
 
-            logging.info(f"Created {self.condition.name} ({repr(data)})")
+            logging.info(f"Created {condition.name} ({repr(data)})")

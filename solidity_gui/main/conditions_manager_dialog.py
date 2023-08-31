@@ -1,20 +1,22 @@
 """Module for the MaterialsManagerDialog class."""
-# import logging
-# from copy import deepcopy
+import logging
+from copy import deepcopy
 
-# from pubsub import pub
-from PySide6.QtWidgets import (  # QTableWidgetItem,
+from pubsub import pub
+from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QHBoxLayout,
     QHeaderView,
     QPushButton,
     QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
 )
 
-# from .material import Material, material_datastore
+from .condition import Condition, condition_datastore
 from .create_condition_dialog import CreateConditionDialog
+from .edit_condition_dialog import EditConditionDialog
 
 
 class ConditionsManagerDialog(QDialog):
@@ -71,83 +73,77 @@ class ConditionsManagerDialog(QDialog):
         self.copy_button.clicked.connect(self._copy_click_handler)
         self.delete_button.clicked.connect(self._delete_click_handler)
 
-        self.conditions_table.cellChanged.connect(self._material_renamed)
+        self.conditions_table.cellChanged.connect(self._condition_renamed)
 
-        # pub.subscribe(self._add_material, material_datastore.update_topic)
+        pub.subscribe(self._add_condition, condition_datastore.update_topic)
 
     def _create_click_handler(self) -> None:
         CreateConditionDialog().exec()
 
     def _edit_click_handler(self) -> None:
-        pass
-        # if self.conditions_table.selectedIndexes():
-        #     selected_condition = int(
-        #       self.conditions_table.item(self.conditions_table.currentRow(), 1).text()
-        #     )
-        #     EditMaterialDialog(material_datastore[selected_condition]).exec()
+        if self.conditions_table.selectedIndexes():
+            selected_condition = int(
+                self.conditions_table.item(self.conditions_table.currentRow(), 1).text()
+            )
+            EditConditionDialog(condition_datastore[selected_condition]).exec()
 
     def _rename_click_handler(self) -> None:
-        pass
-        # if self.conditions_table.selectedIndexes():
-        #     self.conditions_table.editItem(
-        #         self.conditions_table.item(self.conditions_table.currentRow(), 0)
-        #     )
+        if self.conditions_table.selectedIndexes():
+            self.conditions_table.editItem(
+                self.conditions_table.item(self.conditions_table.currentRow(), 0)
+            )
 
-    def _material_renamed(self, row: int, column: int) -> None:
-        pass
-        # material_id = int(self.conditions_table.item(row, 1).text())
-        # new_name = self.conditions_table.item(row, column).text()
+    def _condition_renamed(self, row: int, column: int) -> None:
+        condition_id = int(self.conditions_table.item(row, 1).text())
+        new_name = self.conditions_table.item(row, column).text()
 
-        # old_name = material_datastore[material_id].name
-        # material_datastore[material_id].name = new_name
+        old_name = condition_datastore[condition_id].name
+        condition_datastore[condition_id].name = new_name
 
-        # logging.info(f"Material {old_name} renamed to {new_name}")
+        logging.info(f"Condition {old_name} renamed to {new_name}")
 
-    # def _add_material(self, key: int, value: Material) -> Material:
-    #     materials_count = len(material_datastore)
-    #     # we want to use the cellChanged signal for when a material is renamed but,
-    #     using insertRow emits that signal, so we can temporarily block signals whilst
-    #     # we're doing this
-    #     self.conditions_table.blockSignals(True)
-    #     self.conditions_table.insertRow(materials_count - 1)
-    #     self.conditions_table.setItem(
-    #         materials_count - 1, 0, QTableWidgetItem(value.name)
-    #     )
-    #     self.conditions_table.setItem(
-    #         materials_count - 1, 1, QTableWidgetItem(str(key))
-    #     )
-    #     self.conditions_table.blockSignals(False)
-    #     return value
+    def _add_condition(self, key: int, value: Condition) -> None:
+        conditions_count = len(condition_datastore)
+        # we want to use the cellChanged signal for when a condition is renamed but,
+        # using insertRow emits that signal, so we can temporarily block signals whilst
+        # we're doing this
+        self.conditions_table.blockSignals(True)
+        self.conditions_table.insertRow(conditions_count - 1)
+        self.conditions_table.setItem(
+            conditions_count - 1, 0, QTableWidgetItem(value.name)
+        )
+        self.conditions_table.setItem(
+            conditions_count - 1, 1, QTableWidgetItem(str(key))
+        )
+        self.conditions_table.blockSignals(False)
 
-    # def _get_selected_material_id(self) -> int | None:
-    #     if not self.conditions_table.selectedIndexes():
-    #         return None
-    #     return int(
-    #         self.conditions_table.item(self.conditions_table.currentRow(), 1).text()
-    #     )
+    def _get_selected_condition_id(self) -> int | None:
+        if not self.conditions_table.selectedIndexes():
+            return None
+        return int(
+            self.conditions_table.item(self.conditions_table.currentRow(), 1).text()
+        )
 
     def _copy_click_handler(self) -> None:
-        pass
-        # if (selected_material_id := self._get_selected_material_id()) is None:
-        #     return
+        if (selected_condition_id := self._get_selected_condition_id()) is None:
+            return
 
-        # selected_material = material_datastore[selected_material_id]
-        # material = Material(
-        #     name=selected_material.name + "_copy",
-        #     properties=deepcopy(selected_material.properties),
-        # )
-        # material_datastore.add(material)
+        selected_condition = condition_datastore[selected_condition_id]
+        condition = Condition(
+            name=selected_condition.name + "_copy",
+            properties=deepcopy(selected_condition.properties),
+        )
+        condition_datastore.add(condition)
 
-        # logging.info(f"Created copy of material {selected_material.name}")
+        logging.info(f"Created copy of material {selected_condition.name}")
 
     def _delete_click_handler(self) -> None:
-        pass
-        # if (selected_material_id := self._get_selected_material_id()) is None:
-        #     return
+        if (selected_condition_id := self._get_selected_condition_id()) is None:
+            return
 
-        # logging.info(f"Deleting material {material_datastore[selected_material_id]}")
+        logging.info(f"Deleting condition {condition_datastore[selected_condition_id]}")
 
-        # del material_datastore[selected_material_id]
-        # row = self.conditions_table.currentIndex().row()
+        del condition_datastore[selected_condition_id]
+        row = self.conditions_table.currentIndex().row()
 
-        # self.conditions_table.removeRow(row)
+        self.conditions_table.removeRow(row)
