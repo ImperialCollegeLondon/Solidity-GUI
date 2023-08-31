@@ -50,14 +50,10 @@ class MenuBar(QMenuBar):
             )
         )
 
-        self.conditions_manager_dialog = ConditionsManagerDialog()
-        conditions_manager_action = QAction("Create and Edit &Conditions", self)
-        conditions_manager_action.triggered.connect(self.conditions_manager_dialog.open)
-        self.conditions_menu.addAction(conditions_manager_action)
+        conditions_menu.addAction(
+            "Create and Edit &Conditions", lambda: ConditionsManagerDialog().exec_()
+        )
 
-        conditions_action = QAction("&Assign Conditions", self)
-        conditions_action.triggered.connect(assign_conditions)
-        self.conditions_menu.addAction(conditions_action)
         materials_menu.addAction(
             "&Assign Properties", lambda: AssignPropertiesDialog().exec_()
         )
