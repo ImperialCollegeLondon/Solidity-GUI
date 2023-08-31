@@ -5,9 +5,27 @@ from meshio import Mesh
 from pubsub import pub
 
 from .datastore import IndexDatastore
+from .forms import Form
+from .forms.fields import FloatField, StrField
 from .meshes import mesh_datastore
 
-Attributes_Dict_Type = dict[str, type[float] | bool]
+
+class ConditionForm(Form):
+    """Form for collecting condition data."""
+
+    name = StrField(display_name="Name")
+    acceleration_x = FloatField(display_name="Acceleration X")
+    acceleration_y = FloatField(display_name="Acceleration Y")
+    acceleration_z = FloatField(display_name="Acceleration Z")
+    force_x = FloatField(display_name="Force X")
+    force_y = FloatField(display_name="Force Y")
+    force_z = FloatField(display_name="Force Z")
+    velocity_x = FloatField(display_name="Velocity X")
+    velocity_y = FloatField(display_name="Velocity Y")
+    velocity_z = FloatField(display_name="Velocity Z")
+    velocity_constraint_x = FloatField(display_name="Velocity Constraint X")
+    velocity_constraint_y = FloatField(display_name="Velocity Constraint Y")
+    velocity_constraint_z = FloatField(display_name="Velocity Constraint Z")
 
 
 Properties_Dict_Type = dict[str, float]

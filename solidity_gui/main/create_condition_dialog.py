@@ -2,72 +2,24 @@
 
 import logging
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QLineEdit,
-    QMessageBox,
-    QVBoxLayout,
-)
+from solidity_gui.main.forms import SimpleFormDialog
 
-from .edit_material_dialog import EditMaterialDialog
-from .material import Material, MaterialDatastore, material_datastore
+from .condition import Condition, ConditionForm
 
 
-class CreateMaterialDialog(QDialog):
-    """Dialog for creating a material."""
+class CreateConditionDialog(SimpleFormDialog):
+    """Dialog for creating a condition."""
 
-    def __init__(self, materials: MaterialDatastore) -> None:
+    def __init__(self) -> None:
         """Initialise a new dialog."""
-        super().__init__()
-        self.setWindowTitle("Create new material")
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        name_label = QLabel("Material name:")
-        self.name_input = QLineEdit()
-
-        layout.addWidget(name_label)
-        layout.addWidget(self.name_input)
-
-        self.materials = materials
-
-        # add ok and close buttons
-        self.button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        )
-
-        self.button_box.accepted.connect(self._ok_clicked)  # type: ignore[attr-defined]
-        self.button_box.rejected.connect(self.close)  # type: ignore[attr-defined]
-        layout.addWidget(self.button_box)
+        super().__init__(ConditionForm)
+        self.setWindowTitle("Create new condition")
 
     def _ok_clicked(self) -> None:
-        material_name = self.name_input.text()
+        """Signal handler for clicking ok button."""
+        if data := super()._ok_clicked():
+            condition = Condition(data["name"])
+            condition.properties = data
+            self.close()
 
-        # validate material name
-        if not material_name.isalnum():
-            QMessageBox.warning(
-                self, "Invalid input", "Input must contain only letters and numbers."
-            )
-            return
-
-        if not material_name:
-            QMessageBox.warning(self, "Invalid input", "Name cannot be empty.")
-            return
-
-        if material_name.strip().lower() in [
-            material.name.strip().lower() for material in self.materials.values()
-        ]:
-            QMessageBox.warning(self, "Invalid input", "Name already exists!")
-            return
-
-        material = Material(name=material_name)
-        material_datastore.add(material)
-        self.close()
-
-        logging.info(f'Added new material "{material_name}"')
-
-        # Open dialog to edit new material
-        EditMaterialDialog(material).exec()
+            logging.info(f"Created {self.condition.name} ({repr(data)})")
