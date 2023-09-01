@@ -5,7 +5,6 @@ from typing import Any
 from pubsub import pub
 from PySide6.QtWidgets import QPushButton, QVBoxLayout
 
-from .add_shape_button import AddShapeButton
 from .colour_select_widget import ColourSelectWidget
 from .create_mesh_button import CreateMeshButton
 
@@ -21,9 +20,4 @@ class ControlPanel(QVBoxLayout):
 
         self.addWidget(reset_button)
         self.addWidget(ColourSelectWidget())
-        self.addWidget(AddShapeButton("ball"))
-        self.addWidget(AddShapeButton("box"))
-        self.addWidget(AddShapeButton("cone"))
-        self.addWidget(AddShapeButton("cylinder"))
-        self.addWidget(AddShapeButton("dome"))
         self.addWidget(CreateMeshButton())
