@@ -57,6 +57,7 @@ class AssignPropertiesDialog(QDialog):
             ["Component", "Material"]
         )
         self.material_assignment_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.material_assignment_table.horizontalHeader().setHighlightSections(False)
         self.material_assignment_table.setSelectionBehavior(
             QAbstractItemView.SelectRows
         )
@@ -94,6 +95,7 @@ class AssignPropertiesDialog(QDialog):
 
     def _populate_combos(self) -> None:
         self.select_component_combo.clear()
+        self.select_material_combo.clear()
 
         self.select_component_combo.addItems(
             [
