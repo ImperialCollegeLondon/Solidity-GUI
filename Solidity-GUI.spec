@@ -2,6 +2,7 @@
 
 from gmsh import libpath as gmsh_lib
 import logging
+import os
 from pathlib import Path
 
 block_cipher = None
@@ -12,6 +13,9 @@ if trial_expiry_hook.exists():
     logging.warn("setup_trial_expiry.py found. Adding expiry date to program.")
     runtime_hooks.append(str(trial_expiry_hook))
 
+extra_hiddenimports = os.getenv("PLUGIN_IMPORT_PATHS", "")
+extra_hiddenimports = extra_hiddenimports.strip().split(",")
+extra_hiddenimports = [extra for extra in extra_hiddenimports if extra]
 
 a = Analysis(
     ["stub.py"],
@@ -27,7 +31,8 @@ a = Analysis(
         "vtkmodules.util",
         "vtkmodules.util.numpy_support",
         "vtkmodules.qt.QVTKRenderWindowInteractor",
-    ],
+    ]
+    + extra_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=runtime_hooks,
