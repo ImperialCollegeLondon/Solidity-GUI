@@ -17,6 +17,13 @@ extra_hiddenimports = os.getenv("PLUGIN_IMPORT_PATHS", "")
 extra_hiddenimports = extra_hiddenimports.strip().split(",")
 extra_hiddenimports = [extra for extra in extra_hiddenimports if extra]
 
+if extra_hiddenimports:
+    logging.warn(
+        "Adding hiddenimports from environment variable: {}".format(
+            "".join(extra_hiddenimports)
+        )
+    )
+
 a = Analysis(
     ["stub.py"],
     pathex=[],
