@@ -1,5 +1,7 @@
 """Infrastructure supporting loading geometry data from a file."""
 
+import logging
+
 from marshmallow.validate import Length
 from pubsub import pub
 from PySide6.QtWidgets import QFileDialog, QWidget
@@ -52,6 +54,7 @@ def load_geometry(parent: QWidget) -> None:
     gmsh_process.start()
     gmsh_process_datastore[geom_name] = gmsh_process
 
+    logging.info(f"Importing geometry from file: {filename}")
     mesh = gmsh_process.call_function(
         "import_geometry", geom_name=geom_name, filename=filename
     )

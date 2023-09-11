@@ -274,7 +274,6 @@ class GeometryWrapper:
     def import_geometry(self, geom_name: str, filename: str) -> Mesh:
         """Import a system geometry from an input file."""
         gmsh.open(filename)
-        logging.info(f"Importing geometry from file: {filename}")
         for dim, label in ((2, "surface"), (3, "volume")):
             i = 0
             for dimtag in self.geom.env.getEntities(dim=dim):
