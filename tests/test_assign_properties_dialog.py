@@ -1,10 +1,6 @@
 """Test the AssignPropertiesDialog class."""
 
-from types import SimpleNamespace
-from unittest.mock import MagicMock
-
-import pytest
-from PySide6.QtWidgets import QDialogButtonBox
+from meshio import Mesh
 
 from solidity_gui.main.assign_properties_dialog import AssignPropertiesDialog
 from solidity_gui.main.material import (
@@ -13,37 +9,28 @@ from solidity_gui.main.material import (
     material_assignment_datastore,
     material_datastore,
 )
+from solidity_gui.main.meshes import mesh_datastore
 
 
-@pytest.fixture
-def handler_mocks(monkeypatch):
-    """Fixture that mocks the signal handlers of the AssignPropertiesDialog class."""
-    save_mock = MagicMock()
-    monkeypatch.setattr(AssignPropertiesDialog, "_save_clicked", save_mock)
-    close_mock = MagicMock()
-    monkeypatch.setattr(AssignPropertiesDialog, "close", close_mock)
-    return SimpleNamespace(save=save_mock, close=close_mock)
-
-
-def test_assign_properties(qtbot, handler_mocks, subscribe_mock):
-    """Test AssignPropertiesDialog class."""
+def test_assign_populate_combos(qtbot):
+    """Test the _populate_combos method of the AssignPropertiesDialog class."""
     dialog = AssignPropertiesDialog()
-    dialog_layout = dialog.layout()
-    button_box = dialog_layout.itemAt(dialog_layout.count() - 1).widget()
-    assert isinstance(button_box, QDialogButtonBox)
 
-    # simplest way to check that signal handlers seems to be to replace handlers with a
-    # mock then trigger the signal and check the calls
-    handler_mocks.save.assert_not_called()
-    button_box.accepted.emit()
-    handler_mocks.save.assert_called()
+    material = Material(name="foo")
+    material_datastore.add(material)
 
-    handler_mocks.close.assert_not_called()
-    button_box.rejected.emit()
-    handler_mocks.close.assert_called()
+    cell_set_name = "cell_set_name"
+    mesh = Mesh(points=[], cells={"line": []}, cell_sets={cell_set_name: [[], [], []]})
+    mesh_name = "default"
+    mesh_datastore[mesh_name] = mesh
+
+    dialog._populate_combos()
+
+    assert dialog.select_component_combo.count() == 1
+    assert dialog.select_material_combo.count() == 1
 
 
-def test_assign_save_clicked(qtbot):
+def test_assign_add_clicked(qtbot):
     """Test the _save_clicked method of the AssignPropertiesDialog class."""
     dialog = AssignPropertiesDialog()
 
@@ -54,10 +41,29 @@ def test_assign_save_clicked(qtbot):
     dialog.select_component_combo.addItem(cell_set_name)
     dialog.select_material_combo.addItem("material_name", userData=material_id)
 
-    material_datastore.add(Material("Steel"))
-
-    dialog._save_clicked()
+    dialog._add_clicked()
 
     assert material_assignment_datastore == {
         0: MaterialAssignment(material=material, cell_set_name=cell_set_name)
     }
+
+
+def test_assign_remove_clicked(qtbot):
+    """Test the _remove_clicked method of the AssignPropertiesDialog class."""
+    dialog = AssignPropertiesDialog()
+
+    cell_set_name = "component"
+
+    material = Material(name="foo")
+    material_id = material_datastore.add(material)
+    dialog.select_component_combo.addItem(cell_set_name)
+    dialog.select_material_combo.addItem("material_name", userData=material_id)
+
+    material_assignment_datastore == {
+        0: MaterialAssignment(material=material, cell_set_name=cell_set_name)
+    }
+
+    dialog.material_assignment_table.selectRow(0)
+    dialog._remove_clicked()
+
+    assert material_assignment_datastore == {}
