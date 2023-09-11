@@ -270,3 +270,13 @@ class GeometryWrapper:
             for dim_tags in surface_dim_tags
         ]
         return np.sort(np.unique(np.concatenate(nodes))) - 1
+
+    def import_geometry(self, geom_name: str, filename: str) -> Mesh:
+        """Import a system geometry from an input file."""
+        gmsh.open(filename)
+        for dim, label in ((2, "surface"), (3, "volume")):
+            i = 0
+            for dimtag in self.geom.env.getEntities(dim=dim):
+                self.geom.add_physical(Dummy(*dimtag), f"{geom_name}_{label}_{i}")
+                i += 1
+        return self._generate_mesh()

@@ -217,6 +217,7 @@ class SimpleFormDialog(QDialog):
             "QLabel#description { color: gray } "
             "QLabel#header-0 { font-weight: bold }"
         )
+        self._data: None | dict[str, Any] = None
 
     def _create_contents(self, form_info: FormInfo) -> QLayout:
         """Create the contents of the dialog from a FormInfo instance."""
@@ -240,7 +241,8 @@ class SimpleFormDialog(QDialog):
         failure, updates dialog contents and returns None.
         """
         try:
-            return self.form_class().process(self.form_info)
+            self._data = self.form_class().process(self.form_info)
+            return self._data
         except ValidationError as e:
             self.form_info = self.form_class().form_info(
                 data=e.form_data, errors=e.field_errors, schema_errors=e.schema_errors
@@ -253,3 +255,14 @@ class SimpleFormDialog(QDialog):
             contents = self._create_contents(self.form_info)
             self.setLayout(contents)
             return None
+
+    def get_validated_data(self) -> dict[str, Any]:
+        """Validate and return the data currently entered into the form."""
+        if self._data is None:
+            raise ValueError("No data collected.")
+        return self._data
+
+    def run(self) -> dict[str, Any]:
+        """Display the dialog and return collected data."""
+        self.exec_()
+        return self.get_validated_data()

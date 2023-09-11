@@ -13,6 +13,7 @@ from .add_shape_dialogue import AddShapeDialog
 from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
 from .geometry import SHAPES
+from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_y3d_file
@@ -80,6 +81,10 @@ class MenuBar(QMenuBar):
         for item in extra_menu_items:
             menu = self._get_or_create_menu(item.menu_title)
             menu.addAction(self._create_action(item.action_label, item.callback))
+
+        import_geometry_action = QAction("&Import Geometry from file", self)
+        import_geometry_action.triggered.connect(partial(load_geometry, self))
+        geometry_menu.addAction(import_geometry_action)
 
     def _enable_export_bst(self, mesh_name: str, obj: Mesh) -> None:
         self.export_bst_action.setEnabled(True)
