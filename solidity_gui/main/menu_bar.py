@@ -9,8 +9,10 @@ from pubsub import pub
 from PySide6.QtGui import QAction, QGuiApplication
 from PySide6.QtWidgets import QMenu, QMenuBar
 
+from .add_shape_dialogue import AddShapeDialog
 from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
+from .geometry import SHAPES
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_dialog import run_solidity
@@ -39,46 +41,46 @@ class MenuBar(QMenuBar):
 
         file_menu = self.addMenu("&File")
         geometry_menu = self.addMenu("&Geometry")
-        self.materials_menu = self.addMenu("Materia&ls")
-        self.conditions_menu = self.addMenu("&Conditions")
+        materials_menu = self.addMenu("Materia&ls")
+        conditions_menu = self.addMenu("&Conditions")
         job_menu = self.addMenu("&Job")
 
+        geometry_menu.addAction(self._create_shape_action("ball"))
+        geometry_menu.addAction(self._create_shape_action("box"))
+        geometry_menu.addAction(self._create_shape_action("cone"))
+        geometry_menu.addAction(self._create_shape_action("cylinder"))
+
         self.materials_manager_dialog = MaterialsManagerDialog()
-        materials_manager_action = QAction("Create and Edit &Materials", self)
-        materials_manager_action.triggered.connect(self.materials_manager_dialog.open)
-        self.materials_menu.addAction(materials_manager_action)
-
-        assign_properties_action = QAction("&Assign Properties", self)
-        assign_properties_action.triggered.connect(
-            lambda: AssignPropertiesDialog().exec_()
+        materials_menu.addAction(
+            self._create_action(
+                "Create and Edit &Materials", self.materials_manager_dialog.open
+            )
         )
-        self.materials_menu.addAction(assign_properties_action)
 
-        conditions_action = QAction("&Assign Conditions", self)
-        conditions_action.triggered.connect(assign_conditions)
-        self.conditions_menu.addAction(conditions_action)
+        materials_menu.addAction(
+            "&Assign Properties", lambda: AssignPropertiesDialog().exec_()
+        )
 
-        self.export_bst_action = QAction("&Export BST", self)
+        conditions_menu.addAction(
+            self._create_action("&Assign Conditions", assign_conditions)
+        )
+
+        self.export_bst_action = self._create_action("&Export BST", generate_y3d_file)
         self.export_bst_action.setEnabled(False)
-        self.export_bst_action.triggered.connect(generate_y3d_file)
-        exit_action = QAction("E&xit", self)
-        exit_action.triggered.connect(QGuiApplication.quit)
         file_menu.addAction(self.export_bst_action)
-        file_menu.addAction(exit_action)
+        file_menu.addAction(self._create_action("E&xit", QGuiApplication.quit))
 
         # There's currently no way to remove meshes, so just enable the menu entry when
         # the first component is added
         pub.subscribe(self._enable_export_bst, "add_component.finish")
 
-        run_solidity_action = QAction("&Run Solidity", self)
-        run_solidity_action.triggered.connect(partial(run_solidity, self))
-        job_menu.addAction(run_solidity_action)
+        job_menu.addAction(
+            self._create_action("&Run Solidity", partial(run_solidity, self))
+        )
 
         for item in extra_menu_items:
             menu = self._get_or_create_menu(item.menu_title)
-            action = QAction(item.action_label, self)
-            action.triggered.connect(item.callback)  # type: ignore[attr-defined]
-            menu.addAction(action)
+            menu.addAction(self._create_action(item.action_label, item.callback))
 
         import_geometry_action = QAction("&Import Geometry from file", self)
         import_geometry_action.triggered.connect(partial(load_geometry, self))
@@ -92,3 +94,14 @@ class MenuBar(QMenuBar):
             if menu.title() == title:
                 return menu
         return self.addMenu(title)
+
+    def _create_action(self, label: str, callback: Callable) -> QAction:
+        action = QAction(label, self)
+        action.triggered.connect(callback)
+        return action
+
+    def _create_shape_action(self, label: str) -> QAction:
+        def callback() -> None:
+            AddShapeDialog(SHAPES[label]).exec_()
+
+        return self._create_action(f"Add {label.capitalize()}", callback)
