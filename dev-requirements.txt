@@ -178,7 +178,7 @@ platformdirs==3.10.0
     #   black
     #   mkdocs
     #   virtualenv
-pluggy==1.2.0
+pluggy==1.3.0
     # via pytest
 pre-commit==3.3.3
     # via SolidityGUI (pyproject.toml)
