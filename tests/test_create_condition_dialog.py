@@ -10,7 +10,6 @@ def test_ok_clicked():
 
     # Fill in form fields with test data
     data = dict(
-        name="Test Condition",
         acceleration_x=1.0,
         acceleration_y=2.0,
         acceleration_z=3.0,
@@ -33,7 +32,6 @@ def test_ok_clicked():
     assert len(condition_datastore) == 1
     condition = list(condition_datastore.values())[0]
     assert isinstance(condition, Condition)
-    assert condition.properties["name"] == "Test Condition"
     assert condition.properties["acceleration_x"] == 1.0
     assert condition.properties["acceleration_y"] == 2.0
     assert condition.properties["acceleration_z"] == 3.0
