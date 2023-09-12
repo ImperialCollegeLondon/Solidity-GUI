@@ -86,6 +86,9 @@ class ConditionsManagerDialog(QDialog):
                 self.conditions_table.item(self.conditions_table.currentRow(), 1).text()
             )
             EditConditionDialog(condition_datastore[selected_condition]).exec()
+            self.conditions_table.item(self.conditions_table.currentRow(), 0).setText(
+                condition_datastore[selected_condition].name
+            )
 
     def _rename_click_handler(self) -> None:
         if self.conditions_table.selectedIndexes():
@@ -94,11 +97,11 @@ class ConditionsManagerDialog(QDialog):
             )
 
     def _condition_renamed(self, row: int, column: int) -> None:
-        condition_id = int(self.conditions_table.item(row, 1).text())
+        selected_condition = int(self.conditions_table.item(row, 1).text())
         new_name = self.conditions_table.item(row, column).text()
 
-        old_name = condition_datastore[condition_id].name
-        condition_datastore[condition_id].name = new_name
+        old_name = condition_datastore[selected_condition].name
+        condition_datastore[selected_condition].name = new_name
 
         logging.info(f"Condition {old_name} renamed to {new_name}")
 
@@ -135,7 +138,7 @@ class ConditionsManagerDialog(QDialog):
         )
         condition_datastore.add(condition)
 
-        logging.info(f"Created copy of material {selected_condition.name}")
+        logging.info(f"Created copy of condition {selected_condition.name}")
 
     def _delete_click_handler(self) -> None:
         if (selected_condition_id := self._get_selected_condition_id()) is None:

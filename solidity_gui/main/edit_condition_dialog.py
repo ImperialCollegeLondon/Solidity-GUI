@@ -15,14 +15,19 @@ class EditConditionDialog(SimpleFormDialog):
         Args:
           condition: Condition to be edited
         """
-        super().__init__(ConditionForm, initial_data=condition.properties)
+        initial_data = condition.properties.copy()
+        initial_data["name"] = condition.name
+        super().__init__(ConditionForm, initial_data=initial_data)
         self.setWindowTitle(f"Edit {condition.name}")
         self.condition = condition
 
     def _ok_clicked(self) -> None:
         """Signal handler for clicking ok button."""
         if data := super()._ok_clicked():
-            self.condition.properties = data
+            self.condition.properties = {
+                key: value for key, value in data.items() if key != "name"
+            }
+            self.condition.name = data["name"]
             self.close()
 
-            logging.info(f"Updated {self.condition.name} ({repr(data)})")
+            logging.info(f"Updated condition {self.condition.name} ({data})")

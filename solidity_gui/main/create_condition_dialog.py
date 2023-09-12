@@ -18,11 +18,13 @@ class CreateConditionDialog(SimpleFormDialog):
     def _ok_clicked(self) -> None:
         """Signal handler for clicking ok button."""
         if data := super()._ok_clicked():
-            condition = Condition(data["name"])
-            condition.properties = data
+            condition = Condition(name=data["name"])
+            condition.properties = {
+                key: value for key, value in data.items() if key != "name"
+            }
 
             condition_datastore.add(condition)
 
             self.close()
 
-            logging.info(f"Created {condition.name} ({repr(data)})")
+            logging.info(f"Created condition {condition.name} ({data})")

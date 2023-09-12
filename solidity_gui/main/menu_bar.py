@@ -50,8 +50,9 @@ class MenuBar(QMenuBar):
             )
         )
 
+        self.conditions_manager_dialog = ConditionsManagerDialog()
         conditions_menu.addAction(
-            "Create and Edit &Conditions", lambda: ConditionsManagerDialog().exec_()
+            "Create and Edit &Conditions", self.conditions_manager_dialog.open
         )
 
         materials_menu.addAction(

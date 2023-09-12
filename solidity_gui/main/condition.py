@@ -28,7 +28,7 @@ class ConditionForm(Form):
     velocity_constraint_z = FloatField(display_name="Velocity Constraint Z")
 
 
-Properties_Dict_Type = dict[str, float]
+Properties_Dict_Type = dict[str, float | str]
 
 
 def PROPERTIES() -> Properties_Dict_Type:
