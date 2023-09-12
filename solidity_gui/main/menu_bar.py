@@ -9,9 +9,12 @@ from pubsub import pub
 from PySide6.QtGui import QAction, QGuiApplication
 from PySide6.QtWidgets import QMenu, QMenuBar
 
+from .add_shape_dialogue import AddShapeDialog
 from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
 from .conditions_manager_dialog import ConditionsManagerDialog
+from .geometry import SHAPES
+from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_y3d_file
@@ -38,10 +41,15 @@ class MenuBar(QMenuBar):
         super().__init__(*args, **kwargs)
 
         file_menu = self.addMenu("&File")
-        self.addMenu("&Geometry")
+        geometry_menu = self.addMenu("&Geometry")
         materials_menu = self.addMenu("Materia&ls")
         conditions_menu = self.addMenu("&Conditions")
         job_menu = self.addMenu("&Job")
+
+        geometry_menu.addAction(self._create_shape_action("ball"))
+        geometry_menu.addAction(self._create_shape_action("box"))
+        geometry_menu.addAction(self._create_shape_action("cone"))
+        geometry_menu.addAction(self._create_shape_action("cylinder"))
 
         self.materials_manager_dialog = MaterialsManagerDialog()
         materials_menu.addAction(
@@ -80,6 +88,10 @@ class MenuBar(QMenuBar):
             menu = self._get_or_create_menu(item.menu_title)
             menu.addAction(self._create_action(item.action_label, item.callback))
 
+        import_geometry_action = QAction("&Import Geometry from file", self)
+        import_geometry_action.triggered.connect(partial(load_geometry, self))
+        geometry_menu.addAction(import_geometry_action)
+
     def _enable_export_bst(self, mesh_name: str, obj: Mesh) -> None:
         self.export_bst_action.setEnabled(True)
 
@@ -93,3 +105,9 @@ class MenuBar(QMenuBar):
         action = QAction(label, self)
         action.triggered.connect(callback)
         return action
+
+    def _create_shape_action(self, label: str) -> QAction:
+        def callback() -> None:
+            AddShapeDialog(SHAPES[label]).exec_()
+
+        return self._create_action(f"Add {label.capitalize()}", callback)
