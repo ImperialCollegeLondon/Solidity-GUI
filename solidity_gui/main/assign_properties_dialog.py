@@ -19,6 +19,7 @@ from .material import (
     material_assignment_datastore,
     material_datastore,
 )
+from .mesh_selection_combobox import MeshSelectionComboBox
 from .meshes import mesh_datastore
 
 
@@ -32,7 +33,7 @@ class AssignPropertiesDialog(QDialog):
 
         layout = QVBoxLayout(self)
 
-        self.select_component_combo = QComboBox()
+        self.select_component_combo = MeshSelectionComboBox()
         self.select_material_combo = QComboBox()
 
         self.select_component_combo.setSizeAdjustPolicy(QComboBox.AdjustToContents)
