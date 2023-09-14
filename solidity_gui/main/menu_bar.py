@@ -10,7 +10,7 @@ from PySide6.QtGui import QAction, QGuiApplication
 from PySide6.QtWidgets import QMenu, QMenuBar
 
 from .add_shape_dialogue import AddShapeDialog
-from .assign_conditions import assign_conditions
+from .assign_conditions_dialog import AssignConditionsDialog
 from .assign_properties_dialog import AssignPropertiesDialog
 from .conditions_manager_dialog import ConditionsManagerDialog
 from .geometry import SHAPES
@@ -68,7 +68,7 @@ class MenuBar(QMenuBar):
         )
 
         conditions_menu.addAction(
-            self._create_action("&Assign Conditions", assign_conditions)
+            "&Assign Conditions", lambda: AssignConditionsDialog().exec_()
         )
 
         self.export_bst_action = self._create_action("&Export BST", generate_y3d_file)
