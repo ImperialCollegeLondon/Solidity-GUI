@@ -15,9 +15,9 @@ class EditConditionDialog(SimpleFormDialog):
         Args:
           condition: Condition to be edited
         """
-        initial_data = condition.properties.copy()
-        initial_data["name"] = condition.name
-        super().__init__(ConditionForm, initial_data=initial_data)
+        super().__init__(
+            ConditionForm, initial_data=condition.properties | dict(name=condition.name)
+        )
         self.setWindowTitle(f"Edit {condition.name}")
         self.condition = condition
 

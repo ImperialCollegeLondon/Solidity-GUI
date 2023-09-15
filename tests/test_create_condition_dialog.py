@@ -10,6 +10,7 @@ def test_ok_clicked():
 
     # Fill in form fields with test data
     data = dict(
+        name="test_condition",
         acceleration_x=1.0,
         acceleration_y=2.0,
         acceleration_z=3.0,
@@ -19,9 +20,9 @@ def test_ok_clicked():
         velocity_x=7.0,
         velocity_y=8.0,
         velocity_z=9.0,
-        velocity_constraint_x=10.0,
-        velocity_constraint_y=11.0,
-        velocity_constraint_z=12.0,
+        velocity_constraint_x=1,
+        velocity_constraint_y=1,
+        velocity_constraint_z=1,
     )
     form_info = ConditionForm().form_info(data=data)
     dialog.form_info = form_info
@@ -41,6 +42,6 @@ def test_ok_clicked():
     assert condition.properties["velocity_x"] == 7.0
     assert condition.properties["velocity_y"] == 8.0
     assert condition.properties["velocity_z"] == 9.0
-    assert condition.properties["velocity_constraint_x"] == 10.0
-    assert condition.properties["velocity_constraint_y"] == 11.0
-    assert condition.properties["velocity_constraint_z"] == 12.0
+    assert condition.properties["velocity_constraint_x"] == 1
+    assert condition.properties["velocity_constraint_y"] == 1
+    assert condition.properties["velocity_constraint_z"] == 1
