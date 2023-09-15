@@ -9,7 +9,6 @@ from .gmsh_process import GmshProcess, gmsh_process_datastore
 mesh_datastore: Datastore[str, meshio.Mesh] = Datastore("meshes")
 
 
-current_mesh = "default"
 DEFAULT_RESOLUTION = 0.1
 
 
