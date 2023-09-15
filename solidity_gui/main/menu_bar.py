@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QMenu, QMenuBar
 from .add_shape_dialogue import AddShapeDialog
 from .assign_conditions import assign_conditions
 from .assign_properties_dialog import AssignPropertiesDialog
+from .conditions_manager_dialog import ConditionsManagerDialog
 from .geometry import SHAPES
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
@@ -55,6 +56,11 @@ class MenuBar(QMenuBar):
             self._create_action(
                 "Create and Edit &Materials", self.materials_manager_dialog.open
             )
+        )
+
+        self.conditions_manager_dialog = ConditionsManagerDialog()
+        conditions_menu.addAction(
+            "Create and Edit &Conditions", self.conditions_manager_dialog.open
         )
 
         materials_menu.addAction(

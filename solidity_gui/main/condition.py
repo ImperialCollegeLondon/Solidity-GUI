@@ -1,13 +1,40 @@
 """Module defining Condition and ConditionAssignment datastructures."""
 from dataclasses import dataclass, field
 
+from marshmallow import validate
 from meshio import Mesh
 from pubsub import pub
 
 from .datastore import IndexDatastore
+from .forms import Form
+from .forms.fields import FloatField, IntField, StrField
 from .meshes import mesh_datastore
 
-Attributes_Dict_Type = dict[str, type[float] | bool]
+one_or_zero = validate.Range(min=0, max=1)
+
+
+class ConditionForm(Form):
+    """Form for collecting condition data."""
+
+    name = StrField(display_name="Name", validators=[validate.Length(min=1, max=20)])
+    acceleration_x = FloatField(display_name="Acceleration X")
+    acceleration_y = FloatField(display_name="Acceleration Y")
+    acceleration_z = FloatField(display_name="Acceleration Z")
+    force_x = FloatField(display_name="Force X")
+    force_y = FloatField(display_name="Force Y")
+    force_z = FloatField(display_name="Force Z")
+    velocity_x = FloatField(display_name="Velocity X")
+    velocity_y = FloatField(display_name="Velocity Y")
+    velocity_z = FloatField(display_name="Velocity Z")
+    velocity_constraint_x = IntField(
+        display_name="Velocity Constraint X", validators=[one_or_zero]
+    )
+    velocity_constraint_y = IntField(
+        display_name="Velocity Constraint Y", validators=[one_or_zero]
+    )
+    velocity_constraint_z = IntField(
+        display_name="Velocity Constraint Z", validators=[one_or_zero]
+    )
 
 
 Properties_Dict_Type = dict[str, float]
