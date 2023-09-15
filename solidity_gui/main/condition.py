@@ -10,7 +10,7 @@ from .forms import Form
 from .forms.fields import FloatField, IntField, StrField
 from .meshes import mesh_datastore
 
-one_or_zero = validate.OneOf([0, 1])
+one_or_zero = validate.Range(min=0, max=1)
 
 
 class ConditionForm(Form):
