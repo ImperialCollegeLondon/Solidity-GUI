@@ -198,7 +198,7 @@ pygments==2.16.1
     #   rich
 pygmsh==7.1.17
     # via SolidityGUI (pyproject.toml)
-pyinstaller==5.13.0
+pyinstaller==5.13.2
     # via SolidityGUI (pyproject.toml)
 pyinstaller-hooks-contrib==2023.7
     # via pyinstaller
