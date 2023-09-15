@@ -10,6 +10,7 @@ def test_ok_clicked():
 
     # Fill in form fields with test data
     data = dict(
+        name="test_condition",
         acceleration_x=1.0,
         acceleration_y=2.0,
         acceleration_z=3.0,

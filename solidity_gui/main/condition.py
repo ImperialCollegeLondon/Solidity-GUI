@@ -16,7 +16,7 @@ one_or_zero = validate.Range(min=0, max=1)
 class ConditionForm(Form):
     """Form for collecting condition data."""
 
-    name = StrField(display_name="Name")
+    name = StrField(display_name="Name", validators=[validate.Length(min=1, max=20)])
     acceleration_x = FloatField(display_name="Acceleration X")
     acceleration_y = FloatField(display_name="Acceleration Y")
     acceleration_z = FloatField(display_name="Acceleration Z")
