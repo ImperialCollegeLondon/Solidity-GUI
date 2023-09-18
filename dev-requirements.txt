@@ -186,7 +186,7 @@ pycodestyle==2.11.0
     # via flake8
 pydantic==2.3.0
     # via python-on-whales
-pydantic-core==2.6.3
+pydantic-core==2.8.0
     # via pydantic
 pydocstyle==6.3.0
     # via flake8-docstrings
