@@ -8,7 +8,6 @@ from solidity_gui.main.add_shape_dialogue import AddShapeDialog
 from solidity_gui.main.forms import Form
 from solidity_gui.main.forms.fields import FloatField, IntField, VectorField
 from solidity_gui.main.geometry import Component, Shape
-from solidity_gui.main.meshes import current_mesh
 
 
 class ShapeForm(Form):
@@ -78,7 +77,7 @@ def test_dialog_ok(close_mock, send_message_mock, dialog, qtbot, shape):
     # check that geometry update signal was called with correct data
     send_message_mock.assert_called_once_with(
         "geometry.update",
-        mesh_name=current_mesh,
+        mesh_name=label,
         component=Component(label=label, kwargs=data, shape=shape.name),
     )
 
