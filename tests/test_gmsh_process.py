@@ -56,7 +56,7 @@ class TestGmshProcess:
     def test_daemon_call_function(self, asynchronous):
         """Test _call_function method of class."""
         return_value = "return_value"
-        daemon = GmshDaemon()
+        daemon = GmshDaemon("")
 
         class WrapperMock:
             def function(self, **kwargs):

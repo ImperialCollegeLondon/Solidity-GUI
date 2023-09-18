@@ -7,7 +7,7 @@ from ..logger import initialise_logging
 from . import remove_container_sync, run_solidity_no_stream
 
 if __name__ == "__main__":
-    initialise_logging()
+    initialise_logging(None)
 
     container = run_solidity_no_stream(
         Path(argv[1]), Path(argv[2]), Path(argv[3]), Path(argv[4])

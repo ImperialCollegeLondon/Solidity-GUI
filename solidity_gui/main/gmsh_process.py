@@ -68,7 +68,7 @@ class GmshDaemon:
     issues on certain platforms.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
         """Create a new GmshDaemon."""
         self._in_queue: Queue[_FunctionCall] = Queue()
         """Queue containing the parameters for components to be meshed."""
@@ -76,9 +76,13 @@ class GmshDaemon:
         """Queue containing return values for asynchronous delivery."""
         self._sync_out_queue: Queue[object] = Queue()
         """Queue containing return values for synchronous delivery."""
+        self.name = name
 
     def run(self) -> None:
         """Main loop function that runs on the child process."""
+        from ..initialise import initialise_app
+
+        initialise_app(self.name)
         with Geometry() as geom:
             self.geometry_wrapper = GeometryWrapper(geom)
 
@@ -114,7 +118,7 @@ class GmshProcess:
     def __init__(self, mesh_name: str) -> None:
         """Create a new GmshProcess."""
         self.mesh_name = mesh_name
-        self.daemon = GmshDaemon()
+        self.daemon = GmshDaemon(mesh_name)
         """"""
         self._process = Process(target=self.daemon.run, daemon=True)
         """Background process for running gmsh."""
