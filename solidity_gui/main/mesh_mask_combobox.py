@@ -19,7 +19,7 @@ class MeshMaskComboBox(MeshSelectionComboBox):
 
         pub.subscribe(self._set_meshes, "meshes.update")
 
-    def _set_meshes(self, mesh_name: str, mesh: Mesh) -> None:
+    def _set_meshes(self, key: str, value: Mesh) -> None:
         """Update the list of meshes in the combo box."""
         self.clear()
         self.addItem("--Show All--")
