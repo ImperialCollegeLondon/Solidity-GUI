@@ -9,9 +9,10 @@ from solidity_gui.main.meshes import (
     _add_component_to_geometry_end,
     _create_mesh_from_geometry_begin,
     _create_mesh_from_geometry_end,
-    current_mesh,
     mesh_datastore,
 )
+
+MESH_NAME = "default"
 
 
 def component_factory(
@@ -25,8 +26,8 @@ def component_factory(
 def test_add_component_to_geometry_begin(gmsh_process_mock):
     """Test _add_component_to_geometry_begin method of VTKWindow."""
     component = component_factory()
-    _add_component_to_geometry_begin(current_mesh, component)
-    gmsh_process = gmsh_process_datastore[current_mesh]
+    _add_component_to_geometry_begin(MESH_NAME, component)
+    gmsh_process = gmsh_process_datastore[MESH_NAME]
     assert gmsh_process == gmsh_process_mock()
     gmsh_process.start.assert_called_once_with()
     gmsh_process.call_function_async.assert_called_once_with(
@@ -38,10 +39,10 @@ def test_add_component_to_geometry_end(send_message_mock):
     """Test _add_component_to_geometry_end method of VTKWindow."""
     mesh = MagicMock()
     assert len(mesh_datastore) == 0
-    _add_component_to_geometry_end(current_mesh, mesh)
-    assert mesh_datastore[current_mesh] == mesh
+    _add_component_to_geometry_end(MESH_NAME, mesh)
+    assert mesh_datastore[MESH_NAME] == mesh
     send_message_mock.assert_called_with(
-        "geometry.updated", mesh_name=current_mesh, mesh=mesh
+        "geometry.updated", mesh_name=MESH_NAME, mesh=mesh
     )
 
 
@@ -49,7 +50,7 @@ def test_create_mesh_from_geometry_begin():
     """Test _create_mesh_from_geometry_begin method of VTKWindow."""
     assert len(gmsh_process_datastore) == 0
     gmsh_process_mock = MagicMock()
-    gmsh_process_datastore[current_mesh] = gmsh_process_mock
+    gmsh_process_datastore[MESH_NAME] = gmsh_process_mock
     mesh_size = 0.05
     _create_mesh_from_geometry_begin(size=mesh_size)
     gmsh_process_mock.call_function_async.assert_called_once_with(
@@ -60,8 +61,6 @@ def test_create_mesh_from_geometry_begin():
 def test_create_mesh_from_geometry_end(send_message_mock):
     """Test _create_mesh_from_geometry_end method of VTKWindow."""
     mesh = MagicMock()
-    _create_mesh_from_geometry_end(current_mesh, mesh)
-    assert mesh_datastore[current_mesh] == mesh
-    send_message_mock.assert_called_with(
-        "mesh.updated", mesh_name=current_mesh, mesh=mesh
-    )
+    _create_mesh_from_geometry_end(MESH_NAME, mesh)
+    assert mesh_datastore[MESH_NAME] == mesh
+    send_message_mock.assert_called_with("mesh.updated", mesh_name=MESH_NAME, mesh=mesh)

@@ -14,10 +14,9 @@ def run() -> None:
     import sys
 
     from . import solidity  # noqa
-    from .logger import initialise_logging
+    from .initialise import initialise_app
 
-    # Configure program log
-    initialise_logging()
+    initialise_app()
 
     if sys.platform == "linux":
         import os
