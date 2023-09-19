@@ -12,7 +12,7 @@ class MeshSelectionComboBox(QComboBox):
     def __init__(
         self, select_topic: str | None = None, *args: Any, **kwargs: Any
     ) -> None:
-        """Create new ColourSelectWidget."""
+        """Create new MeshSelectionComboBox."""
         super().__init__(*args, **kwargs)
 
         self.currentTextChanged.connect(self._select_handler)

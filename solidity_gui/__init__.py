@@ -5,6 +5,7 @@ in a mesh format for use by the Solidity tool.
 
 Run the software with: python -m solidity_gui.
 """
+from . import plugins  # noqa: F401
 
 
 def run() -> None:
@@ -17,8 +18,6 @@ def run() -> None:
 
     # Configure program log
     initialise_logging()
-
-    from . import plugins  # noqa: F401
 
     if sys.platform == "linux":
         import os
