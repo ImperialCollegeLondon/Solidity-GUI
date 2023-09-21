@@ -16,6 +16,7 @@ from .conditions_manager_dialog import ConditionsManagerDialog
 from .geometry import SHAPES
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
+from .session_handling import load_session, save_session
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_y3d_file
 
@@ -71,6 +72,8 @@ class MenuBar(QMenuBar):
             "&Assign Conditions", lambda: AssignConditionsDialog().exec_()
         )
 
+        file_menu.addAction(self._create_action("&Save", save_session))
+        file_menu.addAction(self._create_action("&Load", load_session))
         self.export_bst_action = self._create_action("&Export BST", generate_y3d_file)
         self.export_bst_action.setEnabled(False)
         file_menu.addAction(self.export_bst_action)
