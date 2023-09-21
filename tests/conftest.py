@@ -9,7 +9,7 @@ from solidity_gui.main.condition import (
     condition_assignment_datastore,
     condition_datastore,
 )
-from solidity_gui.main.geometry import Geometry
+from solidity_gui.main.geometry import Geometry, GeometryWrapper
 from solidity_gui.main.gmsh_process import gmsh_process_datastore
 from solidity_gui.main.initial_condition import (
     initial_condition_assignment_datastore,
@@ -61,3 +61,9 @@ def geom():
     """Fixture providing a new solidity_gui.main.geometry.Geometry object."""
     with Geometry() as geom:
         yield geom
+
+
+@pytest.fixture()
+def gw(geom):
+    """Fixture providing a new solidity_gui.main.geometry.GeometryWrapper object."""
+    yield GeometryWrapper(geom)

@@ -14,6 +14,7 @@ from .assign_conditions_dialog import AssignConditionsDialog
 from .assign_properties_dialog import AssignPropertiesDialog
 from .conditions_manager_dialog import ConditionsManagerDialog
 from .geometry import SHAPES
+from .joint_materials_dialog import JointMaterialsDialog
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_dialog import run_solidity
@@ -65,6 +66,9 @@ class MenuBar(QMenuBar):
 
         materials_menu.addAction(
             "&Assign Properties", lambda: AssignPropertiesDialog().exec_()
+        )
+        materials_menu.addAction(
+            "&Joint Material Properties", lambda: JointMaterialsDialog().exec_()
         )
 
         conditions_menu.addAction(

@@ -1,14 +1,17 @@
 """Module containing definitions for bundling material and properties data."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
+from typing import TypeGuard
 
 from marshmallow import validate
 from meshio import Mesh
 from pubsub import pub
 
-from .datastore import IndexDatastore
+from .datastore import Datastore, IndexDatastore
 from .forms import Form
 from .forms.fields import FloatField, WiderFloatField
+from .gmsh_process import GmshProcess
 from .meshes import mesh_datastore
 
 Attributes_Dict_Type = dict[str, type[float] | bool]
@@ -209,9 +212,59 @@ class MaterialDatastore(IndexDatastore[Material]):
 class MaterialAssignmentDatastore(IndexDatastore[MaterialAssignment]):
     """IndexDatastore subclass with types concretised for MaterialAssignment."""
 
+    def get_by_cell_set_name(self, name: str) -> tuple[int, MaterialAssignment]:
+        """Retrieve a material assignment using its cell_set_name.
+
+        Args:
+          name: name of the material to get.
+        """
+        for key, assignment in self.items():
+            if assignment.cell_set_name == name:
+                return key, assignment
+        raise ValueError(
+            f"Unable to find material assignment with cell_set_name - {name}"
+        )
+
+
+@dataclass
+class JointInterfaceMaterial:
+    """Definition of an interface between materials containing joint elements."""
+
+    material1: Material
+    material2: Material
+    properties: dict[str, object] = field(default_factory=dict)
+
+
+class JointMaterialDatastore(IndexDatastore[JointInterfaceMaterial]):
+    """IndexDatastore subclass with types concretised for JointInterfaceMaterial."""
+
+    def get_by_materials(
+        self, material1: Material, material2: Material
+    ) -> JointInterfaceMaterial:
+        """Retrieve a joint interface materials using its consituent materials.
+
+        Args:
+          material1: first material of the interface
+          material2: second material of the interface
+        """
+        for key, joint_material in self.items():
+            if (
+                material1 == joint_material.material1
+                and material2 == joint_material.material2
+            ) or (
+                material2 == joint_material.material1
+                and material1 == joint_material.material2
+            ):
+                return joint_material
+        raise ValueError(
+            "Unable to find JointInterfaceMaterial with materials: "
+            f"{material1.name} and {material2.name}"
+        )
+
 
 material_datastore = MaterialDatastore("materials")
 material_assignment_datastore = MaterialAssignmentDatastore("material_assignment")
+joint_material_datastore = JointMaterialDatastore("joint_material")
 
 
 def sync_assignments_material_removed(key: int, value: Material) -> None:
@@ -230,5 +283,65 @@ def sync_assignments_mesh_removed(key: int, value: Mesh) -> None:
                 break
 
 
+def sync_joint_material_removed(key: int, value: Material) -> None:
+    """Message handler to sync joint material datastore when material removed."""
+    for joint_key, joint_material in joint_material_datastore.items():
+        if joint_material.material1 == value or joint_material.material2 == value:
+            del joint_material_datastore[joint_key]
+
+
 pub.subscribe(sync_assignments_material_removed, material_datastore.remove_topic)
 pub.subscribe(sync_assignments_mesh_removed, mesh_datastore.remove_topic)
+
+
+def get_joint_material_interfaces(
+    gmsh_processes: Datastore[str, GmshProcess],
+    material_assignments: MaterialAssignmentDatastore,
+) -> list[tuple[Material, Material]]:
+    """Find all interfaces between different materials that have joint elements.
+
+    Args:
+      gmsh_processes: all gmsh processes containing relevant geometric data
+      material_assignments: material assignment information
+    """
+    joined_materials = []
+
+    for gmsh_process in gmsh_processes.values():
+        joined_volume_names = gmsh_process.call_function("get_joined_volumes")
+
+        if not is_iterable_of_2uple_of_string(joined_volume_names):
+            raise ValueError("Expected Iterable[tuple[str, str]]")
+        for volume_name1, volume_name2 in joined_volume_names:
+            try:
+                _, assignment1 = material_assignments.get_by_cell_set_name(volume_name1)
+                _, assignment2 = material_assignments.get_by_cell_set_name(volume_name2)
+            except ValueError:
+                continue
+            if (
+                not assignment1.material.properties["joint"].enabled
+                or not assignment2.material.properties["joint"].enabled
+            ):
+                continue
+            joined_material = (assignment1.material, assignment2.material)
+
+            if (
+                joined_material not in joined_materials
+                and joined_material[::-1] not in joined_materials
+            ):
+                joined_materials.append(joined_material)
+    return joined_materials
+
+
+def is_iterable_of_2uple_of_string(
+    iterable: object,
+) -> TypeGuard[Iterable[tuple[str, str]]]:
+    """Type guard checking  return type from a get_jointed_volumes function call."""
+    if not isinstance(iterable, Iterable):
+        return False
+    for data in iterable:
+        if not isinstance(data, tuple):
+            return False
+        for val in data:
+            if not isinstance(val, str):
+                return False
+    return True
