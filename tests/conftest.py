@@ -9,6 +9,7 @@ from solidity_gui.main.condition import (
     condition_assignment_datastore,
     condition_datastore,
 )
+from solidity_gui.main.geometry import Geometry
 from solidity_gui.main.gmsh_process import gmsh_process_datastore
 from solidity_gui.main.initial_condition import (
     initial_condition_assignment_datastore,
@@ -53,3 +54,10 @@ def clear_datastores():
 def mock_gmsh_process_start(monkeypatch):
     """Prevent any extra threads or processes from being started."""
     monkeypatch.setattr("solidity_gui.main.gmsh_process.GmshProcess.start", MagicMock())
+
+
+@pytest.fixture()
+def geom():
+    """Fixture providing a new solidity_gui.main.geometry.Geometry object."""
+    with Geometry() as geom:
+        yield geom

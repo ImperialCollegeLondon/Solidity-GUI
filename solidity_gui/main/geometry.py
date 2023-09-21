@@ -1,8 +1,10 @@
 """Creation and manipulation of system geometries."""
 
 import warnings
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import chain
 from typing import Any
 
 import gmsh
@@ -280,3 +282,25 @@ class GeometryWrapper:
                 self.geom.add_physical(Dummy(*dimtag), f"{geom_name}_{label}_{i}")
                 i += 1
         return self._generate_mesh()
+
+
+def get_shared_surfaces(volumes: list[Dummy]) -> set[tuple[Dummy, Dummy]]:
+    """Detect the shared surfaces between a set of volumes in the active gmsh model.
+
+    Args:
+      volumes: the volumes to check
+    """
+    surface_tags = [
+        list(gmsh.model.occ.get_surface_loops(vol._id)[1][0]) for vol in volumes
+    ]
+    repeated_surface_tags = [
+        item for item, count in Counter(chain(*surface_tags)).items() if count > 1
+    ]
+
+    shared_surfaces = set()
+    for tag in repeated_surface_tags:
+        volume_tags = [i for i, surface in enumerate(surface_tags) if tag in surface]
+        if len(volume_tags) != 2:
+            raise ValueError("Error detecting shared surfaces in geometry.")
+        shared_surfaces.add((volumes[volume_tags[0]], volumes[volume_tags[1]]))
+    return shared_surfaces
