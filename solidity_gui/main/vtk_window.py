@@ -197,14 +197,14 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.om1.EnabledOn()
         self.om1.InteractiveOn()
 
-    def _mask_selection(self, cell_set_name: str) -> None:
+    def _mask_selection(self, mesh_name: str) -> None:
         """Masks all meshes except the selected mesh."""
-        if cell_set_name not in self.actors:
+        if mesh_name not in self.actors:
             for actor in self.actors.values():
                 actor.GetProperty().SetOpacity(1.0)
         else:
             for actor_name, actor in self.actors.items():
-                if actor_name == cell_set_name:
+                if actor_name == mesh_name:
                     actor.GetProperty().SetOpacity(1.0)
                 else:
                     actor.GetProperty().SetOpacity(0)

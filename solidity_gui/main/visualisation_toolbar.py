@@ -33,7 +33,7 @@ class VisualisationToolbar(QToolBar):
         iconwidgetholder.setLayout(mask_label_icon_layout)
         self.addWidget(iconwidgetholder)
 
-        self.mask_combo_box = MeshMaskComboBox("mesh.mask")
+        mask_combo_box = MeshMaskComboBox("mesh.mask")
 
         self.pan_action = QAction(qta.icon("fa5s.arrows-alt"), "&Pan", self)
         self.pan_action.setCheckable(True)
@@ -54,7 +54,7 @@ class VisualisationToolbar(QToolBar):
 
         self.pan_action.setChecked(True)  # Pan is default
 
-        self.addWidget(self.mask_combo_box)
+        self.addWidget(mask_combo_box)
 
         self.addAction(self.pan_action)
         self.addAction(self.rotate_action)
