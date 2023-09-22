@@ -21,7 +21,7 @@ def test_two_joined_boxes(geom):
     assert len(get_joined_volumes([box1, box2])) == 0
     volumes = geom.boolean_fragments(box1, box2)
     shared_surfaces = get_joined_volumes(volumes)
-    assert shared_surfaces == {tuple(volumes)}
+    assert shared_surfaces == [tuple(volumes)]
 
 
 def test_two_joined_boxes_with_extra(geom):
@@ -47,7 +47,7 @@ def test_two_joined_boxes_with_extra(geom):
     volumes = geom.boolean_fragments(box1, box2)
     shared_surfaces = get_joined_volumes(volumes)
     assert len(shared_surfaces) == 1
-    assert shared_surfaces == {tuple(volumes)}
+    assert shared_surfaces == [tuple(volumes)]
 
 
 def test_three_joined_boxes(geom):

@@ -18,7 +18,7 @@ from .joint_materials_dialog import JointMaterialsDialog
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
 from .solidity_dialog import run_solidity
-from .solidity_file_generator import generate_y3d_file
+from .solidity_file_generator import generate_output_files
 
 
 @dataclass
@@ -75,7 +75,9 @@ class MenuBar(QMenuBar):
             "&Assign Conditions", lambda: AssignConditionsDialog().exec_()
         )
 
-        self.export_bst_action = self._create_action("&Export BST", generate_y3d_file)
+        self.export_bst_action = self._create_action(
+            "&Export BST", generate_output_files
+        )
         self.export_bst_action.setEnabled(False)
         file_menu.addAction(self.export_bst_action)
         file_menu.addAction(self._create_action("E&xit", QGuiApplication.quit))

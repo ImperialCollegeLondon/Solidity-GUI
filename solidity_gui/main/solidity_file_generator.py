@@ -1,6 +1,7 @@
 """This module provides functionality to generate an input file for Solidity."""
 import logging
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from itertools import combinations
 from pathlib import Path
 from typing import Any
@@ -27,9 +28,12 @@ from .initial_condition import (
     initial_condition_datastore,
 )
 from .material import (
+    JointMaterialDatastore,
     Material,
     MaterialAssignment,
     MaterialDatastore,
+    get_joint_material_interfaces,
+    joint_material_datastore,
     material_assignment_datastore,
     material_datastore,
 )
@@ -318,8 +322,8 @@ def generate_material_data(materials: Mapping[int, Material]) -> dict[str, Any]:
             )
             if property_data is None:
                 raise SystemValidationError(
-                    "Has not been set for the property '{property_.name}' of material "
-                    "'{material.name}'."
+                    f"Has not been set for the property '{property_.name}' of material "
+                    f"'{material.name}'."
                 )
             for key, value in property_data.items():
                 property_line_dict.setdefault(key, []).append(value)
@@ -487,8 +491,101 @@ def create_y3d_template() -> str:
 
 def generate_y3d_file() -> None:
     """Generates a Solidity input file based on a Jinja2 template."""
+    file_content = create_y3d_template()
+    write_file(file_content, config.SOLIDITY_Y3D_FILE_NAME)
+
+
+@dataclass
+class JointMaterialData:
+    """Dataclass holding joint material data for rendering by Jinja2."""
+
+    index1: int
+    index2: int
+    data: dict[str, object]
+
+
+def get_mat_data(
+    joint_material_interfaces: Iterable[tuple[Material, Material]],
+    joint_materials: JointMaterialDatastore,
+    materials: MaterialDatastore,
+) -> dict[str, object]:
+    """Get the data needed to render the mat file template."""
+    joint_material_data: list[JointMaterialData] = []
+    for material_id, material in enumerate(materials.values()):
+        if material.properties["joint"].enabled:
+            other = material.properties["other"]
+            other_data = other.data if other.enabled else other.default_data
+            if other_data is None:
+                raise SystemValidationError(
+                    f"Values have not been set for the property 'other' of "
+                    f"material '{material.name}'."
+                )
+            joint_material_data.append(
+                JointMaterialData(
+                    index1=material_id,
+                    index2=material_id,
+                    data=dict(
+                        tensile_strength=other_data["tensile_strength"],
+                        internal_friction_coefficient=other_data[
+                            "internal_friction_coefficient"
+                        ],
+                        cohesion=other_data["cohesion"],
+                        energy_release_rate_mode_1=other_data[
+                            "energy_release_rate_mode_1"
+                        ],
+                        energy_release_rate_mode_2=other_data[
+                            "energy_release_rate_mode_2"
+                        ],
+                    ),
+                )
+            )
+    for material1, material2 in joint_material_interfaces:
+        try:
+            joint_properties = joint_materials.get_by_materials(
+                material1, material2
+            ).properties
+        except ValueError:
+            raise SystemValidationError(
+                "Joint material properties have not been set for the interface between "
+                f"the materials '{material1.name}' and '{material2.name}'"
+            )
+        joint_material_data.append(
+            JointMaterialData(
+                index1=materials.get_positional_index(material1),
+                index2=materials.get_positional_index(material2),
+                data=joint_properties,
+            )
+        )
+    return dict(
+        num_materials=len(joint_material_data), joint_materials=joint_material_data
+    )
+
+
+def create_mat_template() -> str:
+    """Render file contents for a Solidity mat file using Jinja2."""
+    template = env.get_template(config.SOLIDITY_MAT_TEMPLATE_FILE)
+    logging.info(f"Generating Y3D file from {template.filename}")
+    joint_material_interfaces = get_joint_material_interfaces(
+        gmsh_process_datastore, material_assignment_datastore
+    )
+    data = get_mat_data(
+        joint_material_interfaces,
+        joint_material_datastore,
+        material_datastore,
+    )
+    return template.render(data)
+
+
+def generate_mat_file() -> None:
+    """Generates a Solidity mat file from a Jinja2 template."""
+    file_content = create_mat_template()
+    write_file(file_content, config.SOLIDITY_MAT_FILE_NAME)
+
+
+def generate_output_files() -> None:
+    """Generate all output files and write them to disk."""
     try:
-        file_content = create_y3d_template()
-        write_file(file_content, config.SOLIDITY_Y3D_FILE_NAME)
+        generate_y3d_file()
+        generate_mat_file()
     except SystemValidationError as e:
         display_error_message(e.args[0])

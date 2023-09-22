@@ -8,10 +8,10 @@ class JointMaterialForm(Form):
     """Form for collection of joint element material property parameters."""
 
     tensile_strength = FloatField(display_name="Tensile Strength")
-    internal_friction_angle = FloatField(display_name="Internal Friction Angle")
+    internal_friction_coefficient = FloatField(display_name="Internal Friction Angle")
     cohesion = FloatField()
-    gi_energy_release_rate = FloatField(display_name="GI Energy Release Rate")
-    gii_energy_release_rate = FloatField(display_name="GII Energy Release Rate")
+    energy_release_rate_mode_1 = FloatField(display_name="GI Energy Release Rate")
+    energy_release_rate_mode_2 = FloatField(display_name="GII Energy Release Rate")
 
 
 class JointMaterialFormDialog(SimpleFormDialog):

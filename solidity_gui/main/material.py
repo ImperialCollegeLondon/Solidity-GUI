@@ -232,7 +232,7 @@ class JointInterfaceMaterial:
 
     material1: Material
     material2: Material
-    properties: dict[str, object] = field(default_factory=dict)
+    properties: dict[str, object]
 
 
 class JointMaterialDatastore(IndexDatastore[JointInterfaceMaterial]):
