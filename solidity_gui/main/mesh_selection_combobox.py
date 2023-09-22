@@ -12,7 +12,7 @@ class MeshSelectionComboBox(QComboBox):
     def __init__(
         self, select_topic: str | None = None, *args: Any, **kwargs: Any
     ) -> None:
-        """Create new ColourSelectWidget."""
+        """Create new MeshSelectionComboBox."""
         super().__init__(*args, **kwargs)
 
         self.currentTextChanged.connect(self._select_handler)
@@ -24,7 +24,7 @@ class MeshSelectionComboBox(QComboBox):
             return
 
         if self.select_topic:
-            pub.sendMessage(self.select_topic, cell_set_name=selected_text)
+            pub.sendMessage(self.select_topic, mesh_name=selected_text)
 
     def _highlight_handler(self, selected_text: str) -> None:
         pub.sendMessage("mesh.select_highlight", cell_set_name=selected_text)
