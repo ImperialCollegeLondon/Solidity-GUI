@@ -75,16 +75,16 @@ class MenuBar(QMenuBar):
             "&Assign Conditions", lambda: AssignConditionsDialog().exec_()
         )
 
-        self.export_bst_action = self._create_action(
-            "&Export BST", generate_output_files
+        self.solidity_files_action = self._create_action(
+            "&Create Solidity Input Files", generate_output_files
         )
-        self.export_bst_action.setEnabled(False)
-        file_menu.addAction(self.export_bst_action)
+        self.solidity_files_action.setEnabled(False)
+        file_menu.addAction(self.solidity_files_action)
         file_menu.addAction(self._create_action("E&xit", QGuiApplication.quit))
 
         # There's currently no way to remove meshes, so just enable the menu entry when
         # the first component is added
-        pub.subscribe(self._enable_export_bst, "add_component.finish")
+        pub.subscribe(self._enable_solidity_files, "add_component.finish")
 
         job_menu.addAction(
             self._create_action("&Run Solidity", partial(run_solidity, self))
@@ -98,8 +98,8 @@ class MenuBar(QMenuBar):
         import_geometry_action.triggered.connect(partial(load_geometry, self))
         geometry_menu.addAction(import_geometry_action)
 
-    def _enable_export_bst(self, mesh_name: str, obj: Mesh) -> None:
-        self.export_bst_action.setEnabled(True)
+    def _enable_solidity_files(self, mesh_name: str, obj: Mesh) -> None:
+        self.solidity_files_action.setEnabled(True)
 
     def _get_or_create_menu(self, title: str) -> QMenu:
         for menu in self.findChildren(QMenu):
