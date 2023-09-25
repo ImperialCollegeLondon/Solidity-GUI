@@ -2,8 +2,8 @@
 import meshio
 from pubsub import pub
 
+from .components import Component
 from .datastore import Datastore
-from .geometry import Component
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 
 mesh_datastore: Datastore[str, meshio.Mesh] = Datastore("meshes")

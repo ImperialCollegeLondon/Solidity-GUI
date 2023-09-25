@@ -6,9 +6,10 @@ from typing import Any
 from marshmallow.validate import Length
 from pubsub import pub
 
+from .components import Component
 from .forms import SimpleFormDialog
 from .forms.fields import StrField
-from .geometry import Component, Shape
+from .geometry import Shape
 
 
 class AddShapeDialog(SimpleFormDialog):
