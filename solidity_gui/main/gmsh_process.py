@@ -85,7 +85,7 @@ class GmshDaemon:
 
         initialise_app(self.name)
         with Geometry() as geom:
-            self.geometry_wrapper = GeometryWrapper(geom)
+            self.geometry_wrapper = GeometryWrapper(geom, self.name)
 
             while True:
                 self._call_function()

@@ -14,5 +14,4 @@ class Component:
     """
 
     shape: str
-    label: str
     kwargs: dict[str, float | list[float]]

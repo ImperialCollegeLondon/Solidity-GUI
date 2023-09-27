@@ -15,11 +15,9 @@ from solidity_gui.main.meshes import (
 MESH_NAME = "default"
 
 
-def component_factory(
-    shape="ball", label="sphere", kwargs=dict(center=[0.0, 0.0, 0.0], radius=0.2)
-):
+def component_factory(shape="ball", kwargs=dict(center=[0.0, 0.0, 0.0], radius=0.2)):
     """Generate a component with overridable defaults."""
-    return Component(shape=shape, label=label, kwargs=kwargs)
+    return Component(shape=shape, kwargs=kwargs)
 
 
 @patch("solidity_gui.main.meshes.GmshProcess")

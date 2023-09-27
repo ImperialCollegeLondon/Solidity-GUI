@@ -18,7 +18,9 @@ from .vtk_window import VTKWindow
 
 def _log_geometry_update(mesh_name: str, component: Component) -> None:
     """Log when new components are added to the geometry."""
-    logging.info(f'Added new component "{component.label}" (type: {component.shape})')
+    logging.info(
+        f'Added new component to gmsh process "{mesh_name}" (type: {component.shape})'
+    )
 
 
 class MainWindow(QMainWindow):
