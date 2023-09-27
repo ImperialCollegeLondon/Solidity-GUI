@@ -37,7 +37,7 @@ from .material import (
     material_assignment_datastore,
     material_datastore,
 )
-from .meshes import mesh_datastore
+from .meshes import get_cell_offset, mesh_datastore
 
 env = Environment(
     loader=FileSystemLoader(str(Path(__file__).absolute().parent.parent / "templates")),
@@ -81,11 +81,7 @@ def fetch_condition_assignments(
             continue
         for assignment in mesh_assignments[cell_type]:
             cell_set = mesh.cell_sets_dict[assignment.cell_set_name][cell_type]
-            cell_id_offset = 0
-            # for some reason in the cell sets the id of tetra are offset by the
-            # number of triangles in the mesh so we need to account for that
-            if cell_type == "tetra":
-                cell_id_offset = mesh.cells_dict["triangle"].shape[0]
+            cell_id_offset = get_cell_offset(mesh.cells_dict, cell_type)
             cell_ids = cell_set - cell_id_offset
             node_ids = np.unique(mesh.cells_dict[cell_type][cell_ids].flatten())
             condition_id = conditions.get_positional_index(assignment.condition)
@@ -109,8 +105,7 @@ def fetch_initial_conditions(
     mesh_assignments = initial_condition_assignments.get_assignments_for_mesh(mesh)
     for assignment in mesh_assignments:
         cell_set = mesh.cell_sets_dict[assignment.cell_set_name]["tetra"]
-        cell_id_offset = mesh.cells_dict["triangle"].shape[0]
-        cell_ids = cell_set - cell_id_offset
+        cell_ids = cell_set - get_cell_offset(mesh.cells_dict, "tetra")
         node_ids = np.unique(mesh.cells_dict["tetra"][cell_ids].flatten())
         properties = assignment.initial_condition.properties
         node_initial_conditions[node_ids] = np.array(

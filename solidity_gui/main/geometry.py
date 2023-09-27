@@ -176,10 +176,14 @@ class CylinderForm(Form):
 
 SHAPES = dict(
     box=Shape(name="box", method=pygmsh.occ.geometry.Geometry.add_box, form=BoxForm),
-    ball=Shape(name="ball", method=pygmsh.occ.Geometry.add_ball, form=BallForm),
+    ball=Shape(
+        name="ball", method=pygmsh.occ.geometry.Geometry.add_ball, form=BallForm
+    ),
     cone=Shape(name="cone", method=pygmsh.occ.Geometry.add_cone, form=ConeForm),
     cylinder=Shape(
         name="cylinder", method=pygmsh.occ.Geometry.add_cylinder, form=CylinderForm
     ),
 )
 """Library of supported shapes."""
+
+DIM_2_CELL_TYPE = {0: "point", 1: "line", 2: "surface", 3: "volume"}

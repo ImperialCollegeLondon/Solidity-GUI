@@ -39,7 +39,7 @@ class AddShapeDialog(SimpleFormDialog):
         """Signal handler for clicking ok button."""
         if data := super()._ok_clicked():
             label = data.pop("label")
-            component = Component(self.shape.name, label, data)
+            component = Component(self.shape.name, data)
             pub.sendMessage("geometry.update", mesh_name=label, component=component)
             self.close()
 
