@@ -5,9 +5,10 @@ import qtawesome as qta
 from pubsub import pub
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction, QActionGroup
-from PySide6.QtWidgets import QToolBar
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QToolBar, QWidget
 
 from .. import config
+from .mesh_mask_combobox import MeshMaskComboBox
 
 
 class VisualisationToolbar(QToolBar):
@@ -19,6 +20,20 @@ class VisualisationToolbar(QToolBar):
 
         self.setIconSize(QSize(*config.TOOLBAR_ICON_SIZE))
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+
+        # Some not-so-nice PySide code to add the mask icon + label
+        iconwidget = qta.IconWidget()
+        mask_icon = qta.icon("ei.adjust")
+        iconwidget.setIcon(mask_icon)
+        iconwidgetholder = QWidget()
+        mask_label_icon_layout = QHBoxLayout()
+        mask_label_icon_layout.setContentsMargins(0, 0, 5, 0)
+        mask_label_icon_layout.addWidget(iconwidget)
+        mask_label_icon_layout.addWidget(QLabel("Mask:"))
+        iconwidgetholder.setLayout(mask_label_icon_layout)
+        self.addWidget(iconwidgetholder)
+
+        mask_combo_box = MeshMaskComboBox("mesh.mask")
 
         self.pan_action = QAction(qta.icon("fa5s.arrows-alt"), "&Pan", self)
         self.pan_action.setCheckable(True)
@@ -39,6 +54,8 @@ class VisualisationToolbar(QToolBar):
 
         self.pan_action.setChecked(True)  # Pan is default
 
+        self.addWidget(mask_combo_box)
+
         self.addAction(self.pan_action)
         self.addAction(self.rotate_action)
         self.addAction(self.zoom_action)
@@ -54,6 +71,9 @@ class VisualisationToolbar(QToolBar):
         pub.sendMessage(
             "window.change_mode", mode=action.text().replace("&", "").lower()
         )
+
+    def _mask_click_handler(self) -> None:
+        pub.sendMessage("mesh.mask")
 
     def _xy_click_handler(self) -> None:
         pub.sendMessage(
