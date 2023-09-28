@@ -72,8 +72,13 @@ class MenuBar(QMenuBar):
             "&Assign Conditions", lambda: AssignConditionsDialog().exec_()
         )
 
-        file_menu.addAction(self._create_action("&Save", save_session))
-        file_menu.addAction(self._create_action("&Load", load_session))
+        save_session_action = QAction("&Save Session", self)
+        save_session_action.triggered.connect(partial(save_session, self))
+        file_menu.addAction(save_session_action)
+
+        file_menu.addAction(
+            self._create_action("&Load Session", partial(load_session, self))
+        )
         self.export_bst_action = self._create_action("&Export BST", generate_y3d_file)
         self.export_bst_action.setEnabled(False)
         file_menu.addAction(self.export_bst_action)
