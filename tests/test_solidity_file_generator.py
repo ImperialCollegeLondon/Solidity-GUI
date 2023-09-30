@@ -43,7 +43,7 @@ from solidity_gui.main.solidity_file_generator import (
 def _get_mesh_and_surface_nodes(component, label):
     with Geometry() as geom:
         wrapper = GeometryWrapper(geom, label)
-        mesh = wrapper.add_component(component, 0.2)
+        mesh = wrapper.add_component(component)
         surface_nodes = wrapper.get_surface_nodes()
     return mesh, surface_nodes
 

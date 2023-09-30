@@ -7,6 +7,7 @@ from pubsub import pub
 
 from .forms import Form, SimpleFormDialog
 from .forms.fields import FloatField
+from .mesh_sizes import mesh_size_datastore
 
 
 class MeshResolutionForm(Form):
@@ -28,7 +29,11 @@ class MeshSizeDialog(SimpleFormDialog):
     def _ok_clicked(self) -> None:
         """Process form and send 'mesh.create' signal via pubsub."""
         if data := super()._ok_clicked():
-            logging.info(f"Creating mesh with resolution {data['size']}")
+            logging.info(f"Creating mesh with default resolution {data['size']}")
             pub.sendMessage("geometry.finalise")
-            pub.sendMessage("mesh.create", size=data["size"])
+            pub.sendMessage(
+                "mesh.create",
+                mesh_sizes=mesh_size_datastore.values(),
+                default_size=data["size"],
+            )
             self.close()

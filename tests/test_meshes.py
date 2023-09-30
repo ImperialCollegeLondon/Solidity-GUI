@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 from solidity_gui.main.components import Component
 from solidity_gui.main.gmsh_process import gmsh_process_datastore
 from solidity_gui.main.meshes import (
-    DEFAULT_RESOLUTION,
     _add_component_to_geometry_begin,
     _add_component_to_geometry_end,
     _create_mesh_from_geometry_begin,
@@ -13,6 +12,8 @@ from solidity_gui.main.meshes import (
 )
 
 MESH_NAME = "default"
+
+DEFAULT_RESOLUTION = 0.1
 
 
 def component_factory(shape="ball", kwargs=dict(center=[0.0, 0.0, 0.0], radius=0.2)):
@@ -29,7 +30,7 @@ def test_add_component_to_geometry_begin(gmsh_process_mock):
     assert gmsh_process == gmsh_process_mock()
     gmsh_process.start.assert_called_once_with()
     gmsh_process.call_function_async.assert_called_once_with(
-        "add_component", component=component, resolution=DEFAULT_RESOLUTION
+        "add_component", component=component
     )
 
 
@@ -50,9 +51,9 @@ def test_create_mesh_from_geometry_begin():
     gmsh_process_mock = MagicMock()
     gmsh_process_datastore[MESH_NAME] = gmsh_process_mock
     mesh_size = 0.05
-    _create_mesh_from_geometry_begin(size=mesh_size)
+    _create_mesh_from_geometry_begin(mesh_sizes=[], default_size=mesh_size)
     gmsh_process_mock.call_function_async.assert_called_once_with(
-        "generate_mesh", resolution=mesh_size
+        "generate_mesh", mesh_sizes=[], default_size=mesh_size
     )
 
 
