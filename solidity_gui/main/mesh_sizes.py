@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from meshio import Mesh
 from pubsub import pub
 
+from .assignment_base import AssignmentBase
 from .datastore import IndexDatastore
 
 
 @dataclass
-class MeshSize:
+class MeshSize(AssignmentBase):
     """Dataclass tieing together a mesh cell set and a mesh size value."""
 
-    cell_set_name: str
     size: float
 
 

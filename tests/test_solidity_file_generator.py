@@ -69,7 +69,7 @@ def test_generate_nodes_data():
     condition_assignments = ConditionAssignmentDatastore(
         "condition_assigments",
         {
-            i: ConditionAssignment(conditions[i], cell_set_name)
+            i: ConditionAssignment(cell_set_name, conditions[i])
             for i, cell_set_name in enumerate(cell_set_names)
         },
     )
@@ -201,10 +201,10 @@ def test_generate_elements_data():
         "materials", {i: Material(name=str(i)) for i in range(len(meshes))}
     )
     assignments1 = {
-        0: MaterialAssignment(materials[0], "a_volume_0"),
+        0: MaterialAssignment("a_volume_0", materials[0]),
     }
     assignments2 = {
-        1: MaterialAssignment(materials[1], "b_volume_0"),
+        1: MaterialAssignment("b_volume_0", materials[1]),
     }
 
     # We should get errors if some of the elements don't have assigned materials
@@ -278,8 +278,8 @@ def test_fetch_condition_assignments():
     conditions = ConditionDatastore(
         "conditions", {0: Condition(name="0"), 1: Condition(name="1")}
     )
-    condition_assignment1 = ConditionAssignment(conditions[0], "a_surface_0")
-    condition_assignment2 = ConditionAssignment(conditions[1], "a_volume_0")
+    condition_assignment1 = ConditionAssignment("a_surface_0", conditions[0])
+    condition_assignment2 = ConditionAssignment("a_volume_0", conditions[1])
 
     condition_assigments = ConditionAssignmentDatastore(
         "assigments", {0: condition_assignment1, 1: condition_assignment2}
@@ -326,7 +326,7 @@ def test_check_unassigned_nodes():
         Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), label="a"
     )
     conditions = ConditionDatastore("conditions", {0: Condition(name="0")})
-    condition_assignment1 = ConditionAssignment(conditions[0], "a_surface_0")
+    condition_assignment1 = ConditionAssignment("a_surface_0", conditions[0])
     condition_assignments = ConditionAssignmentDatastore(
         "assigments", {0: condition_assignment1}
     )
