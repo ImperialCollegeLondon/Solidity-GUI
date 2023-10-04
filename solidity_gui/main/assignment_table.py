@@ -1,6 +1,7 @@
 """Module for AssignmentTable class."""
 from collections.abc import Callable, Iterable
 
+from pubsub import pub
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
@@ -41,6 +42,8 @@ class AssignmentTable(QTableWidget):
         )
         self.getters = getters
 
+        self.cellClicked.connect(self._cell_clicked_handler)
+
     def add_items(self, items: Iterable[AssignmentBase]) -> None:
         """Add assignment datastructures as table rows.
 
@@ -53,3 +56,7 @@ class AssignmentTable(QTableWidget):
             self.setItem(row, 0, QTableWidgetItem(item.cell_set_name))
             for i, getter in enumerate(self.getters, 1):
                 self.setItem(row, i, QTableWidgetItem(str(getter(item))))
+
+    def _cell_clicked_handler(self, row: int, column: int) -> None:
+        item = self.item(row, 0)
+        pub.sendMessage("mesh.select_highlight", cell_set_name=item.text())
