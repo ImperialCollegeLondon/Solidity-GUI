@@ -98,6 +98,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
         pub.subscribe(self.reorient_camera, "camera.reorient")
         pub.subscribe(self.reset_camera, "camera.reset")
         pub.subscribe(self._colour_mesh_selection, "mesh.select_highlight")
+        pub.subscribe(self._mask_selection, "mesh.mask")
 
         # Set the mouse cursor to busy during meshing
         pub.subscribe(_set_cursor_to_busy, "mesh.meshing.begin")
@@ -195,6 +196,20 @@ class VTKWindow(QVTKRenderWindowInteractor):
         self.om1.SetInteractor(self.iren)
         self.om1.EnabledOn()
         self.om1.InteractiveOn()
+
+    def _mask_selection(self, mesh_name: str) -> None:
+        """Masks all meshes except the selected mesh."""
+        if mesh_name not in self.actors:
+            for actor in self.actors.values():
+                actor.GetProperty().SetOpacity(1.0)
+        else:
+            for actor_name, actor in self.actors.items():
+                if actor_name == mesh_name:
+                    actor.GetProperty().SetOpacity(1.0)
+                else:
+                    actor.GetProperty().SetOpacity(0)
+
+        self.iren.ReInitialize()
 
     def reorient_camera(self, orientation_vector: Vector, up_vector: Vector) -> None:
         """Updates camera position to a new orientation whilst preserving focal point.
