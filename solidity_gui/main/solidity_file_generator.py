@@ -147,6 +147,7 @@ def generate_nodes_data(
         mesh_node_conditions = fetch_condition_assignments(
             meshes[mesh_name], conditions, condition_assignments
         )
+        check_unassigned_nodes(mesh_node_conditions, meshes[mesh_name])
 
         mesh_node_conditions[:, 0] += incr
         all_node_conditions = np.concatenate(

@@ -2,47 +2,26 @@
 
 import logging
 import pickle
+from pathlib import Path
 
-from marshmallow.validate import Length
 from pubsub import pub
 from PySide6.QtWidgets import QFileDialog, QWidget
 
 from .condition import condition_assignment_datastore, condition_datastore
-from .forms import Form, SimpleFormDialog
-from .forms.fields import StrField
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 from .material import material_assignment_datastore, material_datastore
 from .meshes import mesh_datastore
 
 
-class SessionNameForm(Form):
-    """Form for collecting the name of the session."""
-
-    name = StrField("Session Name", validators=[Length(min=1, max=20)])
-
-
-class SessionNameDialog(SimpleFormDialog):
-    """Dialog to display a SessionNameForm instance."""
-
-    def _ok_clicked(self) -> None:
-        if super()._ok_clicked():
-            self.close()
-
-
 def save_session(parent: QWidget) -> None:
     """Save the current session to a file."""
-    form_dialog = SessionNameDialog(SessionNameForm)
-    form_dialog.setWindowTitle("Set Session Name")
-    try:
-        form_data = form_dialog.run()
-    except ValueError:
-        return
+    session_filename, _ = QFileDialog.getSaveFileName(
+        parent,
+        caption="Save session",
+        filter="Session files (*.pickle)",
+    )
 
-    session_name = form_data["name"]
-
-    print(mesh_datastore)
-
-    with open(f"{session_name}.pickle", "wb") as session_file:
+    with open(session_filename, "wb") as session_file:
         pickle.dump(
             {
                 "meshes": mesh_datastore,
@@ -54,9 +33,11 @@ def save_session(parent: QWidget) -> None:
             session_file,
         )
 
+    session_name = Path(session_filename).parent / Path(session_filename).stem
     for mesh_name, gmsh_process in gmsh_process_datastore.items():
         gmsh_process.call_function(
-            "export_geometry", filename=f"{session_name}_{mesh_name}.brep"
+            "export_geometry",
+            filename=f"{session_name}_{mesh_name}.brep",
         )
 
 
@@ -69,8 +50,6 @@ def load_session(parent: QWidget) -> None:
     )
     if not filename:
         return
-
-    print(filename)
 
     with open(filename, "rb") as session_file:
         session_data = pickle.load(session_file)
