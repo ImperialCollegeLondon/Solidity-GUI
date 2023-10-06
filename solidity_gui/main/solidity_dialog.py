@@ -7,7 +7,7 @@ from pathlib import Path
 
 import qtawesome as qta
 from pubsub import pub
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtCore import QFileInfo, Qt, Signal, Slot
 from PySide6.QtGui import QCloseEvent, QFont
 from PySide6.QtWidgets import (
     QDialog,
@@ -20,20 +20,30 @@ from PySide6.QtWidgets import (
 )
 from python_on_whales.exceptions import DockerException
 
+from .error_message import display_error_message
+
 OutputStream = Iterable[tuple[str, bytes]]
 
 
-def get_file_paths() -> list[str] | None:
+def get_file_paths() -> list[Path] | None:
     """Get the file paths from the user."""
     file_paths = []
-    file_names = ["BST.Y3D", "layout.txt", "pellet.txt", "mat.txt"]
-    for i in range(4):
-        file_dialog = QFileDialog()
-        file_dialog.setFileMode(QFileDialog.ExistingFiles)
-        file_dialog.setWindowTitle("Select " + file_names[i])
-        if file_dialog.exec_() == QFileDialog.DialogCode.Rejected:
+    file_dialog = QFileDialog()
+    file_dialog.setFileMode(QFileDialog.ExistingFiles)
+    file_dialog.setWindowTitle("Select BST.Y3D")
+    if file_dialog.exec_() == QFileDialog.DialogCode.Rejected:
+        return None
+    file_paths.append(Path(file_dialog.selectedFiles()[0]))
+    path = QFileInfo(file_paths[0]).path()
+
+    for file in ["layout.txt", "pellet.txt", "mat.txt"]:
+        file_path = Path(path, file)
+        try:
+            file_path.resolve(strict=True)
+        except FileNotFoundError as e:
+            display_error_message(f"File not found: {e.filename}")
             return None
-        file_paths.append(file_dialog.selectedFiles()[0])
+        file_paths.append(file_path)
     return file_paths
 
 
@@ -47,10 +57,10 @@ def run_solidity(parent: QWidget) -> None:
 
         # Update dialog and show
         _solidity_dlg.update_dialog(
-            y3d_file_path=Path(file_paths[0]),
-            layout_file_path=Path(file_paths[1]),
-            pellet_file_path=Path(file_paths[2]),
-            materials_file_path=Path(file_paths[3]),
+            y3d_file_path=file_paths[0],
+            layout_file_path=file_paths[1],
+            pellet_file_path=file_paths[2],
+            materials_file_path=file_paths[3],
         )
         _solidity_dlg.exec_()
 
