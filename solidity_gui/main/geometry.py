@@ -243,10 +243,6 @@ class GeometryWrapper:
                 surface_count += 1
         return self._generate_mesh()
 
-    def export_geometry(self, filename: str) -> None:
-        """Export the current system geometry to a file."""
-        gmsh.write(filename)
-
     def _generate_mesh(self) -> Mesh:
         # we have to manually clear out some of the mesh and physical group info
         # before we can generate a new mesh
@@ -284,3 +280,15 @@ class GeometryWrapper:
                 self.geom.add_physical(Dummy(*dimtag), f"{geom_name}_{label}_{i}")
                 i += 1
         return self._generate_mesh()
+
+    def merge_mesh(self, filename: str) -> None:
+        """Merge a mesh into the current geometry."""
+        gmsh.merge(filename)
+
+    def open_file(self, filename: str) -> None:
+        """Open a file containing a geometry/mesh."""
+        gmsh.open(filename)
+
+    def write_file(self, filename: str) -> None:
+        """Export the current geometry/mesh to a file."""
+        gmsh.write(filename)
