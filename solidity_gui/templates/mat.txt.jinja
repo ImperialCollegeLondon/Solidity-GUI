@@ -1,0 +1,14 @@
+{%- macro render_joint_material(index1, index2, properties) -%}
+Material_Group_index {{index1}}{{index2}}
+Tensile_Strength {{properties.tensile_strength}}
+Internal_Friction_Angle {{properties.internal_friction_coefficient}}
+Cohesion {{properties.cohesion}}
+GI_Energy_Release_Rate {{properties.energy_release_rate_mode_1}}
+GII_Energy_Release_Rate {{properties.energy_release_rate_mode_2}}
+Spring_Stiffness 1
+{%- endmacro %}
+
+Material_number {{num_materials}}
+{% for joint_material in joint_materials %}
+{{render_joint_material(joint_material.index1, joint_material.index2, joint_material.data)}}
+{% endfor %}
