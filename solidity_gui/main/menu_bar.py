@@ -76,9 +76,10 @@ class MenuBar(QMenuBar):
             "&Assign Conditions", lambda: AssignConditionsDialog().exec_()
         )
 
-        save_session_action = QAction("&Save Session", self)
-        save_session_action.triggered.connect(partial(save_session, self))
-        file_menu.addAction(save_session_action)
+        self.save_session_action = QAction("&Save Session", self)
+        self.save_session_action.triggered.connect(partial(save_session, self))
+        self.save_session_action.setEnabled(False)
+        file_menu.addAction(self.save_session_action)
 
         file_menu.addAction(
             self._create_action("&Load Session", partial(load_session, self))
@@ -94,10 +95,10 @@ class MenuBar(QMenuBar):
 
         # There's currently no way to remove meshes, so just enable the menu entry when
         # the first component is added
-        pub.subscribe(self._enable_solidity_files, "add_component.finish")
+        pub.subscribe(self._enable_exporting_files, "add_component.finish")
 
         # We also want to enable the export BST button when a session is loaded
-        pub.subscribe(self._enable_solidity_files, "session.enable_export_bst")
+        pub.subscribe(self._enable_exporting_files, "session.enable_export_bst")
 
         job_menu.addAction(
             self._create_action("&Run Solidity", partial(run_solidity, self))
@@ -111,8 +112,9 @@ class MenuBar(QMenuBar):
         import_geometry_action.triggered.connect(partial(load_geometry, self))
         geometry_menu.addAction(import_geometry_action)
 
-    def _enable_solidity_files(self, mesh_name: str, obj: Mesh) -> None:
+    def _enable_exporting_files(self, mesh_name: str, obj: Mesh) -> None:
         self.solidity_files_action.setEnabled(True)
+        self.save_session_action.setEnabled(True)
 
     def _get_or_create_menu(self, title: str) -> QMenu:
         for menu in self.findChildren(QMenu):
