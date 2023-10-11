@@ -97,7 +97,7 @@ class MenuBar(QMenuBar):
         pub.subscribe(self._enable_solidity_files, "add_component.finish")
 
         # We also want to enable the export BST button when a session is loaded
-        pub.subscribe(self._enable_export_bst, "session.enable_export_bst")
+        pub.subscribe(self._enable_solidity_files, "session.enable_export_bst")
 
         job_menu.addAction(
             self._create_action("&Run Solidity", partial(run_solidity, self))
