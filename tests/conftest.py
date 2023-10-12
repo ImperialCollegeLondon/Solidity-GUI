@@ -9,7 +9,8 @@ from solidity_gui.main.condition import (
     condition_assignment_datastore,
     condition_datastore,
 )
-from solidity_gui.main.geometry import Geometry, GeometryWrapper
+from solidity_gui.main.geometry import Geometry
+from solidity_gui.main.geometry_wrapper import GeometryWrapper
 from solidity_gui.main.gmsh_process import gmsh_process_datastore
 from solidity_gui.main.initial_condition import (
     initial_condition_assignment_datastore,

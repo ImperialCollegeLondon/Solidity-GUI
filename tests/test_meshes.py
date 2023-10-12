@@ -1,7 +1,7 @@
 """Tests for the solidity_gui.main.meshes."""
 from unittest.mock import MagicMock, patch
 
-from solidity_gui.main.geometry import Component
+from solidity_gui.main.components import Component
 from solidity_gui.main.gmsh_process import gmsh_process_datastore
 from solidity_gui.main.meshes import (
     DEFAULT_RESOLUTION,

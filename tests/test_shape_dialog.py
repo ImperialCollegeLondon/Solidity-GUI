@@ -5,9 +5,10 @@ from unittest.mock import MagicMock
 import pytest
 
 from solidity_gui.main.add_shape_dialogue import AddShapeDialog
+from solidity_gui.main.components import Component
 from solidity_gui.main.forms import Form
 from solidity_gui.main.forms.fields import FloatField, IntField, VectorField
-from solidity_gui.main.geometry import Component, Shape
+from solidity_gui.main.geometry import Shape
 
 
 class ShapeForm(Form):

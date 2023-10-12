@@ -3,7 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
+from solidity_gui.main.components import Component
+from solidity_gui.main.geometry import Geometry
+from solidity_gui.main.geometry_wrapper import GeometryWrapper
 from solidity_gui.main.vtk_window import VTKWindow
 
 

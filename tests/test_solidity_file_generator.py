@@ -4,13 +4,15 @@ import itertools
 import numpy as np
 import pytest
 
+from solidity_gui.main.components import Component
 from solidity_gui.main.condition import (
     Condition,
     ConditionAssignment,
     ConditionAssignmentDatastore,
     ConditionDatastore,
 )
-from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
+from solidity_gui.main.geometry import Geometry
+from solidity_gui.main.geometry_wrapper import GeometryWrapper
 from solidity_gui.main.initial_condition import (
     InitialCondition,
     InitialConditionAssignment,

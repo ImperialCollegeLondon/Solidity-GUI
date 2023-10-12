@@ -7,8 +7,8 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow
 
 from .. import config
+from .components import Component
 from .control_panel import ControlPanel
-from .geometry import Component
 from .menu_bar import MenuBar
 from .trial_expiry import quit_if_expired
 from .uncaught_exceptions import set_uncaught_exception_handler
