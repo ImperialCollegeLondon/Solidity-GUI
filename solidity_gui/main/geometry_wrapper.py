@@ -59,7 +59,6 @@ class GeometryWrapper:
         if not isinstance(shapes, list):
             shapes = [shapes]
 
-        # self.entities.extend(Entity(*shape.dim_tag) for shape in shapes)
         return self._generate_mesh()
 
     def _generate_mesh(self) -> Mesh:
