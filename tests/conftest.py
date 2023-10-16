@@ -64,7 +64,13 @@ def geom():
         yield geom
 
 
+@pytest.fixture
+def gw_label():
+    """Label used when creating a GeometryWrapper via gw fixture."""
+    return "a"
+
+
 @pytest.fixture()
-def gw(geom):
+def gw(geom, gw_label):
     """Fixture providing a new solidity_gui.main.geometry.GeometryWrapper object."""
-    yield GeometryWrapper(geom)
+    yield GeometryWrapper(geom, gw_label)

@@ -79,7 +79,7 @@ def test_dialog_ok(close_mock, send_message_mock, dialog, qtbot, shape):
     send_message_mock.assert_called_once_with(
         "geometry.update",
         mesh_name=label,
-        component=Component(label=label, kwargs=data, shape=shape.name),
+        component=Component(kwargs=data, shape=shape.name),
     )
 
 
