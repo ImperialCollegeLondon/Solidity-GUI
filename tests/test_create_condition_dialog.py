@@ -3,7 +3,7 @@ from solidity_gui.main.condition import Condition, ConditionForm, condition_data
 from solidity_gui.main.create_condition_dialog import CreateConditionDialog
 
 
-def test_ok_clicked():
+def test_ok_clicked(qtbot):
     """Test values in form are correctly parsed and Condition is added to datastore."""
     # Instantiate dialog
     dialog = CreateConditionDialog()
