@@ -18,7 +18,7 @@ from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 from .. import config
 from .custom_interactor_style import CustomInteractorStyle
 from .geometry import Vector
-from .meshes import mesh_datastore
+from .meshes import get_cell_offset, mesh_datastore
 
 
 def save_as_vtu(mesh: Mesh, filename: str) -> None:
@@ -70,7 +70,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
         cell_set_dict = mesh.cell_sets_dict[name]
         cell_type = list(cell_set_dict.keys())[0]
         cell_set = cell_set_dict[cell_type]
-        offset = mesh.cells_dict["triangle"].shape[0] if cell_type == "tetra" else 0
+        offset = get_cell_offset(mesh.cells_dict, cell_type)
         return mesh.cells_dict[cell_type][cell_set - offset]
 
     def __init__(self) -> None:

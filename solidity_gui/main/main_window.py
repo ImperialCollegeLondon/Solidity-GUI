@@ -7,8 +7,8 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow
 
 from .. import config
+from .components import Component
 from .control_panel import ControlPanel
-from .geometry import Component
 from .menu_bar import MenuBar
 from .trial_expiry import quit_if_expired
 from .uncaught_exceptions import set_uncaught_exception_handler
@@ -18,7 +18,9 @@ from .vtk_window import VTKWindow
 
 def _log_geometry_update(mesh_name: str, component: Component) -> None:
     """Log when new components are added to the geometry."""
-    logging.info(f'Added new component "{component.label}" (type: {component.shape})')
+    logging.info(
+        f'Added new component to gmsh process "{mesh_name}" (type: {component.shape})'
+    )
 
 
 class MainWindow(QMainWindow):

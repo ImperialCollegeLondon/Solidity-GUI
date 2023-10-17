@@ -4,13 +4,15 @@ import itertools
 import numpy as np
 import pytest
 
+from solidity_gui.main.components import Component
 from solidity_gui.main.condition import (
     Condition,
     ConditionAssignment,
     ConditionAssignmentDatastore,
     ConditionDatastore,
 )
-from solidity_gui.main.geometry import Component, Geometry, GeometryWrapper
+from solidity_gui.main.geometry import Geometry
+from solidity_gui.main.geometry_wrapper import GeometryWrapper
 from solidity_gui.main.initial_condition import (
     InitialCondition,
     InitialConditionAssignment,
@@ -23,6 +25,7 @@ from solidity_gui.main.material import (
     MaterialAssignment,
     MaterialDatastore,
 )
+from solidity_gui.main.meshes import get_cell_offset
 from solidity_gui.main.solidity_file_generator import (
     SystemValidationError,
     check_unassigned_nodes,
@@ -37,9 +40,9 @@ from solidity_gui.main.solidity_file_generator import (
 )
 
 
-def _get_mesh_and_surface_nodes(component):
+def _get_mesh_and_surface_nodes(component, label):
     with Geometry() as geom:
-        wrapper = GeometryWrapper(geom)
+        wrapper = GeometryWrapper(geom, label)
         mesh = wrapper.add_component(component, 0.2)
         surface_nodes = wrapper.get_surface_nodes()
     return mesh, surface_nodes
@@ -48,10 +51,10 @@ def _get_mesh_and_surface_nodes(component):
 def test_generate_nodes_data():
     """Test generate_nodes_data function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+        Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), "a"
     )
     mesh_b, surface_nodes_b = _get_mesh_and_surface_nodes(
-        Component(shape="box", label="b", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1]))
+        Component(shape="box", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1])), "b"
     )
 
     meshes = dict(a=mesh_a, b=mesh_b)
@@ -127,6 +130,7 @@ def test_generate_nodes_data():
         np.unique(
             mesh_b.cells_dict["triangle"][
                 mesh_b.cell_sets_dict["b_surface_1"]["triangle"]
+                - get_cell_offset(mesh_b.cells_dict, "triangle")
             ].flatten()
         )
         + mesh_a.points.shape[0]
@@ -185,10 +189,10 @@ def _count_tetras(mesh):
 def test_generate_elements_data():
     """Test generate_elements_data function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
-        Component(shape="box", label="a", kwargs=dict(x0=[0, 0, 0], extents=[1, 1, 1]))
+        Component(shape="box", kwargs=dict(x0=[0, 0, 0], extents=[1, 1, 1])), label="a"
     )
     mesh_b, surface_nodes_b = _get_mesh_and_surface_nodes(
-        Component(shape="box", label="b", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1]))
+        Component(shape="box", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1])), label="b"
     )
 
     meshes = dict(a=mesh_a, b=mesh_b)
@@ -229,10 +233,10 @@ def test_generate_elements_data():
 def test_generate_interactions_data():
     """Test generate_interactions_data function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+        Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), label="a"
     )
     mesh_b, surface_nodes_b = _get_mesh_and_surface_nodes(
-        Component(shape="box", label="b", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1]))
+        Component(shape="box", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1])), label="b"
     )
 
     meshes = dict(a=mesh_a, b=mesh_b)
@@ -251,7 +255,7 @@ def test_generate_interactions_data():
 def test_fetch_material_assignments_non_contiguous_ids():
     """Check function where materials have non-contiguous id values."""
     mesh, _ = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+        Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), label="a"
     )
     materials = MaterialDatastore("materials", {2: Material(name="1")})
     material_assignments = {
@@ -269,7 +273,7 @@ def test_fetch_material_assignments_non_contiguous_ids():
 def test_fetch_condition_assignments():
     """Test fetch_condition_assignments function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+        Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), label="a"
     )
     conditions = ConditionDatastore(
         "conditions", {0: Condition(name="0"), 1: Condition(name="1")}
@@ -291,7 +295,7 @@ def test_fetch_condition_assignments():
 def test_fetch_condition_assignments_non_contiguous_ids():
     """Check function where conditions have non-contiguous id values."""
     mesh, _ = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+        Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), label="a"
     )
 
     conditions = ConditionDatastore(
@@ -319,7 +323,7 @@ def test_fetch_condition_assignments_non_contiguous_ids():
 def test_check_unassigned_nodes():
     """Test check_unassigned_nodes function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+        Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), label="a"
     )
     conditions = ConditionDatastore("conditions", {0: Condition(name="0")})
     condition_assignment1 = ConditionAssignment(conditions[0], "a_surface_0")
@@ -337,10 +341,10 @@ def test_check_unassigned_nodes():
 def test_generate_surface_elements_data():
     """Test generate_surface_elements_data function."""
     mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
-        Component(shape="ball", label="a", kwargs=dict(center=[0, 0, 0], radius=1))
+        Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), label="a"
     )
     mesh_b, surface_nodes_b = _get_mesh_and_surface_nodes(
-        Component(shape="box", label="b", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1]))
+        Component(shape="box", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1])), label="b"
     )
 
     meshes = dict(a=mesh_a, b=mesh_b)

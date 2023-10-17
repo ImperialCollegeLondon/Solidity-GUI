@@ -6,9 +6,10 @@ from typing import Any
 from marshmallow.validate import Length
 from pubsub import pub
 
+from .components import Component
 from .forms import SimpleFormDialog
 from .forms.fields import StrField
-from .geometry import Component, Shape
+from .geometry import Shape
 
 
 class AddShapeDialog(SimpleFormDialog):
@@ -38,7 +39,7 @@ class AddShapeDialog(SimpleFormDialog):
         """Signal handler for clicking ok button."""
         if data := super()._ok_clicked():
             label = data.pop("label")
-            component = Component(self.shape.name, label, data)
+            component = Component(self.shape.name, data)
             pub.sendMessage("geometry.update", mesh_name=label, component=component)
             self.close()
 

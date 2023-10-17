@@ -10,7 +10,8 @@ from pubsub import pub
 from PySide6.QtCore import QThread, Signal
 
 from .datastore import Datastore
-from .geometry import Geometry, GeometryWrapper
+from .geometry import Geometry
+from .geometry_wrapper import GeometryWrapper
 
 
 @dataclass
@@ -84,7 +85,7 @@ class GmshDaemon:
 
         initialise_app(self.name)
         with Geometry() as geom:
-            self.geometry_wrapper = GeometryWrapper(geom)
+            self.geometry_wrapper = GeometryWrapper(geom, self.name)
 
             while True:
                 self._call_function()

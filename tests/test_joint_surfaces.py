@@ -2,7 +2,7 @@
 
 from itertools import combinations
 
-from solidity_gui.main.geometry import get_joined_volumes
+from solidity_gui.main.geometry_wrapper import get_joined_volumes
 
 
 def test_two_joined_boxes(geom):
@@ -155,17 +155,17 @@ def test_four_joined_boxes(geom):
         assert comb in shared_surfaces or comb[::-1] in shared_surfaces
 
 
-def test_geometry_wrapper_get_joined_volumes(gw):
+def test_geometry_wrapper_get_joined_volumes(gw, gw_label):
     """Test GeometryWrapper.get_joined_volumes."""
     from pygmsh.common.dummy import Dummy
 
-    from solidity_gui.main.geometry import Component
+    from solidity_gui.main.components import Component
 
-    gw.add_component(Component("box", "a", dict(x0=[0, 0, 0], extents=[1, 1, 1])), 1)
-    gw.add_component(Component("box", "b", dict(x0=[1, 0, 0], extents=[1, 1, 1])), 1)
+    gw.add_component(Component("box", dict(x0=[0, 0, 0], extents=[1, 1, 1])), 1)
+    gw.add_component(Component("box", dict(x0=[1, 0, 0], extents=[1, 1, 1])), 1)
 
     # fuse the objects directly via the geometry
     gw.geom.boolean_fragments(Dummy(3, 1), Dummy(3, 2))
 
     shared_surfaces = gw.get_joined_volumes()
-    assert shared_surfaces == {("a_volume_0", "b_volume_0")}
+    assert shared_surfaces == {(f"{gw_label}_volume_0", f"{gw_label}_volume_1")}
