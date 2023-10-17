@@ -26,6 +26,10 @@ def save_session(parent: QWidget) -> None:
         filter="Session files (*.pickle)",
     )
 
+    # If extension not given, automatically add it
+    if not session_filename.endswith(".pickle"):
+        session_filename += ".pickle"
+
     with open(session_filename, "wb") as session_file:
         pickle.dump(
             {
