@@ -75,13 +75,10 @@ def load_session(parent: QWidget) -> None:
             gmsh_process_datastore[mesh_name] = gmsh_process
 
             logging.info(f"Importing geometry from file: {session_name}_{mesh_name}")
-            # geom_mesh = gmsh_process.call_function(
-            #     "import_geometry",
-            #     geom_name=mesh_name,
-            #     filename=f"{session_name}_{mesh_name}.brep",
-            # )
-            gmsh_process.call_function(
-                "open_file", filename=f"{session_name}_{mesh_name}.brep"
+            _ = gmsh_process.call_function(
+                "import_geometry",
+                geom_name=mesh_name,
+                filename=f"{session_name}_{mesh_name}.brep",
             )
             gmsh_process.call_function(
                 "merge_mesh", filename=f"{session_name}_{mesh_name}.msh"
