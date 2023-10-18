@@ -118,6 +118,14 @@ class GeometryWrapper:
         gmsh.open(filename)
         return self._generate_mesh()
 
+    def merge_mesh(self, filename: str) -> None:
+        """Merge a mesh into the current geometry."""
+        gmsh.merge(filename)
+
+    def write_file(self, filename: str) -> None:
+        """Export the current geometry/mesh to a file."""
+        gmsh.write(filename)
+
     def get_joined_volumes(self) -> set[tuple[str, str]]:
         """Get the cell_set_names of volumes that share a surface."""
         volumes = [Dummy(*dim_tags) for dim_tags in gmsh.model.get_entities(dim=3)]
