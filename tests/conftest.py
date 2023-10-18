@@ -59,8 +59,20 @@ def mock_gmsh_process_start(monkeypatch):
     monkeypatch.setattr("solidity_gui.main.gmsh_process.GmshProcess.start", MagicMock())
 
 
-@pytest.fixture
-def gw():
-    """Convenience fixture for creating an initialised GeometryWrapper instance."""
+@pytest.fixture()
+def geom():
+    """Fixture providing a new solidity_gui.main.geometry.Geometry object."""
     with Geometry() as geom:
-        yield GeometryWrapper(geom, "geometry_wrapper")
+        yield geom
+
+
+@pytest.fixture
+def gw_label():
+    """Label used when creating a GeometryWrapper via gw fixture."""
+    return "a"
+
+
+@pytest.fixture()
+def gw(geom, gw_label):
+    """Fixture providing a new solidity_gui.main.geometry.GeometryWrapper object."""
+    yield GeometryWrapper(geom, gw_label)

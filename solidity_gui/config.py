@@ -37,6 +37,9 @@ DEFAULT_UP_VECTOR = (0, 1, 0)
 SOLIDITY_Y3D_FILE_NAME = "BST.Y3D"
 """Solidity Y3D file name."""
 
+SOLIDITY_MAT_FILE_NAME = "mat.txt"
+"""Solidity mat file name."""
+
 SOLIDITY_LAYOUT_FILE_NAME = "layout.txt"
 """Solidity layout file name, which provides format for elements and particles."""
 
@@ -48,6 +51,9 @@ SOLIDITY_MATERIALS_FILE_NAME = "mat.txt"
 
 SOLIDITY_Y3D_TEMPLATE_FILE = "BST.Y3D.jinja"
 """Solidity Y3D template file."""
+
+SOLIDITY_MAT_TEMPLATE_FILE = "mat.txt.jinja"
+"""Solidity mat.txt template file."""
 
 _DOCKER_IMAGE_DIGEST = (
     "1730fbe6b8f660cdf427cdee8831ca28823b9c584691e7c350e21552f47800ed"
