@@ -202,7 +202,7 @@ pyinstaller==5.13.2
     # via SolidityGUI (pyproject.toml)
 pyinstaller-hooks-contrib==2023.7
     # via pyinstaller
-pymdown-extensions==10.1
+pymdown-extensions==10.3.1
     # via
     #   mkdocs-material
     #   mkdocstrings
