@@ -35,10 +35,10 @@ class AssignInitialConditionsDialog(QDialog):
         self.select_condition_combo = QComboBox()
 
         self.select_component_combo.setSizeAdjustPolicy(
-            QComboBox.AdjustToContents  # type: ignore[attr-defined]
+            QComboBox.SizeAdjustPolicy.AdjustToContents
         )
         self.select_condition_combo.setSizeAdjustPolicy(
-            QComboBox.AdjustToContents  # type: ignore[attr-defined]
+            QComboBox.SizeAdjustPolicy.AdjustToContents
         )
 
         layout.addWidget(QLabel("Component:"))
@@ -82,7 +82,7 @@ class AssignInitialConditionsDialog(QDialog):
             [
                 key
                 for mesh in mesh_datastore.values()
-                for key, value in mesh.cell_sets.items()
+                for key in mesh.cell_sets.keys()
                 if key
                 not in [
                     assignment.cell_set_name
