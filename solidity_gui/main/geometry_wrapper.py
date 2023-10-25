@@ -55,9 +55,7 @@ class GeometryWrapper:
           component: definition of the shape to add to the system geometry
           mesh_size: size applied to mesh if None mesh size is determined by gmsh
         """
-        shapes = self.function_map[component.shape](
-            self.geom, **component.kwargs
-        )
+        shapes = self.function_map[component.shape](self.geom, **component.kwargs)
         # below fudge allows some functions to return more than one shape
         # we could avoid this by making all shape functions return a list but that would
         # involve wrapping all of the pygmsh functions
