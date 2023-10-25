@@ -87,7 +87,7 @@ def test_generate_nodes_data():
         "initial_condition_assignments",
         {
             0: InitialConditionAssignment(
-                initial_conditions[0], cell_set_name="a_volume_0"
+                cell_set_name="a_volume_0", initial_condition=initial_conditions[0]
             )
         },
     )

@@ -11,10 +11,12 @@ from PySide6.QtWidgets import QMenu, QMenuBar
 
 from .add_shape_dialogue import AddShapeDialog
 from .assign_conditions_dialog import AssignConditionsDialog
+from .assign_initial_conditions_dialog import AssignInitialConditionsDialog
 from .assign_mesh_size_dialog import AssignMeshSizeDialog
 from .assign_properties_dialog import AssignPropertiesDialog
 from .conditions_manager_dialog import ConditionsManagerDialog
 from .geometry import SHAPES
+from .initial_conditions_manager_dialog import InitialConditionsManagerDialog
 from .joint_materials_dialog import JointMaterialsDialog
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
@@ -66,6 +68,11 @@ class MenuBar(QMenuBar):
         conditions_menu.addAction(
             "Create and Edit &Conditions", self.conditions_manager_dialog.open
         )
+        self.initial_conditions_manager_dialog = InitialConditionsManagerDialog()
+        conditions_menu.addAction(
+            "Create and Edit &Initial Conditions",
+            self.initial_conditions_manager_dialog.open,
+        )
 
         materials_menu.addAction(
             "&Assign Properties", lambda: AssignPropertiesDialog().exec_()
@@ -76,6 +83,11 @@ class MenuBar(QMenuBar):
 
         conditions_menu.addAction(
             "&Assign Conditions", lambda: AssignConditionsDialog().exec_()
+        )
+
+        conditions_menu.addAction(
+            "A&ssign Initial Conditions",
+            lambda: AssignInitialConditionsDialog().exec_(),
         )
 
         # cast below is used to correct an erroneous type hint from PySide
