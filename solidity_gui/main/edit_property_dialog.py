@@ -21,7 +21,7 @@ class EditPropertyDialog(SimpleFormDialog):
 
     def _ok_clicked(self) -> None:
         """Signal handler for clicking ok button."""
-        if data := super()._ok_clicked():
+        if (data := super()._ok_clicked()) is not None:
             self.material_property.data = data
             self.close()
 

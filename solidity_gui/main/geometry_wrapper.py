@@ -1,16 +1,33 @@
 """Module for GeometryWrapper class."""
 from collections import Counter
 from collections.abc import Iterable
+from dataclasses import dataclass
+from itertools import chain
 
 import gmsh
 import numpy as np
 import pygmsh
 from meshio import Mesh
 from meshio.gmsh import gmsh_to_meshio_type
+from pygmsh.common.dummy import Dummy
 
 from .components import Component
 from .geometry import DIM_2_CELL_TYPE, SHAPES
 from .mesh_sizes import MeshSize
+
+
+@dataclass
+class Entity:
+    """Representation of a geometric entity."""
+
+    name: str
+    dim: int
+    tag: int
+
+    @property
+    def dim_tag(self) -> tuple[int, int]:
+        """Return dimension and tag values as tuple compatible with gmsh functions."""
+        return (self.dim, self.tag)
 
 
 class GeometryWrapper:
@@ -27,6 +44,7 @@ class GeometryWrapper:
         self.function_map = {name: shape.method for name, shape in SHAPES.items()}
         self.label = label
         self.cell_set_to_entity: dict[str, tuple[int, int]] = dict()
+        self.entities: list[Entity] = []
 
     def add_component(
         self, component: Component, mesh_size: float | None = None
@@ -35,11 +53,9 @@ class GeometryWrapper:
 
         Args:
           component: definition of the shape to add to the system geometry
-          mesh_size: size applied to mesh if None mesh size is determined by gmsh
+          mesh_size: size applied to mesh (if None mesh size is determined by gmsh)
         """
-        shapes = self.function_map[component.shape](
-            self.geom, **component.kwargs  # , mesh_size=resolution
-        )
+        shapes = self.function_map[component.shape](self.geom, **component.kwargs)
         # below fudge allows some functions to return more than one shape
         # we could avoid this by making all shape functions return a list but that would
         # involve wrapping all of the pygmsh functions
@@ -56,9 +72,9 @@ class GeometryWrapper:
         gmsh.model.mesh.remove_constraints()
 
         points_with_sizes = set()
-        for entity in ("volume", "surface", "line", "point"):
+        for entity_name in ("volume", "surface", "line", "point"):
             for mesh_size in mesh_sizes:
-                if entity not in mesh_size.cell_set_name:
+                if entity_name not in mesh_size.cell_set_name:
                     continue
                 try:
                     dim_tag = self.cell_set_to_entity[mesh_size.cell_set_name]
@@ -80,6 +96,7 @@ class GeometryWrapper:
         # create a cell set for each geometric entity
         cell_sets = {}
         cell_set_to_entity = {}
+        entities = []
         counter: Counter[int] = Counter()
         for dim, tag in gmsh.model.occ.get_entities():
             cell_type = DIM_2_CELL_TYPE[dim]
@@ -100,9 +117,13 @@ class GeometryWrapper:
                 )
                 for cell_block in mesh.cells
             ]
-            cell_set_to_entity[name] = (dim, tag)
+            entity = Entity(name, dim, tag)
+            entities.append(entity)
+            cell_set_to_entity[name] = entity.dim_tag
         mesh.cell_sets = cell_sets
+        self.entities = entities
         self.cell_set_to_entity = cell_set_to_entity
+
         return mesh
 
     def generate_mesh(
@@ -130,3 +151,56 @@ class GeometryWrapper:
         """Import a system geometry from an input file."""
         gmsh.open(filename)
         return self._generate_mesh()
+
+    def merge_mesh(self, filename: str) -> None:
+        """Merge a mesh into the current geometry."""
+        gmsh.merge(filename)
+
+    def write_file(self, filename: str) -> None:
+        """Export the current geometry/mesh to a file."""
+        gmsh.write(filename)
+
+    def get_joined_volumes(self) -> set[tuple[str, str]]:
+        """Get the cell_set_names of volumes that share a surface."""
+        volumes = [Dummy(*dim_tags) for dim_tags in gmsh.model.get_entities(dim=3)]
+        joined_volumes = get_joined_volumes(volumes)
+        return {
+            (
+                self._get_entity_by_shape(vol1).name,
+                self._get_entity_by_shape(vol2).name,
+            )
+            for vol1, vol2 in joined_volumes
+        }
+
+    def _get_entity_by_shape(self, shape: Dummy) -> Entity:
+        for entity in self.entities:
+            if entity.dim_tag == shape.dim_tag:
+                return entity
+        raise ValueError(f"Unable to find entity for shape: {shape}")
+
+
+def get_joined_volumes(volumes: list[Dummy]) -> list[tuple[Dummy, Dummy]]:
+    """Detect the shared surfaces between a set of volumes in the active gmsh model.
+
+    Args:
+      volumes: the volumes to check
+    """
+    surface_tags = [
+        list(gmsh.model.occ.get_surface_loops(vol._id)[1][0]) for vol in volumes
+    ]
+    repeated_surface_tags = [
+        item for item, count in Counter(chain(*surface_tags)).items() if count > 1
+    ]
+
+    shared_surfaces = []
+    for tag in repeated_surface_tags:
+        volume_tags = [i for i, surface in enumerate(surface_tags) if tag in surface]
+        if len(volume_tags) != 2:
+            raise ValueError("Error detecting shared surfaces in geometry.")
+        joined_volumes = (volumes[volume_tags[0]], volumes[volume_tags[1]])
+        if (
+            joined_volumes not in shared_surfaces
+            and joined_volumes[::-1] not in shared_surfaces
+        ):
+            shared_surfaces.append(joined_volumes)
+    return shared_surfaces

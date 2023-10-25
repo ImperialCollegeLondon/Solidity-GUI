@@ -43,11 +43,11 @@ class MeshSizeDialog(SimpleFormDialog):
         contents.addWidget(table)
 
         button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel  # type: ignore[attr-defined]
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         contents.addWidget(button_box)
-        button_box.accepted.connect(self._ok_clicked)  # type: ignore[attr-defined]
-        button_box.rejected.connect(self._cancel_clicked)  # type: ignore[attr-defined]
+        button_box.accepted.connect(self._ok_clicked)
+        button_box.rejected.connect(self._cancel_clicked)
         return contents
 
     def _ok_clicked(self) -> None:

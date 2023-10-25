@@ -35,7 +35,7 @@ class AssignMeshSizeDialog(QDialog):
         self.mesh_size_spinbox.setMinimum(0.0001)
 
         self.component_combo.setSizeAdjustPolicy(
-            QComboBox.AdjustToContents  # type: ignore[attr-defined]
+            QComboBox.SizeAdjustPolicy.AdjustToContents
         )
 
         layout.addWidget(QLabel("Component:"))
@@ -82,7 +82,7 @@ class AssignMeshSizeDialog(QDialog):
             [
                 key
                 for mesh in mesh_datastore.values()
-                for key, value in mesh.cell_sets.items()
+                for key in mesh.cell_sets.keys()
                 if key not in assigned_cell_sets
             ]
         )
@@ -109,8 +109,7 @@ class AssignMeshSizeDialog(QDialog):
         if not selected_rows:
             return
         for row in selected_rows:
-            for index in mesh_size_datastore:
-                mesh_size = mesh_size_datastore[index]
+            for index, mesh_size in mesh_size_datastore.items():
                 if mesh_size.cell_set_name == self.table.item(row.row(), 0).text():
                     del mesh_size_datastore[index]
                     self.table.removeRow(row.row())
