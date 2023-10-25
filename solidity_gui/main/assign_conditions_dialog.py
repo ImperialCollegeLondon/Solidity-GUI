@@ -1,19 +1,17 @@
 """Module for the AssignConditionsDialog class."""
 import logging
+from operator import attrgetter
 
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QComboBox,
     QDialog,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
     QVBoxLayout,
 )
 
+from .assignment_table import AssignmentTable
 from .condition import (
     ConditionAssignment,
     condition_assignment_datastore,
@@ -52,37 +50,16 @@ class AssignConditionsDialog(QDialog):
 
         layout.addWidget(QLabel("Condition Assignments:"))
 
-        self.condition_assignment_table = QTableWidget()
-        self.condition_assignment_table.setColumnCount(2)
-        self.condition_assignment_table.setHorizontalHeaderLabels(
-            ["Component", "Condition"]
-        )
-        self.condition_assignment_table.setEditTriggers(
-            QAbstractItemView.NoEditTriggers
-        )
-        self.condition_assignment_table.horizontalHeader().setHighlightSections(False)
-        self.condition_assignment_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.condition_assignment_table.setSelectionMode(
-            QAbstractItemView.SingleSelection
-        )
-
-        self.condition_assignment_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
+        self.condition_assignment_table = AssignmentTable(
+            ["Condition"],
+            [attrgetter("condition.name")],
         )
 
         layout.addWidget(self.condition_assignment_table)
 
-        for assignment in condition_assignment_datastore.values():
-            row = self.condition_assignment_table.rowCount()
-            self.condition_assignment_table.insertRow(row)
-            self.condition_assignment_table.setItem(
-                row, 0, QTableWidgetItem(assignment.cell_set_name)
-            )
-            self.condition_assignment_table.setItem(
-                row, 1, QTableWidgetItem(assignment.condition.name)
-            )
+        self.condition_assignment_table.add_items(
+            condition_assignment_datastore.values()
+        )
 
         remove_button = QPushButton("Remove")
         remove_button.clicked.connect(self._remove_clicked)
@@ -127,14 +104,7 @@ class AssignConditionsDialog(QDialog):
         )
         condition_assignment_datastore.add(assignment)
 
-        row = self.condition_assignment_table.rowCount()
-        self.condition_assignment_table.insertRow(row)
-        self.condition_assignment_table.setItem(
-            row, 0, QTableWidgetItem(assignment.cell_set_name)
-        )
-        self.condition_assignment_table.setItem(
-            row, 1, QTableWidgetItem(assignment.condition.name)
-        )
+        self.condition_assignment_table.add_items([assignment])
 
         self._populate_combos()
 

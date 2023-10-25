@@ -8,6 +8,7 @@ from marshmallow import validate
 from meshio import Mesh
 from pubsub import pub
 
+from .assignment_base import AssignmentBase
 from .datastore import Datastore, IndexDatastore
 from .forms import Form
 from .forms.fields import FloatField, WiderFloatField
@@ -186,12 +187,11 @@ class Material:
         return material
 
 
-@dataclass(frozen=True)
-class MaterialAssignment:
+@dataclass
+class MaterialAssignment(AssignmentBase):
     """Simple datastructure recording the association of a cell_set and Material."""
 
     material: Material
-    cell_set_name: str
 
 
 class MaterialDatastore(IndexDatastore[Material]):

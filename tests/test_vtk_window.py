@@ -22,9 +22,9 @@ def generate_mesh(components, resolution, label):
     with Geometry() as geom:
         wrapper = GeometryWrapper(geom, label)
         for component in components:
-            wrapper.add_component(component, resolution=resolution)
+            wrapper.add_component(component)
 
-        return wrapper.generate_mesh(resolution)
+        return wrapper.generate_mesh([], resolution)
 
 
 def component_factory(shape="ball", kwargs=dict(center=[0.0, 0.0, 0.0], radius=0.2)):

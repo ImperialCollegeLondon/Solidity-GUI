@@ -1,5 +1,6 @@
 """Module for GeometryWrapper class."""
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from itertools import chain
 
@@ -12,6 +13,7 @@ from pygmsh.common.dummy import Dummy
 
 from .components import Component
 from .geometry import DIM_2_CELL_TYPE, SHAPES
+from .mesh_sizes import MeshSize
 
 
 @dataclass
@@ -40,34 +42,60 @@ class GeometryWrapper:
         """
         self.geom = geom
         self.function_map = {name: shape.method for name, shape in SHAPES.items()}
-        self.entities: list[Entity] = []
         self.label = label
+        self.cell_set_to_entity: dict[str, tuple[int, int]] = dict()
+        self.entities: list[Entity] = []
 
-    def add_component(self, component: Component, resolution: float) -> Mesh:
+    def add_component(
+        self, component: Component, mesh_size: float | None = None
+    ) -> Mesh:
         """Add a component to the system geometry.
 
         Args:
           component: definition of the shape to add to the system geometry
-          resolution: resolution to use for mesh
+          mesh_size: size applied to mesh (if None mesh size is determined by gmsh)
         """
-        shapes = self.function_map[component.shape](
-            self.geom, **component.kwargs, mesh_size=resolution
-        )
+        shapes = self.function_map[component.shape](self.geom, **component.kwargs)
         # below fudge allows some functions to return more than one shape
         # we could avoid this by making all shape functions return a list but that would
         # involve wrapping all of the pygmsh functions
         if not isinstance(shapes, list):
             shapes = [shapes]
+        self.geom.synchronize()
+        return self._generate_mesh(default_size=mesh_size)
 
-        return self._generate_mesh()
-
-    def _generate_mesh(self) -> Mesh:
+    def _generate_mesh(
+        self, mesh_sizes: Iterable[MeshSize] = [], default_size: float | None = None
+    ) -> Mesh:
         # we have to manually clear the old mesh before we can generate a new one
         gmsh.model.mesh.clear()
+        gmsh.model.mesh.remove_constraints()
+
+        points_with_sizes = set()
+        for entity_name in ("volume", "surface", "line", "point"):
+            for mesh_size in mesh_sizes:
+                if entity_name not in mesh_size.cell_set_name:
+                    continue
+                try:
+                    dim_tag = self.cell_set_to_entity[mesh_size.cell_set_name]
+                except KeyError:
+                    continue
+                points = gmsh.model.get_boundary((dim_tag,), False, False, True)
+                gmsh.model.mesh.set_size(points, mesh_size.size)
+                points_with_sizes.update(points)
+
+        if default_size is not None:
+            gmsh.model.mesh.set_size(
+                tuple(
+                    set(gmsh.model.get_entities(dim=0)).difference(points_with_sizes)
+                ),
+                default_size,
+            )
         mesh = self.geom.generate_mesh()
 
         # create a cell set for each geometric entity
         cell_sets = {}
+        cell_set_to_entity = {}
         entities = []
         counter: Counter[int] = Counter()
         for dim, tag in gmsh.model.occ.get_entities():
@@ -80,7 +108,6 @@ class GeometryWrapper:
                 continue
             cell_set_id = counter[dim]
             name = f"{self.label}_{cell_type}_{cell_set_id}"
-            entities.append(Entity(name, dim, tag))
             counter[dim] += 1
             cell_sets[name] = [
                 (
@@ -90,18 +117,25 @@ class GeometryWrapper:
                 )
                 for cell_block in mesh.cells
             ]
+            entity = Entity(name, dim, tag)
+            entities.append(entity)
+            cell_set_to_entity[name] = entity.dim_tag
         mesh.cell_sets = cell_sets
         self.entities = entities
+        self.cell_set_to_entity = cell_set_to_entity
+
         return mesh
 
-    def generate_mesh(self, resolution: float) -> Mesh:
+    def generate_mesh(
+        self, mesh_sizes: Iterable[MeshSize], default_size: float
+    ) -> Mesh:
         """Generate a new system mesh at the specified resolution.
 
         Args:
-            resolution: desired mesh resolution
+            mesh_sizes: assignment of mesh size values to cell sets
+            default_size: mesh size applied to points without a mesh size assignment
         """
-        self.geom._SIZE_QUEUE = [(sq[0], resolution) for sq in self.geom._SIZE_QUEUE]
-        return self._generate_mesh()
+        return self._generate_mesh(mesh_sizes, default_size)
 
     def get_surface_nodes(self) -> np.ndarray:
         """Get the indices of the mesh nodes that are on the system surface."""

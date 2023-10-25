@@ -31,7 +31,7 @@ class CreateMeshButton(QPushButton):
         """Display a MeshSizeDialog to the user."""
         MeshSizeDialog().exec_()
 
-    def _disable(self, size: float) -> None:
+    def _disable(self, mesh_sizes: object, default_size: object) -> None:
         self.setDisabled(True)
 
     def _enable(self, mesh_name: str, mesh: Mesh = None) -> None:
