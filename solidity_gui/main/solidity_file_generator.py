@@ -508,27 +508,30 @@ def get_mat_data(
     joint_material_data: list[JointMaterialData] = []
     for material_id, material in enumerate(materials.values()):
         if material.properties["joint"].enabled:
-            other = material.properties["joint"]
-            other_data = other.data if other.enabled else other.default_data
-            if other_data is None:
+            joint = material.properties["joint"]
+            joint_data = joint.data if joint.data is not None else joint.default_data
+            if joint_data is None:
+                print("joint_data is None")
                 raise SystemValidationError(
-                    f"Values have not been set for the property 'other' of "
+                    f"Values have not been set for the property 'joint' of "
                     f"material '{material.name}'."
                 )
+            else:
+                print("joint_data is not None")
             joint_material_data.append(
                 JointMaterialData(
                     index1=material_id,
                     index2=material_id,
                     data=dict(
-                        tensile_strength=other_data["tensile_strength"],
-                        internal_friction_coefficient=other_data[
+                        tensile_strength=joint_data["tensile_strength"],
+                        internal_friction_coefficient=joint_data[
                             "internal_friction_coefficient"
                         ],
-                        cohesion=other_data["cohesion"],
-                        energy_release_rate_mode_1=other_data[
+                        cohesion=joint_data["cohesion"],
+                        energy_release_rate_mode_1=joint_data[
                             "energy_release_rate_mode_1"
                         ],
-                        energy_release_rate_mode_2=other_data[
+                        energy_release_rate_mode_2=joint_data[
                             "energy_release_rate_mode_2"
                         ],
                     ),

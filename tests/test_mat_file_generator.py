@@ -3,6 +3,7 @@
 import pytest
 
 from solidity_gui.main.material import (
+    PROPERTIES,
     JointInterfaceMaterial,
     JointMaterialDatastore,
     Material,
@@ -16,23 +17,25 @@ from solidity_gui.main.solidity_file_generator import (
 
 
 def _check_joint_material(joint_material_data, index1, index2, properties):
-    other = properties["other"].default_data
+    joint = properties["joint"].default_data
     assert joint_material_data == JointMaterialData(
         index1,
         index2,
         dict(
-            tensile_strength=other["tensile_strength"],
-            internal_friction_coefficient=other["internal_friction_coefficient"],
-            cohesion=other["cohesion"],
-            energy_release_rate_mode_1=other["energy_release_rate_mode_1"],
-            energy_release_rate_mode_2=other["energy_release_rate_mode_2"],
+            tensile_strength=joint["tensile_strength"],
+            internal_friction_coefficient=joint["internal_friction_coefficient"],
+            cohesion=joint["cohesion"],
+            energy_release_rate_mode_1=joint["energy_release_rate_mode_1"],
+            energy_release_rate_mode_2=joint["energy_release_rate_mode_2"],
         ),
     )
 
 
 def test_get_mat_data():
     """Check joint material data with no interfaces."""
-    mat1 = Material.from_properties_dict("mat1", dict(joint={}))
+    mat1 = Material.from_properties_dict(
+        "mat1", dict(joint=PROPERTIES()["joint"].default_data)
+    )
     mat2 = Material("mat2")
     materials = MaterialDatastore("materials", {0: mat1, 1: mat2})
 
@@ -45,11 +48,11 @@ def test_get_mat_data():
 def test_get_mat_data_joint_interface():
     """Check joint material data with an interface between different joint materials."""
     mat1 = Material.from_properties_dict(
-        "mat1", dict(joint={}, density=dict(density=2))
+        "mat1", dict(joint=PROPERTIES()["joint"].default_data, density=dict(density=2))
     )
     mat2 = Material("mat2")
     mat3 = Material.from_properties_dict(
-        "mat1", dict(joint={}, density=dict(density=1))
+        "mat1", dict(joint=PROPERTIES()["joint"].default_data, density=dict(density=1))
     )
     materials = MaterialDatastore("materials", {0: mat1, 1: mat2, 2: mat3})
 
@@ -77,11 +80,11 @@ def test_get_mat_data_joint_interface():
 def test_get_mat_data_missing_joint_interface_data():
     """Check for validation error if joint material interface parameters not present."""
     mat1 = Material.from_properties_dict(
-        "mat1", dict(joint={}, density=dict(density=2))
+        "mat1", dict(joint=PROPERTIES()["joint"].default_data, density=dict(density=2))
     )
     mat2 = Material("mat2")
     mat3 = Material.from_properties_dict(
-        "mat1", dict(joint={}, density=dict(density=1))
+        "mat1", dict(joint=PROPERTIES()["joint"].default_data, density=dict(density=1))
     )
     materials = MaterialDatastore("materials", {0: mat1, 1: mat2, 2: mat3})
 
