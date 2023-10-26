@@ -508,7 +508,7 @@ def get_mat_data(
     joint_material_data: list[JointMaterialData] = []
     for material_id, material in enumerate(materials.values()):
         if material.properties["joint"].enabled:
-            other = material.properties["other"]
+            other = material.properties["joint"]
             other_data = other.data if other.enabled else other.default_data
             if other_data is None:
                 raise SystemValidationError(
