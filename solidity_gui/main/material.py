@@ -50,13 +50,6 @@ class OtherForm(Form):
 
     mass_damping_coefficient = FloatField(display_name="Mass Damping Coefficient")
     penalty_number = FloatField(display_name="Penalty Number")
-    energy_release_rate_mode_1 = FloatField(display_name="Energy Release Rate - Mode 1")
-    energy_release_rate_mode_2 = FloatField(display_name="Energy Release Rate - Mode 2")
-    tensile_strength = FloatField(display_name="Tensile Strength")
-    cohesion = FloatField(display_name="Cohesion")
-    internal_friction_coefficient = FloatField(
-        display_name="Internal Friction Coefficient"
-    )
     sliding_friction_coefficient = FloatField(
         display_name="Sliding Friction Coefficient"
     )
@@ -71,6 +64,14 @@ class OtherForm(Form):
 
 class JointForm(Form):
     """Blank form relating to joint elements."""
+
+    energy_release_rate_mode_1 = FloatField(display_name="Energy Release Rate - Mode 1")
+    energy_release_rate_mode_2 = FloatField(display_name="Energy Release Rate - Mode 2")
+    tensile_strength = FloatField(display_name="Tensile Strength")
+    cohesion = FloatField(display_name="Cohesion")
+    internal_friction_coefficient = FloatField(
+        display_name="Internal Friction Coefficient"
+    )
 
 
 @dataclass
@@ -139,11 +140,6 @@ def PROPERTIES() -> Properties_Dict_Type:
             default_data=dict(
                 mass_damping_coefficient=0.0,
                 penalty_number=2e10,
-                energy_release_rate_mode_1=50.0,
-                energy_release_rate_mode_2=50.0,
-                tensile_strength=1e7,
-                cohesion=3.5e7,
-                internal_friction_coefficient=0.577,
                 sliding_friction_coefficient=0.6,
                 static_friction_coefficient=0.0,
                 pressure_friction_coefficient=0.0,
@@ -157,7 +153,13 @@ def PROPERTIES() -> Properties_Dict_Type:
             name="Joint",
             enabled=False,
             attributes=JointForm,
-            default_data=dict(),
+            default_data=dict(
+                energy_release_rate_mode_1=50.0,
+                energy_release_rate_mode_2=50.0,
+                tensile_strength=1e7,
+                cohesion=3.5e7,
+                internal_friction_coefficient=0.577,
+            ),
         ),
     }
 
