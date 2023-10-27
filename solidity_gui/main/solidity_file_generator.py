@@ -511,13 +511,10 @@ def get_mat_data(
             joint = material.properties["joint"]
             joint_data = joint.data if joint.data is not None else joint.default_data
             if joint_data is None:
-                print("joint_data is None")
                 raise SystemValidationError(
                     f"Values have not been set for the property 'joint' of "
                     f"material '{material.name}'."
                 )
-            else:
-                print("joint_data is not None")
             joint_material_data.append(
                 JointMaterialData(
                     index1=material_id,
