@@ -17,8 +17,8 @@ def generate_mesh(components, label, resolution):
     with Geometry() as geom:
         wrapper = GeometryWrapper(geom, label)
         for component in components:
-            wrapper.add_component(component, resolution=resolution)
-        return wrapper.generate_mesh(RESOLUTION)
+            wrapper.add_component(component)
+        return wrapper.generate_mesh([], RESOLUTION)
 
 
 def check_mesh_cell_sets(mesh, no_points, no_lines, no_surfaces, label):

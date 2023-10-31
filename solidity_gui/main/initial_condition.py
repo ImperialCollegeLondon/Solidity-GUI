@@ -4,13 +4,22 @@ from dataclasses import dataclass, field
 from meshio import Mesh
 from pubsub import pub
 
+from .assignment_base import AssignmentBase
 from .datastore import IndexDatastore
+from .forms import Form
+from .forms.fields import FloatField, StrField
 from .meshes import mesh_datastore
 
-Attributes_Dict_Type = dict[str, type[float] | bool]
-
-
 Properties_Dict_Type = dict[str, float]
+
+
+class InitialConditionForm(Form):
+    """Form for collecting initial condition data."""
+
+    name = StrField()
+    x = FloatField()
+    y = FloatField()
+    z = FloatField()
 
 
 def PROPERTIES() -> Properties_Dict_Type:
@@ -31,12 +40,11 @@ class InitialCondition:
     properties: Properties_Dict_Type = field(default_factory=PROPERTIES)
 
 
-@dataclass(frozen=True)
-class InitialConditionAssignment:
+@dataclass
+class InitialConditionAssignment(AssignmentBase):
     """Simple datastructure recording the association of a cell_set and Condition."""
 
     initial_condition: InitialCondition
-    cell_set_name: str
 
 
 class InitialConditionDatastore(IndexDatastore[InitialCondition]):

@@ -1,4 +1,6 @@
 """Module for storage of mesh related data."""
+from collections.abc import Iterable
+
 import meshio
 import numpy as np
 from pubsub import pub
@@ -6,11 +8,9 @@ from pubsub import pub
 from .components import Component
 from .datastore import Datastore
 from .gmsh_process import GmshProcess, gmsh_process_datastore
+from .mesh_sizes import MeshSize
 
 mesh_datastore: Datastore[str, meshio.Mesh] = Datastore("meshes")
-
-
-DEFAULT_RESOLUTION = 0.1
 
 
 def _add_component_to_geometry_begin(mesh_name: str, component: Component) -> None:
@@ -22,9 +22,7 @@ def _add_component_to_geometry_begin(mesh_name: str, component: Component) -> No
         gmsh_process.start()
         gmsh_process_datastore[mesh_name] = gmsh_process
 
-    gmsh_process.call_function_async(
-        "add_component", component=component, resolution=DEFAULT_RESOLUTION
-    )
+    gmsh_process.call_function_async("add_component", component=component)
 
 
 def _add_component_to_geometry_end(mesh_name: str, obj: meshio.Mesh) -> None:
@@ -33,10 +31,14 @@ def _add_component_to_geometry_end(mesh_name: str, obj: meshio.Mesh) -> None:
     pub.sendMessage("geometry.updated", mesh_name=mesh_name, mesh=obj)
 
 
-def _create_mesh_from_geometry_begin(size: float) -> None:
+def _create_mesh_from_geometry_begin(
+    mesh_sizes: Iterable[MeshSize], default_size: float
+) -> None:
     """Generate and display a high quality mesh from the current geometry."""
     for gmsh_process in gmsh_process_datastore.values():
-        gmsh_process.call_function_async("generate_mesh", resolution=size)
+        gmsh_process.call_function_async(
+            "generate_mesh", mesh_sizes=mesh_sizes, default_size=default_size
+        )
 
 
 def _create_mesh_from_geometry_end(mesh_name: str, obj: meshio.Mesh) -> None:

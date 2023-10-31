@@ -17,6 +17,7 @@ from solidity_gui.main.initial_condition import (
     initial_condition_datastore,
 )
 from solidity_gui.main.material import material_assignment_datastore, material_datastore
+from solidity_gui.main.mesh_sizes import mesh_size_datastore
 from solidity_gui.main.meshes import mesh_datastore
 
 
@@ -49,6 +50,7 @@ def clear_datastores():
         condition_assignment_datastore.clear()
         initial_condition_datastore.clear()
         initial_condition_assignment_datastore.clear()
+        mesh_size_datastore.clear()
 
 
 @pytest.fixture(autouse=True)

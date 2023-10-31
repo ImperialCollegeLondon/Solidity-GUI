@@ -1,19 +1,17 @@
 """Module for the AssignPropertiesDialog class."""
 import logging
+from operator import attrgetter
 
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QComboBox,
     QDialog,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
     QVBoxLayout,
 )
 
+from .assignment_table import AssignmentTable
 from .material import (
     MaterialAssignment,
     material_assignment_datastore,
@@ -52,35 +50,14 @@ class AssignPropertiesDialog(QDialog):
 
         layout.addWidget(QLabel("Material Assignments:"))
 
-        self.material_assignment_table = QTableWidget()
-        self.material_assignment_table.setColumnCount(2)
-        self.material_assignment_table.setHorizontalHeaderLabels(
-            ["Component", "Material"]
-        )
-        self.material_assignment_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.material_assignment_table.horizontalHeader().setHighlightSections(False)
-        self.material_assignment_table.setSelectionBehavior(
-            QAbstractItemView.SelectRows
-        )
-        self.material_assignment_table.setSelectionMode(
-            QAbstractItemView.SingleSelection
-        )
-
-        self.material_assignment_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
+        self.material_assignment_table = AssignmentTable(
+            ["Material"],
+            [attrgetter("material.name")],
         )
 
         layout.addWidget(self.material_assignment_table)
 
-        for assignment in material_assignment_datastore.values():
-            row = self.material_assignment_table.rowCount()
-            self.material_assignment_table.insertRow(row)
-            self.material_assignment_table.setItem(
-                row, 0, QTableWidgetItem(assignment.cell_set_name)
-            )
-            self.material_assignment_table.setItem(
-                row, 1, QTableWidgetItem(assignment.material.name)
-            )
+        self.material_assignment_table.add_items(material_assignment_datastore.values())
 
         remove_button = QPushButton("Remove")
         remove_button.clicked.connect(self._remove_clicked)
@@ -126,15 +103,7 @@ class AssignPropertiesDialog(QDialog):
         )
         material_assignment_datastore.add(assignment)
 
-        row = self.material_assignment_table.rowCount()
-        self.material_assignment_table.insertRow(row)
-        self.material_assignment_table.setItem(
-            row, 0, QTableWidgetItem(assignment.cell_set_name)
-        )
-        self.material_assignment_table.setItem(
-            row, 1, QTableWidgetItem(assignment.material.name)
-        )
-
+        self.material_assignment_table.add_items([assignment])
         self._populate_combos()
 
         logging.info(f"Assigned material {material.name} to {assignment.cell_set_name}")

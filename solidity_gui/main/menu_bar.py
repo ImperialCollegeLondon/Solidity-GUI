@@ -2,7 +2,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 from meshio import Mesh
 from pubsub import pub
@@ -11,9 +11,12 @@ from PySide6.QtWidgets import QMenu, QMenuBar
 
 from .add_shape_dialogue import AddShapeDialog
 from .assign_conditions_dialog import AssignConditionsDialog
+from .assign_initial_conditions_dialog import AssignInitialConditionsDialog
+from .assign_mesh_size_dialog import AssignMeshSizeDialog
 from .assign_properties_dialog import AssignPropertiesDialog
 from .conditions_manager_dialog import ConditionsManagerDialog
 from .geometry import SHAPES
+from .initial_conditions_manager_dialog import InitialConditionsManagerDialog
 from .joint_materials_dialog import JointMaterialsDialog
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
@@ -46,6 +49,7 @@ class MenuBar(QMenuBar):
         geometry_menu = self.addMenu("&Geometry")
         materials_menu = self.addMenu("Materia&ls")
         conditions_menu = self.addMenu("&Conditions")
+        mesh_menu = self.addMenu("&Mesh")
         job_menu = self.addMenu("&Job")
 
         geometry_menu.addAction(self._create_shape_action("ball"))
@@ -64,6 +68,11 @@ class MenuBar(QMenuBar):
         conditions_menu.addAction(
             "Create and Edit &Conditions", self.conditions_manager_dialog.open
         )
+        self.initial_conditions_manager_dialog = InitialConditionsManagerDialog()
+        conditions_menu.addAction(
+            "Create and Edit &Initial Conditions",
+            self.initial_conditions_manager_dialog.open,
+        )
 
         materials_menu.addAction(
             "&Assign Properties", lambda: AssignPropertiesDialog().exec_()
@@ -75,6 +84,21 @@ class MenuBar(QMenuBar):
         conditions_menu.addAction(
             "&Assign Conditions", lambda: AssignConditionsDialog().exec_()
         )
+
+        conditions_menu.addAction(
+            "A&ssign Initial Conditions",
+            lambda: AssignInitialConditionsDialog().exec_(),
+        )
+
+        # cast below is used to correct an erroneous type hint from PySide
+        # QMenu.addAction is typed as returning None when it actually returns QAction
+        self._mesh_size_action = cast(
+            QAction,
+            mesh_menu.addAction(
+                "&Assign Mesh Sizes", lambda: AssignMeshSizeDialog().exec_()
+            ),
+        )
+        pub.subscribe(self._disable_mesh_size_action, "mesh.create")
 
         self.save_session_action = QAction("&Save Session", self)
         self.save_session_action.triggered.connect(partial(save_session, self))
@@ -111,6 +135,11 @@ class MenuBar(QMenuBar):
         import_geometry_action = QAction("&Import Geometry from file", self)
         import_geometry_action.triggered.connect(partial(load_geometry, self))
         geometry_menu.addAction(import_geometry_action)
+
+    def _disable_mesh_size_action(
+        self, mesh_sizes: object, default_size: object
+    ) -> None:
+        self._mesh_size_action.setEnabled(False)
 
     def _enable_exporting_files(self, mesh_name: str, obj: Mesh) -> None:
         self.solidity_files_action.setEnabled(True)

@@ -5,6 +5,7 @@ from marshmallow import validate
 from meshio import Mesh
 from pubsub import pub
 
+from .assignment_base import AssignmentBase
 from .datastore import IndexDatastore
 from .forms import Form
 from .forms.fields import FloatField, IntField, StrField
@@ -71,12 +72,11 @@ class Condition:
     properties: Properties_Dict_Type = field(default_factory=PROPERTIES)
 
 
-@dataclass(frozen=True)
-class ConditionAssignment:
+@dataclass
+class ConditionAssignment(AssignmentBase):
     """Simple datastructure recording the association of a cell_set and Condition."""
 
     condition: Condition
-    cell_set_name: str
 
 
 class ConditionDatastore(IndexDatastore[Condition]):
