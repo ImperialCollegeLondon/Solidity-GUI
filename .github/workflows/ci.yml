@@ -1,9 +1,6 @@
 name: Test
 
-on: [push]
-
-env:
-  TRIAL_EXPIRY_PERIOD: 60 # days
+on: [push, workflow_call]
 
 jobs:
   qa:
@@ -69,44 +66,6 @@ jobs:
       run: pytest -k "not test_main_window and not test_vtk_window"
       if: matrix.os == 'windows-latest'
 
-    - name: Setting trial expiry period to ${{env.TRIAL_EXPIRY_PERIOD}} days
-      run: python set_trial_expiry.py ${{env.TRIAL_EXPIRY_PERIOD}}
-      if: matrix.os == 'windows-latest'
-
-    - name: Build executable
-      run: pyinstaller Solidity-GUI.spec
-      if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10'
-
-    - uses: actions/upload-artifact@v3
-      if: github.ref == 'refs/heads/main' && matrix.python-version == '3.10' && success()
-      with:
-        name: Solidity-GUI-${{matrix.os}}
-        path: dist/*
-
     - name: Check for documentation errors with MkDocs
       run: |
         mkdocs build -s
-
-  docs:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
-
-    - name: Install system dependencies in Linux
-      run: |
-        sudo apt update
-
-        # Without this, PySide6 gives an ImportError
-        sudo apt install libegl1
-
-    - name: Install dependencies
-      run: pip install -r dev-requirements.txt
-
-    - name: Deploy Docs
-      run: mkdocs gh-deploy --force

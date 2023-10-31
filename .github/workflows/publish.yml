@@ -1,0 +1,81 @@
+name: Publish
+
+on: [release]
+
+env:
+  TRIAL_EXPIRY_PERIOD: 60 # days
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-20.04, macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Dependencies (Linux)
+      run: |
+        sudo apt update
+        sudo apt-get install -y libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 \
+            x11-utils libegl1 libglu1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-render-util0 libxkbcommon-x11-0 libxcb-cursor0 libglu1-mesa
+      if: matrix.os == 'ubuntu-20.04'
+
+    - name: Setup XServer and Window Manager (Linux)
+      run: |
+        /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid \
+          --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 \
+          1920x1200x24 -ac +extension GLX +render -noreset
+      if: matrix.os == 'ubuntu-20.04'
+
+    - name: Install dependencies
+      run: pip install -r dev-requirements.txt
+
+    - name: Setting trial expiry period to ${{env.TRIAL_EXPIRY_PERIOD}} days
+      run: python set_trial_expiry.py ${{env.TRIAL_EXPIRY_PERIOD}}
+      if: matrix.os == 'windows-latest'
+
+    - name: Build executable
+      run: pyinstaller Solidity-GUI.spec
+
+    - uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: Solidity-GUI-${{matrix.os}}
+        path: dist/*
+
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install system dependencies in Linux
+      run: |
+        sudo apt update
+
+        # Without this, PySide6 gives an ImportError
+        sudo apt install libegl1
+
+    - name: Install dependencies
+      run: pip install -r dev-requirements.txt
+
+    - name: Deploy Docs
+      run: mkdocs gh-deploy --force
