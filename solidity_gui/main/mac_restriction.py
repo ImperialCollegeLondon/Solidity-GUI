@@ -5,12 +5,9 @@ import uuid
 
 from PySide6.QtWidgets import QMessageBox
 
-from ..config import APP_NAME
+from solidity_gui.config import ALLOWED_MAC_ADDRESSES
 
-# List of allowed MAC addresses
-_allowed_mac_addresses = [
-    "C8:5A:CF:78:94:CC",
-]
+from ..config import APP_NAME
 
 
 # Retrieve the MAC address of the current machine
@@ -28,7 +25,9 @@ def _get_mac_address() -> str:
 def _is_mac_address_allowed() -> bool:
     """Check if the current MAC address is allowed to run the application."""
     current_mac_address = _get_mac_address()
-    if current_mac_address in _allowed_mac_addresses:
+    if len(ALLOWED_MAC_ADDRESSES) == 0:
+        return True
+    if current_mac_address in ALLOWED_MAC_ADDRESSES:
         return True
     else:
         return False
