@@ -17,20 +17,15 @@ def _get_mac_address() -> str:
         mac = uuid.UUID(int=uuid.getnode()).hex[-12:]
         return ":".join([mac[e : e + 2].upper() for e in range(0, 11, 2)])
     except Exception as e:
-        print(f"Error occurred while trying to retrieve MAC address: {e}")
-        sys.exit()
+        raise RuntimeError("Error occurred while trying to retrieve MAC address") from e
 
 
 # Check if the current MAC address is allowed
 def _is_mac_address_allowed() -> bool:
     """Check if the current MAC address is allowed to run the application."""
-    current_mac_address = _get_mac_address()
-    if len(ALLOWED_MAC_ADDRESSES) == 0:
+    if not ALLOWED_MAC_ADDRESSES:
         return True
-    if current_mac_address in ALLOWED_MAC_ADDRESSES:
-        return True
-    else:
-        return False
+    return _get_mac_address() in ALLOWED_MAC_ADDRESSES
 
 
 def _show_expiry_dialog() -> None:
@@ -47,4 +42,4 @@ def quit_if_no_access() -> None:
     if not _is_mac_address_allowed():
         _show_expiry_dialog()
 
-        sys.exit()
+        sys.exit(1)
