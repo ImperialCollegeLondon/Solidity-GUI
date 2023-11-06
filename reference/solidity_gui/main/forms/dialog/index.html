@@ -1,0 +1,2550 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../fields/">
+      
+      
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.3">
+    
+    
+      
+        <title>dialog - Solidity-GUI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.0e669242.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#solidity_gui.main.forms.dialog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../.." title="Solidity-GUI" class="md-header__button md-logo" aria-label="Solidity-GUI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Solidity-GUI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              dialog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ImperialCollegeLondon/Solidity-GUI" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../.." title="Solidity-GUI" class="md-nav__button md-logo" aria-label="Solidity-GUI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Solidity-GUI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ImperialCollegeLondon/Solidity-GUI" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Solidity-GUI documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../developer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Developer Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Code Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Code Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    solidity_gui
+  </span>
+  
+
+            </a>
+            
+              <label class="md-nav__link " for="__nav_3_1">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            solidity_gui
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../initialise/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    initialise
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../logger/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    logger
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_4" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    main
+  </span>
+  
+
+            </a>
+            
+              <label class="md-nav__link " for="__nav_3_1_4">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            main
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add_shape_dialogue/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    add_shape_dialogue
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assign_conditions_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    assign_conditions_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assign_properties_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    assign_properties_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../components/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    components
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../condition/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    condition
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../conditions_manager_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    conditions_manager_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../control/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    control
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../control_panel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    control_panel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../create_condition_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    create_condition_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../create_material_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    create_material_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../create_mesh_button/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    create_mesh_button
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom_interactor_style/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    custom_interactor_style
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../datastore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    datastore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../edit_condition_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    edit_condition_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../edit_material_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    edit_material_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../edit_property_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    edit_property_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../error_message/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    error_message
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_4_18" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    forms
+  </span>
+  
+
+            </a>
+            
+              <label class="md-nav__link " for="__nav_3_1_4_18">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_1_4_18_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_1_4_18">
+            <span class="md-nav__icon md-icon"></span>
+            forms
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    dialog
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    dialog
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog" class="md-nav__link">
+    dialog
+  </a>
+  
+    <nav class="md-nav" aria-label="dialog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog-classes" class="md-nav__link">
+    Classes
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.SimpleFormDialog" class="md-nav__link">
+    SimpleFormDialog
+  </a>
+  
+    <nav class="md-nav" aria-label="SimpleFormDialog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.SimpleFormDialog-functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.SimpleFormDialog.get_validated_data" class="md-nav__link">
+    get_validated_data()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.SimpleFormDialog.run" class="md-nav__link">
+    run()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog-functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.default_field_renderer" class="md-nav__link">
+    default_field_renderer()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.default_form_renderer" class="md-nav__link">
+    default_form_renderer()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.single_choice_field_renderer" class="md-nav__link">
+    single_choice_field_renderer()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.single_choice_form_renderer" class="md-nav__link">
+    single_choice_form_renderer()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fields/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    fields
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../forms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    forms
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../info/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    info
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../widgets/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    widgets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../geometry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    geometry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../geometry_wrapper/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    geometry_wrapper
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gmsh_process/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    gmsh_process
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../initial_condition/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    initial_condition
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../joint_materials_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    joint_materials_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../joint_materials_form/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    joint_materials_form
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../load_geometry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    load_geometry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../main_window/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    main_window
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../material/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    material
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../materials_manager_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    materials_manager_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../menu_bar/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    menu_bar
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mesh_mask_combobox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    mesh_mask_combobox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mesh_selection_combobox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    mesh_selection_combobox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mesh_size_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    mesh_size_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../meshes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    meshes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../session_handling/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    session_handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solidity_dialog/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    solidity_dialog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solidity_file_generator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    solidity_file_generator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trial_expiry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    trial_expiry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../uncaught_exceptions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    uncaught_exceptions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../visualisation_toolbar/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    visualisation_toolbar
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vtk_window/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    vtk_window
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../plugins/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    plugins
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../solidity/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    solidity
+  </span>
+  
+
+            </a>
+            
+              <label class="md-nav__link " for="__nav_3_1_6">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            solidity
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../solidity/pubsub_decorators/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pubsub_decorators
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog" class="md-nav__link">
+    dialog
+  </a>
+  
+    <nav class="md-nav" aria-label="dialog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog-classes" class="md-nav__link">
+    Classes
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.SimpleFormDialog" class="md-nav__link">
+    SimpleFormDialog
+  </a>
+  
+    <nav class="md-nav" aria-label="SimpleFormDialog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.SimpleFormDialog-functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.SimpleFormDialog.get_validated_data" class="md-nav__link">
+    get_validated_data()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.SimpleFormDialog.run" class="md-nav__link">
+    run()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog-functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.default_field_renderer" class="md-nav__link">
+    default_field_renderer()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.default_form_renderer" class="md-nav__link">
+    default_form_renderer()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.single_choice_field_renderer" class="md-nav__link">
+    single_choice_field_renderer()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solidity_gui.main.forms.dialog.single_choice_form_renderer" class="md-nav__link">
+    single_choice_form_renderer()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>dialog</h1>
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="solidity_gui.main.forms.dialog" class="doc doc-heading">
+            <code>solidity_gui.main.forms.dialog</code>
+
+
+<a href="#solidity_gui.main.forms.dialog" class="headerlink" title="Permanent link">¤</a></h2>
+
+  <div class="doc doc-contents first">
+  
+      <p>Support for rendering Form objects as individual dialog boxes.</p>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+<h3 id="solidity_gui.main.forms.dialog-classes">Classes<a href="#solidity_gui.main.forms.dialog-classes" class="headerlink" title="Permanent link">¤</a></h3>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h4 id="solidity_gui.main.forms.dialog.SimpleFormDialog" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">SimpleFormDialog</span><span class="p">(</span><span class="n">form_class</span><span class="p">,</span> <span class="n">form_renderer</span><span class="o">=</span><span class="n">default_form_renderer</span><span class="p">,</span> <span class="n">initial_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#solidity_gui.main.forms.dialog.SimpleFormDialog" class="headerlink" title="Permanent link">¤</a></h4>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="PySide6.QtWidgets.QDialog">QDialog</span></code></p>
+
+  
+      <p>A dedicated QDialog subclass for presenting a form to the user.</p>
+<p>This dialog displays the form according to the provided render function, adds an
+OK/Cancel button pair and wires up basic signal handlers. In the event of the
+submitted form failing validation, the dialog contents are re-rendered with error
+messages.</p>
+<p>This class is designed to be extensible and indeed must be extended to in order to
+do anything useful. The <code>_ok_clicked</code> handler provides sensible default behaviour in
+the case of invalid data being provided but does not do anything in the case of
+valid data.</p>
+<p>The simplest intended use case for this form is therefore as below:</p>
+<pre><code>class FunctionalDialog(SimpleFormDialog):
+    def _ok_clicked(self):
+        if data := super()._ok_clicked():
+            # do something useful with data
+</code></pre>
+<p>This preserves the data validation behaviour and tacks on additional actions to
+perform with data that passes validation. Alternatively, you can overwrite
+<code>_ok_clicked</code> without calling the superclass implementation. This gives more
+flexibility but you will probably need to implement data validation and form update
+behaviours.</p>
+<p>A basic StyleSheet is applied that assumes the naming conventions used by
+<code>default_form_renderer</code>. The headers of fields in top-level forms are shown in bold
+and without bolding for nested fields.</p>
+  
+      <p>Initialise a new SimpleFormDialog.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>form_class</code></td>
+          <td>
+                <code>type[<a class="autorefs autorefs-internal" title="solidity_gui.main.forms.forms.Form" href="../forms/#solidity_gui.main.forms.forms.Form">Form</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>form to display</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>form_renderer</code></td>
+          <td>
+                <code><span title="collections.abc.Callable">Callable</span>[[<a class="autorefs autorefs-internal" title="solidity_gui.main.forms.info.FormInfo" href="../info/#solidity_gui.main.forms.info.FormInfo">FormInfo</a>], <span title="PySide6.QtWidgets.QLayout">QLayout</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>renderer that creates GUI elements from a FormInfo instance</p>
+            </div>
+          </td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="solidity_gui.main.forms.dialog.default_form_renderer" href="#solidity_gui.main.forms.dialog.default_form_renderer">default_form_renderer</a></code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>initial_data</code></td>
+          <td>
+                <code>dict[str, <span title="typing.Any">Any</span>] | None</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>data to pre-populate into the form</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+              <details class="quote">
+                <summary>Source code in <code>solidity_gui/main/forms/dialog.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">form_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Form</span><span class="p">],</span>
+    <span class="n">form_renderer</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">FormInfo</span><span class="p">],</span> <span class="n">QLayout</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_form_renderer</span><span class="p">,</span>
+    <span class="n">initial_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialise a new SimpleFormDialog.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      form_class: form to display</span>
+<span class="sd">      form_renderer: renderer that creates GUI elements from a FormInfo instance</span>
+<span class="sd">      initial_data: data to pre-populate into the form</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">form_class</span> <span class="o">=</span> <span class="n">form_class</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">form_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_class</span><span class="p">()</span><span class="o">.</span><span class="n">form_info</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">initial_data</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">form_renderer</span> <span class="o">=</span> <span class="n">form_renderer</span>
+    <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_contents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">form_info</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+    <span class="c1"># style different label types in form</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span>
+        <span class="s2">&quot;QLabel#error { color: red } &quot;</span>
+        <span class="s2">&quot;QLabel#description { color: gray } &quot;</span>
+        <span class="s2">&quot;QLabel#header-0 { font-weight: bold }&quot;</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="solidity_gui.main.forms.dialog.SimpleFormDialog-functions">Functions<a href="#solidity_gui.main.forms.dialog.SimpleFormDialog-functions" class="headerlink" title="Permanent link">¤</a></h5>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h6 id="solidity_gui.main.forms.dialog.SimpleFormDialog.get_validated_data" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_validated_data</span><span class="p">()</span></code>
+
+<a href="#solidity_gui.main.forms.dialog.SimpleFormDialog.get_validated_data" class="headerlink" title="Permanent link">¤</a></h6>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Validate and return the data currently entered into the form.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>solidity_gui/main/forms/dialog.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_validated_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate and return the data currently entered into the form.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data collected.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h6 id="solidity_gui.main.forms.dialog.SimpleFormDialog.run" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">run</span><span class="p">()</span></code>
+
+<a href="#solidity_gui.main.forms.dialog.SimpleFormDialog.run" class="headerlink" title="Permanent link">¤</a></h6>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Display the dialog and return collected data.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>solidity_gui/main/forms/dialog.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Display the dialog and return collected data.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_validated_data</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+<h3 id="solidity_gui.main.forms.dialog-functions">Functions<a href="#solidity_gui.main.forms.dialog-functions" class="headerlink" title="Permanent link">¤</a></h3>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="solidity_gui.main.forms.dialog.default_field_renderer" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">default_field_renderer</span><span class="p">(</span><span class="n">field_info</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">include_header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#solidity_gui.main.forms.dialog.default_field_renderer" class="headerlink" title="Permanent link">¤</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Render an individual field within a form.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>field_info</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="solidity_gui.main.forms.info.FieldInfo" href="../info/#solidity_gui.main.forms.info.FieldInfo">FieldInfo</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>the field to render</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>level</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>the level of nesting for the form containing this field</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>include_header</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>whether to render field_info.header in a QLabel</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>solidity_gui/main/forms/dialog.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">default_field_renderer</span><span class="p">(</span>
+    <span class="n">field_info</span><span class="p">:</span> <span class="n">FieldInfo</span><span class="p">,</span>
+    <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">include_header</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QLayout</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render an individual field within a form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      field_info: the field to render</span>
+<span class="sd">      level: the level of nesting for the form containing this field</span>
+<span class="sd">      include_header: whether to render field_info.header in a QLabel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">include_header</span> <span class="ow">and</span> <span class="n">field_info</span><span class="o">.</span><span class="n">header</span><span class="p">:</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span>
+            <span class="n">_create_named_label</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">field_info</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;header-</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">field_info</span><span class="o">.</span><span class="n">description</span><span class="p">:</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">_create_named_label</span><span class="p">(</span><span class="n">field_info</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">input_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">field_info</span><span class="o">.</span><span class="n">input</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_info</span><span class="o">.</span><span class="n">errors</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">errors</span> <span class="o">:=</span> <span class="n">field_info</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">:</span>
+                    <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">_create_named_label</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">))</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">input_</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_info</span><span class="o">.</span><span class="n">errors</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">field_info</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">_create_named_label</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">layout</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="solidity_gui.main.forms.dialog.default_form_renderer" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">default_form_renderer</span><span class="p">(</span><span class="n">form_info</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></code>
+
+<a href="#solidity_gui.main.forms.dialog.default_form_renderer" class="headerlink" title="Permanent link">¤</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Render a FormInfo instance into a QVBoxLayout.</p>
+<p>This function aims to provide a sensible default layout agnostic to use
+context. Field errors, headers and descriptions are displayed as QLabel objects with
+appropriate ObjectName values to allow simple and consistent styling. Errors are
+displayed immediately after the most relevant context (e.g. input widget for field
+level errors, end of form for schema level errors).</p>
+<p>Rendering of nested forms is supported. The level of nesting is tracked via <code>level</code>
+and is used to set different ObjectNames for field headers i.e. the QLabel's used to
+display header information at the outer level have the ObjectName 'header-0', at the
+first level of nesting 'header-1' and so on. This can be used in combination with
+the StyleSheet of a dialog to control the appearance of headers at different
+levels. Nested forms are also rendered with a small indent on the left.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>form_info</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="solidity_gui.main.forms.info.FormInfo" href="../info/#solidity_gui.main.forms.info.FormInfo">FormInfo</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>description of the form to render</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>level</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>the level of nesting of the form to render used to fine tune appearance</p>
+            </div>
+          </td>
+          <td>
+                <code>0</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>solidity_gui/main/forms/dialog.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">default_form_renderer</span><span class="p">(</span><span class="n">form_info</span><span class="p">:</span> <span class="n">FormInfo</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QLayout</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render a FormInfo instance into a QVBoxLayout.</span>
+
+<span class="sd">    This function aims to provide a sensible default layout agnostic to use</span>
+<span class="sd">    context. Field errors, headers and descriptions are displayed as QLabel objects with</span>
+<span class="sd">    appropriate ObjectName values to allow simple and consistent styling. Errors are</span>
+<span class="sd">    displayed immediately after the most relevant context (e.g. input widget for field</span>
+<span class="sd">    level errors, end of form for schema level errors).</span>
+
+<span class="sd">    Rendering of nested forms is supported. The level of nesting is tracked via `level`</span>
+<span class="sd">    and is used to set different ObjectNames for field headers i.e. the QLabel&#39;s used to</span>
+<span class="sd">    display header information at the outer level have the ObjectName &#39;header-0&#39;, at the</span>
+<span class="sd">    first level of nesting &#39;header-1&#39; and so on. This can be used in combination with</span>
+<span class="sd">    the StyleSheet of a dialog to control the appearance of headers at different</span>
+<span class="sd">    levels. Nested forms are also rendered with a small indent on the left.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      form_info: description of the form to render</span>
+<span class="sd">      level: the level of nesting of the form to render used to fine tune appearance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">form_info</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">FieldInfo</span><span class="p">):</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">default_field_renderer</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">level</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">FormInfo</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">header</span><span class="p">:</span>
+                <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span>
+                    <span class="n">_create_named_label</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;header-</span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">single_choice</span><span class="p">:</span>
+                <span class="n">nested_layout</span> <span class="o">=</span> <span class="n">single_choice_form_renderer</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nested_layout</span> <span class="o">=</span> <span class="n">default_form_renderer</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># add to left margin to indent nested forms a bit</span>
+                <span class="n">margins</span> <span class="o">=</span> <span class="n">nested_layout</span><span class="o">.</span><span class="n">getContentsMargins</span><span class="p">()</span>
+                <span class="n">nested_layout</span><span class="o">.</span><span class="n">setContentsMargins</span><span class="p">(</span><span class="n">margins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">20</span><span class="p">,</span> <span class="o">*</span><span class="n">margins</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">nested_layout</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">form_info</span><span class="o">.</span><span class="n">schema_errors</span><span class="p">:</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">_create_named_label</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">layout</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="solidity_gui.main.forms.dialog.single_choice_field_renderer" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">single_choice_field_renderer</span><span class="p">(</span><span class="n">field_info</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">checked</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#solidity_gui.main.forms.dialog.single_choice_field_renderer" class="headerlink" title="Permanent link">¤</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Return layout of a form field with an associated radio button.</p>
+<p>Rather than using a QLabel for the header a radio button is used instead. The
+disabled attribute of the field_info object is set according to the checked status
+of the radio button.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>solidity_gui/main/forms/dialog.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">single_choice_field_renderer</span><span class="p">(</span>
+    <span class="n">field_info</span><span class="p">:</span> <span class="n">FieldInfo</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">checked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QLayout</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return layout of a form field with an associated radio button.</span>
+
+<span class="sd">    Rather than using a QLabel for the header a radio button is used instead. The</span>
+<span class="sd">    disabled attribute of the field_info object is set according to the checked status</span>
+<span class="sd">    of the radio button.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+    <span class="n">radio</span> <span class="o">=</span> <span class="n">QRadioButton</span><span class="p">(</span><span class="n">field_info</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+
+    <span class="n">field_info</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="n">checked</span>
+    <span class="n">field_layout</span> <span class="o">=</span> <span class="n">default_field_renderer</span><span class="p">(</span><span class="n">field_info</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">include_header</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># set up signal handler that controls whether field input widgets are disabled</span>
+    <span class="k">def</span> <span class="nf">_toggled_handler</span><span class="p">(</span><span class="n">checked</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">field_info</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="n">checked</span>
+
+    <span class="n">radio</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">_toggled_handler</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
+
+    <span class="n">radio</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">checked</span><span class="p">)</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">radio</span><span class="p">)</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">field_layout</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">layout</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="solidity_gui.main.forms.dialog.single_choice_form_renderer" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">single_choice_form_renderer</span><span class="p">(</span><span class="n">form_info</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></code>
+
+<a href="#solidity_gui.main.forms.dialog.single_choice_form_renderer" class="headerlink" title="Permanent link">¤</a></h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Render a FormInfo instance such that only a single field may be completed.</p>
+<p>This is used to present the user with a choice between data to provide. Practically
+this is achieved via the use of a QGroupBox widget with exclusive radio buttons for
+each field in <code>form_info</code>.</p>
+<p>The presence of nested forms is not currently supported.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>solidity_gui/main/forms/dialog.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">single_choice_form_renderer</span><span class="p">(</span><span class="n">form_info</span><span class="p">:</span> <span class="n">FormInfo</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QLayout</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render a FormInfo instance such that only a single field may be completed.</span>
+
+<span class="sd">    This is used to present the user with a choice between data to provide. Practically</span>
+<span class="sd">    this is achieved via the use of a QGroupBox widget with exclusive radio buttons for</span>
+<span class="sd">    each field in `form_info`.</span>
+
+<span class="sd">    The presence of nested forms is not currently supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+    <span class="n">group_box</span> <span class="o">=</span> <span class="n">QGroupBox</span><span class="p">()</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">group_box</span><span class="p">)</span>
+    <span class="n">box_layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+    <span class="n">group_box</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">box_layout</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field_info</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">form_info</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_info</span><span class="p">,</span> <span class="n">FormInfo</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Nesting forms within a SingleChoiceNestedForm is not supported.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">box_layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span>
+            <span class="n">single_choice_field_renderer</span><span class="p">(</span><span class="n">field_info</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">checked</span><span class="o">=</span><span class="ow">not</span> <span class="n">i</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">form_info</span><span class="o">.</span><span class="n">schema_errors</span><span class="p">:</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">_create_named_label</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">layout</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../../../..", "features": [], "search": "../../../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.78eede0e.min.js"></script>
+      
+    
+  </body>
+</html>
