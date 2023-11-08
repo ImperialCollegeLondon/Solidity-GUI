@@ -28,7 +28,7 @@ a = Analysis(
     ["stub.py"],
     pathex=[],
     binaries=[(gmsh_lib, ".")],
-    datas=[("solidity_gui/templates/BST.Y3D.jinja", "solidity_gui/templates")],
+    datas=[("solidity_gui/templates/BST.Y3D.jinja", "solidity_gui/templates/mat.txt.jinja", "solidity_gui/templates")],
     hiddenimports=[
         "gmsh",
         "PySide6.plugins",
