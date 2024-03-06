@@ -7,9 +7,7 @@ from datetime import date
 
 from PySide6.QtWidgets import QMessageBox
 
-from solidity_gui.config import ALLOWED_MAC_ADDRESSES, TRIAL_EXPIRY_DATE
-
-from ..config import APP_NAME
+from solidity_gui.config import ALLOWED_MAC_ADDRESSES, APP_NAME, TRIAL_EXPIRY_DATE
 
 
 def _has_expired() -> bool:
