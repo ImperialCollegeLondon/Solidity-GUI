@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
         """Show the main window."""
         super().show()
 
-        # Checking MAC access
+        # Access verification
         quit_if_no_access()
 
     def closeEvent(self, event: QCloseEvent) -> None:

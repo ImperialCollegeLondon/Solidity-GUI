@@ -8,10 +8,15 @@ from pathlib import Path
 block_cipher = None
 
 mac_address_verification_hook = Path.cwd() / "setup_mac_address_verification.py"
+trial_expiry_hook = Path.cwd() / "setup_trial_expiry.py"
 runtime_hooks = []
 if mac_address_verification_hook.exists():
     logging.warn("setup_mac_address_verification.py found. Adding MAC verification to program.")
     runtime_hooks.append(str(mac_address_verification_hook))
+
+if trial_expiry_hook.exists():
+    logging.warn("setup_trial_expiry.py found. Adding expiry date to program.")
+    runtime_hooks.append(str(trial_expiry_hook))
 
 extra_hiddenimports = os.getenv("PLUGIN_IMPORT_PATHS", "")
 extra_hiddenimports = extra_hiddenimports.strip().split(",")
