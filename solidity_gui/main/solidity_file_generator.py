@@ -1,4 +1,5 @@
 """This module provides functionality to generate an input file for Solidity."""
+
 import logging
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -517,8 +518,8 @@ def get_mat_data(
                 )
             joint_material_data.append(
                 JointMaterialData(
-                    index1=material_id,
-                    index2=material_id,
+                    index1=material_id + 1,
+                    index2=material_id + 1,
                     data=dict(
                         tensile_strength=joint_data["tensile_strength"],
                         internal_friction_coefficient=joint_data[
@@ -546,8 +547,8 @@ def get_mat_data(
             )
         joint_material_data.append(
             JointMaterialData(
-                index1=materials.get_positional_index(material1),
-                index2=materials.get_positional_index(material2),
+                index1=materials.get_positional_index(material1) + 1,
+                index2=materials.get_positional_index(material2) + 1,
                 data=joint_properties,
             )
         )
