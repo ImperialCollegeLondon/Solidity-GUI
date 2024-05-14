@@ -340,7 +340,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> dict[str, Any]:
             for property_line in property_line_dict.values():
                 property_line.append(property_line[i])
         property_lines["_calculated"]["is_joint"].append(15)
-        property_lines["_calculated"]["is_damage"].append(0)
+        property_lines["_calculated"]["is_fracture"].append(0)
         property_lines["_calculated"]["material_index"].append(i + 1)
     return dict(
         materials=materials.values(),
