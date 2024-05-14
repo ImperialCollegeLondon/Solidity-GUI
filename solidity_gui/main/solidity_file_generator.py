@@ -324,7 +324,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> dict[str, Any]:
                 property_line_dict.setdefault(key, []).append(value)
         calculated_properties = property_lines.setdefault("_calculated", {})
         calculated_properties.setdefault("is_joint", []).append(13)
-        calculated_properties.setdefault("is_damage", []).append(
+        calculated_properties.setdefault("is_fracture", []).append(
             3 if material.properties["joint"].enabled else 0
         )
         calculated_properties.setdefault("material_index", []).append(i)
