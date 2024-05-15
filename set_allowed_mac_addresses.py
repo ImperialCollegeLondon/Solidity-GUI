@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Generates the setup_verification.py file.
+"""Generates the setup_mac_address_verification.py file.
 
 This is used as a runtime hook by Pyinstaller to enforce MAC address verification.
 """
