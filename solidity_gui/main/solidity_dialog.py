@@ -67,9 +67,9 @@ def run_solidity(parent: QWidget) -> None:
         # Update dialog and show
         _solidity_dlg.update_dialog(
             y3d_file_path=file_paths[0],
-            layout_file_path=file_paths[1],
-            pellet_file_path=file_paths[2],
-            materials_file_path=file_paths[3],
+            layout_file_path=file_paths[2],
+            pellet_file_path=file_paths[3],
+            materials_file_path=file_paths[1],
         )
         _solidity_dlg.exec_()
 
