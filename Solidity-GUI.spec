@@ -8,7 +8,6 @@ from pathlib import Path
 block_cipher = None
 
 mac_address_verification_hook = Path.cwd() / "setup_mac_address_verification.py"
-trial_expiry_hook = Path.cwd() / "setup_trial_expiry.py"
 runtime_hooks = []
 if mac_address_verification_hook.exists():
     logging.warn("setup_mac_address_verification.py found. Adding MAC verification to program.")
