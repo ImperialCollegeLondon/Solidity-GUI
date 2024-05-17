@@ -133,7 +133,7 @@ def PROPERTIES() -> Properties_Dict_Type:
             ),
         ),
         "other": Property(
-            category="Other",
+            category="General",
             name="Other",
             enabled=False,
             attributes=OtherForm,
