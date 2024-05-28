@@ -37,7 +37,7 @@ class ElasticityForm(Form):
     )
 
 
-class FractureForm(Form):
+class DamageForm(Form):
     """Form for collecting properties related to fracturing."""
 
     damage_delta_0 = WiderFloatField(display_name="Damage Delta 0")
@@ -121,11 +121,11 @@ def PROPERTIES() -> Properties_Dict_Type:
                 lames_second_parameter=2.41935483871e10,
             ),
         ),
-        "fracture": Property(
+        "damage": Property(
             category="Mechanical",
-            name="Fracture",
+            name="Damage",
             enabled=False,
-            attributes=FractureForm,
+            attributes=DamageForm,
             default_data=dict(
                 damage_delta_0=1.0,
                 damage_delta_1=1.0,
