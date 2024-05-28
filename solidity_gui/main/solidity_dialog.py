@@ -1,4 +1,5 @@
 """This module provides functionality to run Solidity."""
+
 import html
 import logging
 import weakref
@@ -30,13 +31,21 @@ def get_file_paths() -> list[Path] | None:
     file_paths = []
     file_dialog = QFileDialog()
     file_dialog.setFileMode(QFileDialog.ExistingFiles)
+
+    # Dialog for selecting BST.Y3D file
     file_dialog.setWindowTitle("Select BST.Y3D")
     if file_dialog.exec_() == QFileDialog.DialogCode.Rejected:
         return None
     file_paths.append(Path(file_dialog.selectedFiles()[0]))
     path = QFileInfo(file_paths[0]).path()
 
-    for file in ["layout.txt", "pellet.txt", "mat.txt"]:
+    # Dialog for selecting mat.txt file
+    file_dialog.setWindowTitle("Select mat.txt")
+    if file_dialog.exec_() == QFileDialog.DialogCode.Rejected:
+        return None
+    file_paths.append(Path(file_dialog.selectedFiles()[0]))
+
+    for file in ["layout.txt", "pellet.txt"]:
         file_path = Path(path, file)
         try:
             file_path.resolve(strict=True)
@@ -58,9 +67,9 @@ def run_solidity(parent: QWidget) -> None:
         # Update dialog and show
         _solidity_dlg.update_dialog(
             y3d_file_path=file_paths[0],
-            layout_file_path=file_paths[1],
-            pellet_file_path=file_paths[2],
-            materials_file_path=file_paths[3],
+            layout_file_path=file_paths[2],
+            pellet_file_path=file_paths[3],
+            materials_file_path=file_paths[1],
         )
         _solidity_dlg.exec_()
 
