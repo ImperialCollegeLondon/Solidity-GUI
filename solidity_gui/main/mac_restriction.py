@@ -5,22 +5,27 @@ import sys
 import uuid
 from datetime import date
 
-from PySide6.QtWidgets import QMessageBox
-
-from solidity_gui.config import ALLOWED_MAC_ADDRESSES, APP_NAME, TRIAL_EXPIRY_DATE
+from solidity_gui.config import ALLOWED_MAC_ADDRESSES
 
 
-def _has_expired() -> bool:
+def _has_expired(mac_address: str) -> bool:
     """Check whether the trial period for this program has elapsed."""
+    expiry = ALLOWED_MAC_ADDRESSES.get(mac_address)
     # Not a trial version
-    if not TRIAL_EXPIRY_DATE:
+    if expiry is None:
         return False
 
-    logging.warn(
-        f"This trial version will expire on {TRIAL_EXPIRY_DATE.strftime('%d %b %Y')}."
-    )
+    expiry_date = date.fromisoformat(expiry)
+    if date.today() > expiry_date:
+        logging.warn(
+            f"This trial version expired on {expiry_date.strftime('%d %b %Y')}."
+        )
+        return True
 
-    return date.today() >= TRIAL_EXPIRY_DATE
+    logging.warn(
+        f"This trial version will expire on {expiry_date.strftime('%d %b %Y')}."
+    )
+    return False
 
 
 def _get_mac_address() -> str:
@@ -34,27 +39,13 @@ def _get_mac_address() -> str:
 
 def _is_mac_address_allowed() -> bool:
     """Check if the current MAC address is allowed to run the application."""
+    mac_address = _get_mac_address()
     if not ALLOWED_MAC_ADDRESSES:
         return True
-    return _get_mac_address() in ALLOWED_MAC_ADDRESSES
-
-
-def _show_expiry_dialog() -> None:
-    """Show a dialog box when the trial version of the application has expired."""
-    err_box = QMessageBox()
-    err_box.setIcon(QMessageBox.Icon.Critical)
-    err_box.setWindowTitle("Access restricted")
-    err_box.setText(
-        f"This version {APP_NAME} expired "
-        f"on {TRIAL_EXPIRY_DATE.strftime('%d %b %Y')}."  # type: ignore[union-attr]
-        f"The machine you are using is not authorised to run {APP_NAME}."
-    )
-    err_box.exec_()
+    return mac_address in ALLOWED_MAC_ADDRESSES and not _has_expired(mac_address)
 
 
 def quit_if_no_access() -> None:
     """Quit the application if the current machine is not allowed to run it."""
-    if not _is_mac_address_allowed() and _has_expired():
-        _show_expiry_dialog()
-
+    if not _is_mac_address_allowed():
         sys.exit(1)

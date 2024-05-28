@@ -1,4 +1,5 @@
 """This module provides functionality to generate an input file for Solidity."""
+
 import logging
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -324,7 +325,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> dict[str, Any]:
                 property_line_dict.setdefault(key, []).append(value)
         calculated_properties = property_lines.setdefault("_calculated", {})
         calculated_properties.setdefault("is_joint", []).append(13)
-        calculated_properties.setdefault("is_damage", []).append(
+        calculated_properties.setdefault("is_fracture", []).append(
             3 if material.properties["joint"].enabled else 0
         )
         calculated_properties.setdefault("material_index", []).append(i)
@@ -340,7 +341,7 @@ def generate_material_data(materials: Mapping[int, Material]) -> dict[str, Any]:
             for property_line in property_line_dict.values():
                 property_line.append(property_line[i])
         property_lines["_calculated"]["is_joint"].append(15)
-        property_lines["_calculated"]["is_damage"].append(0)
+        property_lines["_calculated"]["is_fracture"].append(0)
         property_lines["_calculated"]["material_index"].append(i + 1)
     return dict(
         materials=materials.values(),
@@ -517,8 +518,8 @@ def get_mat_data(
                 )
             joint_material_data.append(
                 JointMaterialData(
-                    index1=material_id,
-                    index2=material_id,
+                    index1=material_id + 1,
+                    index2=material_id + 1,
                     data=dict(
                         tensile_strength=joint_data["tensile_strength"],
                         internal_friction_coefficient=joint_data[
@@ -546,8 +547,8 @@ def get_mat_data(
             )
         joint_material_data.append(
             JointMaterialData(
-                index1=materials.get_positional_index(material1),
-                index2=materials.get_positional_index(material2),
+                index1=materials.get_positional_index(material1) + 1,
+                index2=materials.get_positional_index(material2) + 1,
                 data=joint_properties,
             )
         )
