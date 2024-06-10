@@ -6,16 +6,19 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   qa:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: pre-commit/action@v3.0.0
 
   check-links:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
@@ -58,6 +61,8 @@ jobs:
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: "dev-requirements.txt"
 
     - name: Install dependencies
       run: pip install -r dev-requirements.txt
