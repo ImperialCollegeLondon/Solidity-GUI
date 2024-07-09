@@ -2,6 +2,7 @@
 
 import html
 import logging
+import multiprocessing
 import weakref
 from collections.abc import Iterable
 from pathlib import Path
@@ -15,8 +16,10 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QGridLayout,
+    QLabel,
     QPlainTextEdit,
     QPushButton,
+    QSpinBox,
     QWidget,
 )
 from python_on_whales.exceptions import DockerException
@@ -101,10 +104,19 @@ class SolidityDialog(QDialog):
         cancel_btn.rejected.connect(self.hide)
         layout.addWidget(cancel_btn, 0, 2, Qt.AlignmentFlag.AlignCenter)
 
+        # CPU selection spin box
+        self._cpu_label = QLabel("CPU Cores:")
+        self._cpu_spin_box = QSpinBox()
+        self._cpu_spin_box.setRange(1, multiprocessing.cpu_count())
+        self._cpu_spin_box.setValue(multiprocessing.cpu_count())
+        self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
+        layout.addWidget(self._cpu_label, 1, 0)
+        layout.addWidget(self._cpu_spin_box, 1, 1)
+
         self._log_text_edit = QPlainTextEdit()
         self._log_text_edit.setFont(QFont("monospace"))
         self._log_text_edit.setReadOnly(True)
-        layout.addWidget(self._log_text_edit, 1, 0, 1, 3)
+        layout.addWidget(self._log_text_edit, 2, 0, 1, 3)
 
         self.setLayout(layout)
 

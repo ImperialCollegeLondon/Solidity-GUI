@@ -2,6 +2,7 @@
 
 It achieves this by using the docker image.
 """
+
 import logging
 import sys
 from collections.abc import Iterable
@@ -18,6 +19,7 @@ import solidity_gui
 from ..config import (
     DOCKER_IMAGE_ID,
     DOCKER_IMAGE_ID_SHORT,
+    NUM_CPUS,
     SOLIDITY_CONTAINER_NAME,
     SOLIDITY_DOCKER_IMAGE,
 )
@@ -155,6 +157,7 @@ def _run_solidity(
         detach=not stream,
         name=SOLIDITY_CONTAINER_NAME,
         stream=stream,
+        cpus=NUM_CPUS,
     )
 
 
