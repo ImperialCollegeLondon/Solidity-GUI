@@ -1,4 +1,5 @@
 """Code to display a mesh within a VTK window."""
+
 import logging
 from typing import Any
 
@@ -109,6 +110,15 @@ class VTKWindow(QVTKRenderWindowInteractor):
         pub.subscribe(self.render_mesh, "geometry.updated")
         pub.subscribe(self.render_mesh, "mesh.updated")
         pub.subscribe(self.render_mesh, "session.load")
+
+        pub.subscribe(self._clear_meshes, "session.clear")
+
+    def _clear_meshes(self) -> None:
+        """Clear all meshes from the VTKWindow."""
+        for actor in self.actors.values():
+            self.ren.RemoveActor(actor)
+
+        self.reset_camera()
 
     def render_mesh(self, mesh_name: str, mesh: Mesh) -> None:
         """Render a mesh within the VTKWindow.

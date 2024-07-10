@@ -1,4 +1,5 @@
 """Code to create the toolbar containing the visualisation controls."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
@@ -20,7 +21,7 @@ from .initial_conditions_manager_dialog import InitialConditionsManagerDialog
 from .joint_materials_dialog import JointMaterialsDialog
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
-from .session_handling import load_session, save_session
+from .session_handling import load_session, save_session, start_new_session
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_output_files
 
@@ -100,6 +101,9 @@ class MenuBar(QMenuBar):
         )
         pub.subscribe(self._disable_mesh_size_action, "mesh.create")
 
+        # New session
+        file_menu.addAction(self._create_action("&New Session", start_new_session))
+
         self.save_session_action = QAction("&Save Session", self)
         self.save_session_action.triggered.connect(partial(save_session, self))
         self.save_session_action.setEnabled(False)
@@ -121,8 +125,9 @@ class MenuBar(QMenuBar):
         # the first component is added
         pub.subscribe(self._enable_exporting_files, "add_component.finish")
 
-        # We also want to enable the export BST button when a session is loaded
         pub.subscribe(self._enable_exporting_files, "session.enable_export_bst")
+
+        pub.subscribe(self._disable_exporting_files, "session.disable_export_bst")
 
         job_menu.addAction(
             self._create_action("&Run Solidity", partial(run_solidity, self))
@@ -140,6 +145,10 @@ class MenuBar(QMenuBar):
         self, mesh_sizes: object, default_size: object
     ) -> None:
         self._mesh_size_action.setEnabled(False)
+
+    def _disable_exporting_files(self) -> None:
+        self.solidity_files_action.setEnabled(False)
+        self.save_session_action.setEnabled(False)
 
     def _enable_exporting_files(self, mesh_name: str, obj: Mesh) -> None:
         self.solidity_files_action.setEnabled(True)
