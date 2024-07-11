@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 from python_on_whales.exceptions import DockerException
 
+from .. import config
 from .error_message import display_error_message
 
 OutputStream = Iterable[tuple[str, bytes]]
@@ -171,6 +172,7 @@ class SolidityDialog(QDialog):
             )
 
     def _start_solidity(self) -> None:
+        config.NUM_CPUS = self._cpu_spin_box.value()
         self._start_btn.setEnabled(False)
         self._log("Setting up Solidity (this may take some time)...")
         pub.sendMessage("docker.pull")
