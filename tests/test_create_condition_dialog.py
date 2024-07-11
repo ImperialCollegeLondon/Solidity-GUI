@@ -1,4 +1,5 @@
 """Test case for CreateConditionDialog."""
+
 from solidity_gui.main.condition import Condition, ConditionForm, condition_datastore
 from solidity_gui.main.create_condition_dialog import CreateConditionDialog
 

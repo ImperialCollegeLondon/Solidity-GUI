@@ -1,4 +1,5 @@
 """Module defining Condition and ConditionAssignment datastructures."""
+
 from dataclasses import dataclass, field
 
 from marshmallow import validate
