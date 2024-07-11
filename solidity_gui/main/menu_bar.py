@@ -127,7 +127,7 @@ class MenuBar(QMenuBar):
 
         pub.subscribe(self._enable_exporting_files, "session.enable_export_bst")
 
-        pub.subscribe(self._disable_exporting_files, "session.disable_export_bst")
+        pub.subscribe(self._disable_exporting_files, "session.new")
 
         job_menu.addAction(
             self._create_action("&Run Solidity", partial(run_solidity, self))

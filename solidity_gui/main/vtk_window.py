@@ -110,8 +110,7 @@ class VTKWindow(QVTKRenderWindowInteractor):
         pub.subscribe(self.render_mesh, "geometry.updated")
         pub.subscribe(self.render_mesh, "mesh.updated")
         pub.subscribe(self.render_mesh, "session.load")
-
-        pub.subscribe(self._clear_meshes, "session.clear")
+        pub.subscribe(self._clear_meshes, "session.new")
 
     def _clear_meshes(self) -> None:
         """Clear all meshes from the VTKWindow."""

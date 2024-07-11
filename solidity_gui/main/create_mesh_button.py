@@ -23,6 +23,7 @@ class CreateMeshButton(QPushButton):
         pub.subscribe(self._disable, "mesh.create")
         pub.subscribe(self._enable, "geometry.updated")
         pub.subscribe(self._disable_no_args, "mesh.finalise")
+        pub.subscribe(self._disable_no_args, "session.new")
 
     def _disable_no_args(self) -> None:
         self.setDisabled(True)

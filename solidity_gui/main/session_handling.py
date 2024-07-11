@@ -105,6 +105,5 @@ def start_new_session() -> None:
     initial_condition_datastore.clear()
     control_datastore.clear()
     gmsh_process_datastore.clear()
-    pub.sendMessage("session.clear")
-    pub.sendMessage("session.disable_export_bst")
+    pub.sendMessage("session.new")
     logging.info("Started new session")
