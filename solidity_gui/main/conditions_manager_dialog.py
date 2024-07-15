@@ -1,4 +1,5 @@
 """Module for the MaterialsManagerDialog class."""
+
 import logging
 from copy import deepcopy
 
@@ -29,7 +30,7 @@ class ConditionsManagerDialog(QDialog):
     def __init__(self) -> None:
         """Initialise a new dialog."""
         super().__init__()
-        self.setWindowTitle("Conditions Manager")
+        self.setWindowTitle("Constant Conditions Manager")
         layout = QHBoxLayout()
         self.setLayout(layout)
 
