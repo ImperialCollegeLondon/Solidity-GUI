@@ -33,7 +33,9 @@ class ElasticityForm(Form):
     )
     poissons_ratio = FloatField(
         display_name="Poisson's Ratio",
-        validators=[validate.Range(min=-1.0, max=0.5)],
+        validators=[
+            validate.Range(min=-1.0, max=0.5, min_inclusive=False, max_inclusive=False)
+        ],
     )
 
 
