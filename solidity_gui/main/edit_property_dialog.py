@@ -23,6 +23,17 @@ class EditPropertyDialog(SimpleFormDialog):
         """Signal handler for clicking ok button."""
         if (data := super()._ok_clicked()) is not None:
             self.material_property.data = data
+
+            # If editing Elasticity, calculate Lame's Constants from Young's Modulus
+            # and Poisson's Ratio
+            if self.material_property.name == "Elasticity":
+                data["lame_lambda"] = (
+                    data["youngs_modulus"] * data["poissons_ratio"]
+                ) / ((1 + data["poissons_ratio"]) * (1 - 2 * data["poissons_ratio"]))
+                data["lame_mu"] = data["youngs_modulus"] / (
+                    2 * (1 + data["poissons_ratio"])
+                )
+
             self.close()
 
             logging.info(f"Updated {self.material_property.name} ({repr(data)})")
