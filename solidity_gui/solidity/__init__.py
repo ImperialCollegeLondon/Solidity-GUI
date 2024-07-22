@@ -19,7 +19,6 @@ import solidity_gui
 from ..config import (
     DOCKER_IMAGE_ID,
     DOCKER_IMAGE_ID_SHORT,
-    NUM_CPUS,
     SOLIDITY_CONTAINER_NAME,
     SOLIDITY_DOCKER_IMAGE,
 )
@@ -86,6 +85,7 @@ def _run_solidity(
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
+    num_cpus: int,
     stream: bool,
 ) -> Container | str | OutputStream:
     """Run Solidity using the specified input files, using docker.run().
@@ -157,7 +157,7 @@ def _run_solidity(
         detach=not stream,
         name=SOLIDITY_CONTAINER_NAME,
         stream=stream,
-        cpus=NUM_CPUS,
+        envs={"OMP_NUM_THREADS": str(num_cpus)},
     )
 
 
@@ -166,6 +166,7 @@ def run_solidity_no_stream(
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
+    num_cpus: int,
 ) -> Container:
     """Run Solidity using the specified input files.
 
@@ -179,6 +180,7 @@ def run_solidity_no_stream(
                           (layout.txt)
         pellet_file_path: Path to file with elements and particles (pellet.txt)
         materials_file_path: Path to materials file (mat.txt)
+        num_cpus: Number of CPUs to use for the Solidity process
 
     Returns:
         The running container
@@ -196,6 +198,7 @@ def run_solidity_no_stream(
             layout_file_path,
             pellet_file_path,
             materials_file_path,
+            num_cpus=num_cpus,
             stream=False,
         ),
     )
@@ -235,6 +238,7 @@ def run_solidity_stream_sync(
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
+    num_cpus: int,
 ) -> None:
     """Run Solidity using the specified input files.
 
@@ -264,6 +268,7 @@ def run_solidity_stream_sync(
             layout_file_path,
             pellet_file_path,
             materials_file_path,
+            num_cpus,
             stream=True,
         ),
     )
@@ -278,6 +283,7 @@ def run_solidity_stream_async(
     layout_file_path: Path,
     pellet_file_path: Path,
     materials_file_path: Path,
+    num_cpus: int,
 ) -> None:
     """Start Solidity in the background.
 
@@ -287,10 +293,17 @@ def run_solidity_stream_async(
                           (layout.txt)
         pellet_file_path: Path to file with elements and particles (pellet.txt)
         materials_file_path: Path to materials file (mat.txt)
+        num_cpus: Number of CPUs to use for the Solidity process
     """
     Thread(
         target=run_solidity_stream_sync,
-        args=(y3d_file_path, layout_file_path, pellet_file_path, materials_file_path),
+        args=(
+            y3d_file_path,
+            layout_file_path,
+            pellet_file_path,
+            materials_file_path,
+            num_cpus,
+        ),
     ).start()
 
 

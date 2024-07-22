@@ -33,9 +33,6 @@ DEFAULT_ORIENTATION_VECTOR = (1, 0, 0)
 DEFAULT_UP_VECTOR = (0, 1, 0)
 """Default up direction for camera."""
 
-NUM_CPUS = 1
-"""Number of CPUs to use for Solidity."""
-
 SOLIDITY_Y3D_FILE_NAME = "BST.Y3D"
 """Solidity Y3D file name."""
 
