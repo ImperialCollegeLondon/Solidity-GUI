@@ -25,14 +25,14 @@ class EditPropertyDialog(SimpleFormDialog):
             self.material_property.data = data
 
             # If editing Elasticity, calculate Lame's Constants from Young's Modulus
-            # and Poisson's Ratio
+            # and Poisson's Ratio.
+            # Formula for Lame's Constants:
+            # https://encyclopediaofmath.org/wiki/Lam%C3%A9_constants
             if self.material_property.name == "Elasticity":
-                data["lame_lambda"] = (
-                    data["youngs_modulus"] * data["poissons_ratio"]
-                ) / ((1 + data["poissons_ratio"]) * (1 - 2 * data["poissons_ratio"]))
-                data["lame_mu"] = data["youngs_modulus"] / (
-                    2 * (1 + data["poissons_ratio"])
-                )
+                E = data["youngs_modulus"]
+                nu = data["poissons_ratio"]
+                data["lame_lambda"] = E * nu / ((1 + nu) * (1 - 2 * nu))
+                data["lame_mu"] = E / (2 * (1 + nu))
 
             self.close()
 
