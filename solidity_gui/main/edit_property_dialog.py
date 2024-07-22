@@ -3,7 +3,7 @@
 import logging
 
 from .forms import SimpleFormDialog
-from .material import Property
+from .material import Property, calculate_lame_constants
 
 
 class EditPropertyDialog(SimpleFormDialog):
@@ -29,10 +29,11 @@ class EditPropertyDialog(SimpleFormDialog):
             # Formula for Lame's Constants:
             # https://encyclopediaofmath.org/wiki/Lam%C3%A9_constants
             if self.material_property.name == "Elasticity":
-                E = data["youngs_modulus"]
-                nu = data["poissons_ratio"]
-                data["lame_lambda"] = E * nu / ((1 + nu) * (1 - 2 * nu))
-                data["lame_mu"] = E / (2 * (1 + nu))
+                lame_lambda, lame_mu = calculate_lame_constants(
+                    data["youngs_modulus"], data["poissons_ratio"]
+                )
+                self.material_property.data["lame_lambda"] = lame_lambda
+                self.material_property.data["lame_mu"] = lame_mu
 
             self.close()
 

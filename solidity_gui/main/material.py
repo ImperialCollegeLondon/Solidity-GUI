@@ -351,3 +351,14 @@ def is_iterable_of_2uple_of_string(
             if not isinstance(val, str):
                 return False
     return True
+
+
+def calculate_lame_constants(
+    youngs_modulus: float, poissons_ratio: float
+) -> tuple[float, float]:
+    """Calculate Lame's Constants from Young's Modulus and Poisson's Ratio."""
+    E = youngs_modulus
+    nu = poissons_ratio
+    lame_lambda = E * nu / ((1 + nu) * (1 - 2 * nu))
+    lame_mu = E / (2 * (1 + nu))
+    return lame_lambda, lame_mu
