@@ -95,3 +95,15 @@ def load_session(parent: QWidget) -> None:
         )
         initial_condition_datastore.update(session_data["initial_conditions"])
         control_datastore.update(session_data["controls"])
+
+
+def start_new_session() -> None:
+    """Start a new session."""
+    mesh_datastore.clear()
+    material_datastore.clear()
+    condition_datastore.clear()
+    initial_condition_datastore.clear()
+    control_datastore.clear()
+    gmsh_process_datastore.clear()
+    pub.sendMessage("session.new")
+    logging.info("Started new session")

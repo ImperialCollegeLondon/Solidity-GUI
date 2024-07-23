@@ -1,4 +1,5 @@
 """Module defining Condition and ConditionAssignment datastructures."""
+
 from dataclasses import dataclass, field
 
 from marshmallow import validate
@@ -114,11 +115,14 @@ def sync_assignments_condition_removed(key: int, value: Condition) -> None:
 
 def sync_assignments_mesh_removed(key: int, value: Mesh) -> None:
     """Message handler sync assignment datastore when mesh datastore changes."""
+    keys_to_delete = []
     for assignment_key, assignment in condition_assignment_datastore.items():
         for cell_set_name in value.cell_sets:
             if assignment.cell_set_name == cell_set_name:
-                del condition_assignment_datastore[assignment_key]
+                keys_to_delete.append(assignment_key)
                 break
+    for key in keys_to_delete:
+        del condition_assignment_datastore[key]
 
 
 pub.subscribe(sync_assignments_condition_removed, condition_datastore.remove_topic)
