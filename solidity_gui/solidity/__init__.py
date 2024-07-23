@@ -158,6 +158,7 @@ def _run_solidity(
         name=SOLIDITY_CONTAINER_NAME,
         stream=stream,
         envs={"OMP_NUM_THREADS": str(num_cpus)},
+        cpus=num_cpus,
     )
 
 
