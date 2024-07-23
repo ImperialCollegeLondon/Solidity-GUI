@@ -9,7 +9,7 @@ from pubsub import pub
 from .assignment_base import AssignmentBase
 from .datastore import IndexDatastore
 from .forms import Form
-from .forms.fields import FloatField, IntField, StrField
+from .forms.fields import ComboField, FloatField, StrField
 from .meshes import mesh_datastore
 
 one_or_zero = validate.Range(min=0, max=1)
@@ -19,24 +19,21 @@ class ConditionForm(Form):
     """Form for collecting condition data."""
 
     name = StrField(display_name="Name", validators=[validate.Length(min=1, max=20)])
-    acceleration_x = FloatField(display_name="Acceleration X")
-    acceleration_y = FloatField(display_name="Acceleration Y")
-    acceleration_z = FloatField(display_name="Acceleration Z")
-    force_x = FloatField(display_name="Force X")
-    force_y = FloatField(display_name="Force Y")
-    force_z = FloatField(display_name="Force Z")
-    velocity_x = FloatField(display_name="Velocity X")
-    velocity_y = FloatField(display_name="Velocity Y")
-    velocity_z = FloatField(display_name="Velocity Z")
-    velocity_constraint_x = IntField(
-        display_name="Velocity Constraint X", validators=[one_or_zero]
+    constraint_x = ComboField(
+        display_name="Constraint X",
+        items=["Force", "Acceleration", "Velocity"],
     )
-    velocity_constraint_y = IntField(
-        display_name="Velocity Constraint Y", validators=[one_or_zero]
+    x_value = FloatField(display_name="X Value")
+    constraint_y = ComboField(
+        display_name="Constraint Y",
+        items=["Force", "Acceleration", "Velocity"],
     )
-    velocity_constraint_z = IntField(
-        display_name="Velocity Constraint Z", validators=[one_or_zero]
+    y_value = FloatField(display_name="Y Value")
+    constraint_z = ComboField(
+        display_name="Constraint Z",
+        items=["Force", "Acceleration", "Velocity"],
     )
+    z_value = FloatField(display_name="Z Value")
 
 
 Properties_Dict_Type = dict[str, float]
@@ -45,18 +42,12 @@ Properties_Dict_Type = dict[str, float]
 def PROPERTIES() -> Properties_Dict_Type:
     """Define the dictionary of available properties for a Condition."""
     return {
-        "acceleration_x": 0.0,
-        "acceleration_y": 0.0,
-        "acceleration_z": 0.0,
-        "force_x": 0.0,
-        "force_y": 0.0,
-        "force_z": 0.0,
-        "velocity_x": 0.0,
-        "velocity_y": 0.0,
-        "velocity_z": 0.0,
-        "velocity_constraint_x": 0,
-        "velocity_constraint_y": 0,
-        "velocity_constraint_z": 0,
+        "x_value": 0.0,
+        "y_value": 0.0,
+        "z_value": 0.0,
+        "constraint_x": 0,
+        "constraint_y": 0,
+        "constraint_z": 0,
     }
 
 

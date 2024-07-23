@@ -27,6 +27,7 @@ from PySide6.QtWidgets import QWidget
 from .info import FieldInfo
 from .widgets import (
     CheckBoxWidget,
+    ComboBoxWidget,
     DoubleSpinBoxWidget,
     LineEditWidget,
     SpinBoxWidget,
@@ -183,6 +184,46 @@ class SingleField(BaseField, Generic[DataType]):
           inputs: the gui widget instances
         """
         return self.widget.process(inputs[0])
+
+
+class ComboField(SingleField[str]):
+    """A field for selecting a single option from a list of choices."""
+
+    _marshmallow_field = marshmallow_fields.Str
+    _default_widget = ComboBoxWidget()
+
+    def __init__(
+        self,
+        items: list[str],
+        display_name: str | None = None,
+        description: str | None = None,
+        validators: Iterable[Callable] = [],
+        widget: Widget | None = None,
+    ):
+        """Initialise a new SelectField instance.
+
+        Args:
+        items: list of tuples containing (value, display_name)
+        display_name: human friendly name
+        description: human friendly description of the field's purpose
+        validators: marshmallow compatible functions to validate individual values
+        widget: the GUI widget displayed to the user
+        """
+        super().__init__(
+            display_name=display_name,
+            description=description,
+            validators=validators,
+            widget=widget,
+        )
+        self.items = items
+
+    def input(self, data: str | None = None) -> QWidget:
+        """Generates the GUI widget for display to the user.
+
+        Args:
+        data: value to pre-populate into the widget
+        """
+        return self.widget.create(self.items, self.validators)
 
 
 class StrField(SingleField[str]):
