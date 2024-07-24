@@ -9,7 +9,7 @@ from pubsub import pub
 from .assignment_base import AssignmentBase
 from .datastore import IndexDatastore
 from .forms import Form
-from .forms.fields import ComboField, FloatField, StrField
+from .forms.fields import ConditionComboField, FloatField, StrField
 from .meshes import mesh_datastore
 
 one_or_zero = validate.Range(min=0, max=1)
@@ -19,24 +19,15 @@ class ConditionForm(Form):
     """Form for collecting condition data."""
 
     name = StrField(display_name="Name", validators=[validate.Length(min=1, max=20)])
-    constraint_x = ComboField(
-        display_name="Constraint X",
-        items=["Force", "Acceleration", "Velocity"],
-    )
+    constraint_x = ConditionComboField(display_name="Constraint X")
     x_value = FloatField(display_name="X Value")
-    constraint_y = ComboField(
-        display_name="Constraint Y",
-        items=["Force", "Acceleration", "Velocity"],
-    )
+    constraint_y = ConditionComboField(display_name="Constraint Y")
     y_value = FloatField(display_name="Y Value")
-    constraint_z = ComboField(
-        display_name="Constraint Z",
-        items=["Force", "Acceleration", "Velocity"],
-    )
+    constraint_z = ConditionComboField(display_name="Constraint Z")
     z_value = FloatField(display_name="Z Value")
 
 
-Properties_Dict_Type = dict[str, float]
+Properties_Dict_Type = dict[str, float | str]
 
 
 def PROPERTIES() -> Properties_Dict_Type:
@@ -45,9 +36,9 @@ def PROPERTIES() -> Properties_Dict_Type:
         "x_value": 0.0,
         "y_value": 0.0,
         "z_value": 0.0,
-        "constraint_x": 0,
-        "constraint_y": 0,
-        "constraint_z": 0,
+        "constraint_x": "Force",
+        "constraint_y": "Force",
+        "constraint_z": "Force",
     }
 
 

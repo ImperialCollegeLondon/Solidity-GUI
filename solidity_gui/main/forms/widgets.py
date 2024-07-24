@@ -227,7 +227,7 @@ class TrueWidget(CheckBoxWidget):
         return True
 
 
-class ComboBoxWidget(Widget[QComboBox, str]):
+class ConditionComboBoxWidget(Widget[QComboBox, str]):
     """Widget for collecting strings via a QComboBox."""
 
     qt_input_class = QComboBox
@@ -240,8 +240,9 @@ class ComboBoxWidget(Widget[QComboBox, str]):
           validators: marshmallow validators (passed by associated Field)
         """
         qt_input = self.qt_input_class()
+        qt_input.addItems(["Force", "Acceleration", "Velocity"])
         if data is not None:
-            qt_input.addItems(data)
+            qt_input.setCurrentText(data)
         return qt_input
 
     @staticmethod
