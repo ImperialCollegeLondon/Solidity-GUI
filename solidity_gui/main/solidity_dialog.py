@@ -2,9 +2,9 @@
 
 import html
 import logging
-import multiprocessing
 import weakref
 from collections.abc import Iterable
+from os import cpu_count
 from pathlib import Path
 
 import qtawesome as qta
@@ -107,8 +107,8 @@ class SolidityDialog(QDialog):
         # CPU selection spin box
         self._cpu_label = QLabel("CPU Cores:")
         self._cpu_spin_box = QSpinBox()
-        self._cpu_spin_box.setRange(1, multiprocessing.cpu_count())
-        self._cpu_spin_box.setValue(multiprocessing.cpu_count())
+        self._cpu_spin_box.setRange(1, cpu_count())
+        self._cpu_spin_box.setValue(cpu_count())
         self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
         layout.addWidget(self._cpu_label, 1, 0)
         layout.addWidget(self._cpu_spin_box, 1, 1)
@@ -172,6 +172,7 @@ class SolidityDialog(QDialog):
 
     def _start_solidity(self) -> None:
         self._start_btn.setEnabled(False)
+        self._cpu_spin_box.setEnabled(False)
         self._log("Setting up Solidity (this may take some time)...")
         pub.sendMessage("docker.pull")
 
@@ -198,6 +199,7 @@ class SolidityDialog(QDialog):
     def _on_docker_stopped(self, return_code: int) -> None:
         self._start_btn.setEnabled(True)
         self._stop_btn.setEnabled(False)
+        self._cpu_spin_box.setEnabled(True)
         self._log(f"Solidity stopped (exit code: {return_code})")
 
     def _on_docker_error(self, error: BaseException) -> None:
