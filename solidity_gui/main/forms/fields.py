@@ -27,6 +27,7 @@ from PySide6.QtWidgets import QWidget
 from .info import FieldInfo
 from .widgets import (
     CheckBoxWidget,
+    ConditionComboBoxWidget,
     DoubleSpinBoxWidget,
     LineEditWidget,
     SpinBoxWidget,
@@ -183,6 +184,13 @@ class SingleField(BaseField, Generic[DataType]):
           inputs: the gui widget instances
         """
         return self.widget.process(inputs[0])
+
+
+class ConditionComboField(SingleField[str]):
+    """A field for selecting a constraint type."""
+
+    _marshmallow_field = marshmallow_fields.Str
+    _default_widget = ConditionComboBoxWidget()
 
 
 class StrField(SingleField[str]):

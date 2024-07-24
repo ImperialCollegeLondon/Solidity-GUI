@@ -122,29 +122,29 @@
 /YD/YDB/MBCON {{ num_conditions+1}}
 /YD/YDB/NBCON {{ num_conditions}}
 /YD/YDB/D1BNVX {{ num_conditions}}
-{% for condition in conditions -%}{{ condition.properties.velocity_x }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_x == "Velocity" %} {{ condition.properties.x_value }} {% else %} {{0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNVY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_y }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_y == "Velocity" %} {{ condition.properties.y_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNVZ {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_z }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_z == "Velocity" %} {{ condition.properties.z_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/I1BNVX {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_constraint_x | int }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_x == "Velocity" %} {{ 1 }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/I1BNVY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_constraint_y | int }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_y == "Velocity" %} {{ 1 }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/I1BNVZ {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_constraint_z | int }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_z == "Velocity" %} {{ 1 }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNFX {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.force_x }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_x == "Force" %} {{ condition.properties.x_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNFY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.force_y }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_y == "Force" %} {{ condition.properties.y_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNFZ {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.force_z }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_z == "Force" %} {{ condition.properties.z_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNAX {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.acceleration_x }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_x == "Acceleration" %} {{ condition.properties.x_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNAY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.acceleration_y }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_y == "Acceleration" %} {{ condition.properties.y_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNAZ {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.acceleration_z }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_z == "Acceleration" %} {{ condition.properties.z_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDX/MELEM {{ num_triangles+1}}
 /YD/YDX/NELEM {{ num_triangles }}
 /YD/YDX/NELNO {{ points_per_triangle }}
