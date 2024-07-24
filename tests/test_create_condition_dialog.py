@@ -27,7 +27,6 @@ def test_ok_clicked(qtbot):
     # Check that Condition is added to datastore
     assert len(condition_datastore) == 1
     condition = list(condition_datastore.values())[0]
-    print(condition.properties)
     assert isinstance(condition, Condition)
     assert condition.properties["x_value"] == 1.0
     assert condition.properties["y_value"] == 2.0
