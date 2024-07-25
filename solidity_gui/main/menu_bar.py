@@ -21,6 +21,7 @@ from .initial_conditions_manager_dialog import InitialConditionsManagerDialog
 from .joint_materials_dialog import JointMaterialsDialog
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
+from .problem_data import ProblemDataDialog
 from .session_handling import load_session, save_session, start_new_session
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_output_files
@@ -111,6 +112,11 @@ class MenuBar(QMenuBar):
 
         file_menu.addAction(
             self._create_action("&Load Session", partial(load_session, self))
+        )
+
+        # Problem Data
+        file_menu.addAction(
+            self._create_action("&Problem Data", lambda: ProblemDataDialog().exec_())
         )
 
         self.solidity_files_action = self._create_action(
