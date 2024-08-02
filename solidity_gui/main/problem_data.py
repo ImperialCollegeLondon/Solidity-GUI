@@ -8,7 +8,7 @@ from solidity_gui.main.forms.forms import Form
 
 from .control import control_datastore
 from .forms import SimpleFormDialog
-from .forms.fields import BoolField, FloatField, IntField, StrField
+from .forms.fields import BoolField, ComboBoxField, FloatField, IntField
 
 
 class ProblemDataForm(Form):
@@ -32,8 +32,7 @@ class ProblemDataForm(Form):
     restart_save_number = IntField(
         display_name="Restart Save Number", validators=[validate.Range(min=0)]
     )
-    element_type = StrField(display_name="Element-type")
-    generate_output_file_only = BoolField(display_name="Generate output file only")
+    element_type = ComboBoxField(items=["Linear"], display_name="Element-type")
     gravity_setting_stage = FloatField(display_name="Gravity setting stage (s)")
     load_ramping_stage = FloatField(display_name="Load ramping stage (s)")
     load_constant_stage = FloatField(display_name="Load constant stage (s)")

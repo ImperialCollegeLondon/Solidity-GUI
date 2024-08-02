@@ -227,10 +227,16 @@ class TrueWidget(CheckBoxWidget):
         return True
 
 
-class ConditionComboBoxWidget(Widget[QComboBox, str]):
+class ComboBoxBase(Widget[QComboBox, str]):
     """Widget for collecting strings via a QComboBox."""
 
-    qt_input_class = QComboBox
+    def __init__(self, items: list[str]):
+        """Initialise a new instance.
+
+        Args:
+          items: The items to populate the QComboBox with.
+        """
+        self.items = items
 
     def create(self, data: str | None, validators: Iterable[Callable]) -> QComboBox:
         """Return a QComboBox instance.
@@ -239,8 +245,8 @@ class ConditionComboBoxWidget(Widget[QComboBox, str]):
           data: value to populate into the QComboBox
           validators: marshmallow validators (passed by associated Field)
         """
-        qt_input = self.qt_input_class()
-        qt_input.addItems(["Force", "Acceleration", "Velocity"])
+        qt_input = QComboBox()
+        qt_input.addItems(self.items)
         if data is not None:
             qt_input.setCurrentText(data)
         return qt_input
@@ -253,3 +259,19 @@ class ConditionComboBoxWidget(Widget[QComboBox, str]):
           input_: QComboBox instance containing data
         """
         return input_.currentText()
+
+
+# class ConditionComboBoxWidget(ComboBoxBase):
+#     """Widget for collecting strings via a QComboBox."""
+
+#     def __init__(self) -> None:
+#         """Initialise a new instance."""
+#         super().__init__(["Force", "Acceleration", "Velocity"])
+
+
+# class ElementTypeComboBoxWidget(ComboBoxBase):
+#     """Widget for collecting strings via a QComboBox."""
+
+#     def __init__(self) -> None:
+#         """Initialise a new instance."""
+#         super().__init__(["Linear"])
