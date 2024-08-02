@@ -259,19 +259,3 @@ class ComboBoxBase(Widget[QComboBox, str]):
           input_: QComboBox instance containing data
         """
         return input_.currentText()
-
-
-# class ConditionComboBoxWidget(ComboBoxBase):
-#     """Widget for collecting strings via a QComboBox."""
-
-#     def __init__(self) -> None:
-#         """Initialise a new instance."""
-#         super().__init__(["Force", "Acceleration", "Velocity"])
-
-
-# class ElementTypeComboBoxWidget(ComboBoxBase):
-#     """Widget for collecting strings via a QComboBox."""
-
-#     def __init__(self) -> None:
-#         """Initialise a new instance."""
-#         super().__init__(["Linear"])
