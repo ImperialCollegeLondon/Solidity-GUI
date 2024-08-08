@@ -1,14 +1,14 @@
 """Code for the main window containing all the frames and menus of the GUI."""
+
 import logging
 
 from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QMainWindow
+from PySide6.QtWidgets import QMainWindow
 
 from .. import config
 from .components import Component
-from .control_panel import ControlPanel
 from .mac_restriction import quit_if_no_access
 from .menu_bar import MenuBar
 from .uncaught_exceptions import set_uncaught_exception_handler
@@ -36,7 +36,8 @@ class MainWindow(QMainWindow):
 
         menu_bar = MenuBar()
         self.setMenuBar(menu_bar)
-        self.setCentralWidget(self.create_main_frame())
+        self.vtk_window = VTKWindow()
+        self.setCentralWidget(self.vtk_window)
 
         # create the toolbar containing the various visualisation buttons
         visualisation_toolbar = VisualisationToolbar()
@@ -59,23 +60,3 @@ class MainWindow(QMainWindow):
         pub.sendMessage("window.close")
 
         logging.info("Main window closed")
-
-    def create_main_frame(self) -> QFrame:
-        """Create the main frame.
-
-        This is called and created inside the main frame.
-
-        This contains the side control panel, and the VTK window.
-        """
-        main_frame = QFrame()
-        central_layout = QHBoxLayout()
-
-        central_layout.setSpacing(config.CENTRAL_LAYOUT_SPACING)
-
-        self.vtk_window = VTKWindow()
-        self.control_panel = ControlPanel()
-        central_layout.addLayout(self.control_panel)
-        central_layout.addWidget(self.vtk_window)
-        main_frame.setLayout(central_layout)
-
-        return main_frame
