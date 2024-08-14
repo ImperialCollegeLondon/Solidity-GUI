@@ -1,4 +1,4 @@
-"""Module for storing the Problem Data and the assiciated dialog."""
+"""Module for storing the Problem Data and the associated dialog."""
 
 import logging
 
@@ -8,7 +8,7 @@ from solidity_gui.main.forms.forms import Form
 
 from .control import control_datastore
 from .forms import SimpleFormDialog
-from .forms.fields import BoolField, ComboBoxField, FloatField, IntField
+from .forms.fields import ComboBoxField, FloatField, IntField
 
 
 class ProblemDataForm(Form):
@@ -39,7 +39,6 @@ class ProblemDataForm(Form):
     unload_ramping_stage = FloatField(display_name="Unload ramping stage (s)")
     stand_off_distance = FloatField(display_name="Stand off distance (s)")
     jet_load_ramping = FloatField(display_name="Jet load ramping (s)")
-    chipping_removal = BoolField(display_name="Chipping removal")
 
 
 class ProblemDataDialog(SimpleFormDialog):
@@ -47,12 +46,11 @@ class ProblemDataDialog(SimpleFormDialog):
 
     def __init__(self) -> None:
         """Initialise a new dialog."""
-        super().__init__(ProblemDataForm, initial_data=control_datastore.data)
+        super().__init__(ProblemDataForm)
 
     def _ok_clicked(self) -> None:
         if data := super()._ok_clicked():
-            control_datastore.data = data
-
+            control_datastore.update(**data)
             self.close()
 
             logging.info(f"Problem Data updated ({data})")

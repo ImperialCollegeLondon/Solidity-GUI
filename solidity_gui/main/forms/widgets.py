@@ -227,8 +227,10 @@ class TrueWidget(CheckBoxWidget):
         return True
 
 
-class ComboBoxBase(Widget[QComboBox, str]):
+class ComboBox(Widget[QComboBox, str]):
     """Widget for collecting strings via a QComboBox."""
+
+    qt_input_class = QComboBox
 
     def __init__(self, items: list[str]):
         """Initialise a new instance.

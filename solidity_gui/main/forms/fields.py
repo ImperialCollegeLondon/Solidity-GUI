@@ -27,7 +27,7 @@ from PySide6.QtWidgets import QWidget
 from .info import FieldInfo
 from .widgets import (
     CheckBoxWidget,
-    ComboBoxBase,
+    ComboBox,
     DoubleSpinBoxWidget,
     LineEditWidget,
     SpinBoxWidget,
@@ -286,7 +286,7 @@ class ComboBoxField(SingleField[str]):
         self,
         items: list[str],
         display_name: str | None = None,
-        widget: ComboBoxBase | None = None,
+        widget: ComboBox | None = None,
     ):
         """Initialise a new ComboBoxField instance.
 
@@ -297,5 +297,5 @@ class ComboBoxField(SingleField[str]):
         """
         super().__init__(
             display_name=display_name,
-            widget=widget if widget else ComboBoxBase(items),
+            widget=widget if widget else ComboBox(items),
         )

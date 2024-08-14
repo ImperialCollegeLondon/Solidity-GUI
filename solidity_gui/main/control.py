@@ -2,7 +2,7 @@
 
 from .datastore import Datastore
 
-control_datastore: Datastore[str, dict] = Datastore(
+control_datastore: Datastore[str, object] = Datastore(
     "control",
     dict(
         maximum_time_steps=2000000,
