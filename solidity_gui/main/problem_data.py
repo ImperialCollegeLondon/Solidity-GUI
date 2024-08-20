@@ -46,7 +46,7 @@ class ProblemDataDialog(SimpleFormDialog):
 
     def __init__(self) -> None:
         """Initialise a new dialog."""
-        super().__init__(ProblemDataForm)
+        super().__init__(ProblemDataForm, initial_data=control_datastore)
 
     def _ok_clicked(self) -> None:
         if data := super()._ok_clicked():
