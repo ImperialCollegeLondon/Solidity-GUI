@@ -9,7 +9,7 @@ from pubsub import pub
 from .assignment_base import AssignmentBase
 from .datastore import IndexDatastore
 from .forms import Form
-from .forms.fields import ConditionComboField, FloatField, StrField
+from .forms.fields import ComboBoxField, FloatField, StrField
 from .meshes import mesh_datastore
 
 one_or_zero = validate.Range(min=0, max=1)
@@ -18,12 +18,14 @@ one_or_zero = validate.Range(min=0, max=1)
 class ConditionForm(Form):
     """Form for collecting condition data."""
 
+    constraint_values = ["Force", "Acceleration", "Velocity"]
+
     name = StrField(display_name="Name", validators=[validate.Length(min=1, max=20)])
-    constraint_x = ConditionComboField(display_name="Constraint X")
+    constraint_x = ComboBoxField(items=constraint_values, display_name="Constraint X")
     x_value = FloatField(display_name="X Value")
-    constraint_y = ConditionComboField(display_name="Constraint Y")
+    constraint_y = ComboBoxField(items=constraint_values, display_name="Constraint Y")
     y_value = FloatField(display_name="Y Value")
-    constraint_z = ConditionComboField(display_name="Constraint Z")
+    constraint_z = ComboBoxField(items=constraint_values, display_name="Constraint Z")
     z_value = FloatField(display_name="Z Value")
 
 

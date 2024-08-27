@@ -27,7 +27,7 @@ from PySide6.QtWidgets import QWidget
 from .info import FieldInfo
 from .widgets import (
     CheckBoxWidget,
-    ConditionComboBoxWidget,
+    ComboBox,
     DoubleSpinBoxWidget,
     LineEditWidget,
     SpinBoxWidget,
@@ -186,13 +186,6 @@ class SingleField(BaseField, Generic[DataType]):
         return self.widget.process(inputs[0])
 
 
-class ConditionComboField(SingleField[str]):
-    """A field for selecting a constraint type."""
-
-    _marshmallow_field = marshmallow_fields.Str
-    _default_widget = ConditionComboBoxWidget()
-
-
 class StrField(SingleField[str]):
     """A field for string data."""
 
@@ -282,3 +275,27 @@ class BlankField(SingleField[bool]):
     def marshmallow(self) -> marshmallow_fields.Boolean:
         """Generates a corresponding Marshmallow Field for use in a Schema."""
         return self._marshmallow_field(validate=validate.Equal(True))
+
+
+class ComboBoxField(SingleField[str]):
+    """A field for selecting from a list of options."""
+
+    _marshmallow_field = marshmallow_fields.Str
+
+    def __init__(
+        self,
+        items: list[str],
+        display_name: str | None = None,
+        widget: ComboBox | None = None,
+    ):
+        """Initialise a new ComboBoxField instance.
+
+        Args:
+          items: list of strings representing the options
+          display_name: human friendly name
+          widget: the GUI widget displayed to the user
+        """
+        super().__init__(
+            display_name=display_name,
+            widget=widget if widget else ComboBox(items),
+        )

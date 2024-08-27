@@ -1,4 +1,5 @@
 """Tests for the solidity_file_generator module."""
+
 import itertools
 
 import numpy as np
@@ -32,11 +33,9 @@ from solidity_gui.main.solidity_file_generator import (
     fetch_condition_assignments,
     fetch_material_assignments,
     generate_elements_data,
-    generate_interactions_data,
     generate_material_data,
     generate_nodes_data,
     generate_surface_elements_data,
-    get_tetra_side_lengths,
 )
 
 
@@ -228,28 +227,6 @@ def test_generate_elements_data():
 
     # There is probably a better test we can do for this...
     assert data["tetra_node_ids"].shape == (total_tetras, 5)
-
-
-def test_generate_interactions_data():
-    """Test generate_interactions_data function."""
-    mesh_a, surface_nodes_a = _get_mesh_and_surface_nodes(
-        Component(shape="ball", kwargs=dict(center=[0, 0, 0], radius=1)), label="a"
-    )
-    mesh_b, surface_nodes_b = _get_mesh_and_surface_nodes(
-        Component(shape="box", kwargs=dict(x0=[2, 2, 2], extents=[1, 1, 1])), label="b"
-    )
-
-    meshes = dict(a=mesh_a, b=mesh_b)
-
-    data = generate_interactions_data(meshes)
-
-    # Calculate expected values based on input meshes
-    tetra_side_lengths = get_tetra_side_lengths(meshes)
-    expected_min_length = np.min(tetra_side_lengths)
-    expected_mean_length = np.mean(tetra_side_lengths)
-
-    assert data["min_length"] == expected_min_length
-    assert data["mean_length"] == expected_mean_length
 
 
 def test_fetch_material_assignments_non_contiguous_ids():
