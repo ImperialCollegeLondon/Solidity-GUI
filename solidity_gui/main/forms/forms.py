@@ -110,7 +110,7 @@ class Form:
 
     def form_info(
         self,
-        data: dict[str, Any] = {},
+        data: Mapping[str, Any] = {},
         errors: FormErrorsType = {},
         schema_errors: list[str] = [],
         header: str | None = None,

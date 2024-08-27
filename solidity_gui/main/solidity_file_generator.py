@@ -3,7 +3,6 @@
 import logging
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from itertools import combinations
 from pathlib import Path
 from typing import Any
 
@@ -350,37 +349,6 @@ def generate_material_data(materials: Mapping[int, Material]) -> dict[str, Any]:
     )
 
 
-def get_tetra_side_lengths(meshes: Mapping[str, Mesh]) -> np.ndarray:
-    """Gets the side lengths of the tetrahedra in the mesh."""
-    # this is only good for linear meshes
-    # it is probably too memory/compute intensive for large meshes
-    # gmsh will release a built in way to do this in the 4.12 release
-    # https://gitlab.onelab.info/gmsh/gmsh/-/blob/0dacd204c5b936efdfb9341fd71cabbb06ebb9e2/api/gmsh.py#L2989
-
-    lengths = np.array([])
-    for mesh in meshes.values():
-        pairings = np.empty((0, 2), dtype="uint64")
-        for cell in mesh.cells_dict["tetra"]:
-            edges = np.array(list(combinations(cell, 2)))
-            pairings = np.concatenate([pairings, edges], axis=0)
-
-        pairings = np.unique(pairings, axis=0)
-
-        dist_vectors = mesh.points[pairings[:, 0]] - mesh.points[pairings[:, 1]]
-        lengths = np.concatenate((lengths, np.linalg.norm(dist_vectors, axis=1)))
-    return lengths
-
-
-def generate_interactions_data(meshes: Mapping[str, Mesh]) -> dict[str, Any]:
-    """Generates the interactions section data for the Solidity input file."""
-    tetra_side_lengths = get_tetra_side_lengths(meshes)
-
-    min_length = np.min(tetra_side_lengths)
-    mean_length = np.mean(tetra_side_lengths)
-
-    return dict(mean_length=mean_length, min_length=min_length)
-
-
 class SurfaceElementData(TypedDict):
     """Typed dict class providing types for surface element data."""
 
@@ -429,7 +397,6 @@ def get_template_data(
         meshes, materials, material_assignments, surface_nodes
     )
     data.update(element_data)
-    data.update(generate_interactions_data(meshes))
     data.update(
         generate_nodes_data(
             meshes,

@@ -1,4 +1,5 @@
 """Routines for global application setup."""
+
 from .logger import initialise_logging
 
 
