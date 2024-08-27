@@ -15,7 +15,7 @@ from collections.abc import Callable, Iterable
 from typing import Generic, TypeVar
 
 from marshmallow import validate
-from PySide6.QtWidgets import QCheckBox, QDoubleSpinBox, QLineEdit, QSpinBox
+from PySide6.QtWidgets import QCheckBox, QComboBox, QDoubleSpinBox, QLineEdit, QSpinBox
 from typing_extensions import Protocol
 
 DataType = TypeVar("DataType")
@@ -225,3 +225,39 @@ class TrueWidget(CheckBoxWidget):
           input_: present for API consistency but ignored.
         """
         return True
+
+
+class ComboBox(Widget[QComboBox, str]):
+    """Widget for collecting strings via a QComboBox."""
+
+    qt_input_class = QComboBox
+
+    def __init__(self, items: list[str]):
+        """Initialise a new instance.
+
+        Args:
+          items: The items to populate the QComboBox with.
+        """
+        self.items = items
+
+    def create(self, data: str | None, validators: Iterable[Callable]) -> QComboBox:
+        """Return a QComboBox instance.
+
+        Args:
+          data: value to populate into the QComboBox
+          validators: marshmallow validators (passed by associated Field)
+        """
+        qt_input = QComboBox()
+        qt_input.addItems(self.items)
+        if data is not None:
+            qt_input.setCurrentText(data)
+        return qt_input
+
+    @staticmethod
+    def process(input_: QComboBox) -> str:
+        """Extract form data from an instance of QComboBox.
+
+        Args:
+          input_: QComboBox instance containing data
+        """
+        return input_.currentText()

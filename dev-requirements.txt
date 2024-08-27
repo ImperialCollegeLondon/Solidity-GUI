@@ -14,7 +14,7 @@ beautifulsoup4==4.12.2
     # via readtime
 black==23.7.0
     # via SolidityGUI (pyproject.toml)
-build==0.10.0
+build==1.2.1
     # via pip-tools
 certifi==2023.7.22
     # via requests
@@ -294,7 +294,7 @@ typing-extensions==4.7.1
     #   typer
 urllib3==2.0.4
     # via requests
-virtualenv==20.24.3
+virtualenv==20.26.3
     # via pre-commit
 vtk==9.2.6
     # via SolidityGUI (pyproject.toml)

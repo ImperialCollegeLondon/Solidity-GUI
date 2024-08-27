@@ -1,4 +1,5 @@
 """Tests for the Solidity module."""
+
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
@@ -19,7 +20,9 @@ def test_run_solidity_no_error(docker_mock: Mock, pull_mock: Mock) -> None:
     """Test that run_solidity() passes the correct args to the docker wrapper."""
     image = MagicMock()
     pull_mock.return_value = image
-    run_solidity_no_stream(*INPUT_FILES)
+    run_solidity_no_stream(
+        INPUT_FILES[0], INPUT_FILES[1], INPUT_FILES[2], INPUT_FILES[3], 1
+    )
     pull_mock.assert_called_once_with()
 
     RUN_DIR = "/home/software/solidity/run"
@@ -36,6 +39,8 @@ def test_run_solidity_no_error(docker_mock: Mock, pull_mock: Mock) -> None:
         detach=True,
         stream=False,
         name=SOLIDITY_CONTAINER_NAME,
+        envs={"OMP_NUM_THREADS": "1"},
+        cpus=1,
     )
 
 
@@ -47,7 +52,7 @@ def test_run_solidity_missing_file(missing_idx: int) -> None:
 
     with patch("solidity_gui.solidity.docker"):
         with pytest.raises(RuntimeError):
-            run_solidity_no_stream(*files)
+            run_solidity_no_stream(files[0], files[1], files[2], files[3], 1)
 
 
 @pytest.mark.parametrize("diff_idx", range(4))
@@ -58,4 +63,4 @@ def test_run_solidity_diff_dir(diff_idx: int) -> None:
 
     with patch("solidity_gui.solidity.docker"):
         with pytest.raises(ValueError):
-            run_solidity_no_stream(*files)
+            run_solidity_no_stream(files[0], files[1], files[2], files[3], 1)
