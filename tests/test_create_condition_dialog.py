@@ -1,4 +1,5 @@
 """Test case for CreateConditionDialog."""
+
 from solidity_gui.main.condition import Condition, ConditionForm, condition_datastore
 from solidity_gui.main.create_condition_dialog import CreateConditionDialog
 
@@ -11,18 +12,12 @@ def test_ok_clicked(qtbot):
     # Fill in form fields with test data
     data = dict(
         name="test_condition",
-        acceleration_x=1.0,
-        acceleration_y=2.0,
-        acceleration_z=3.0,
-        force_x=4.0,
-        force_y=5.0,
-        force_z=6.0,
-        velocity_x=7.0,
-        velocity_y=8.0,
-        velocity_z=9.0,
-        velocity_constraint_x=1,
-        velocity_constraint_y=1,
-        velocity_constraint_z=1,
+        x_value=1.0,
+        y_value=2.0,
+        z_value=3.0,
+        constraint_x="Force",
+        constraint_y="Acceleration",
+        constraint_z="Velocity",
     )
     form_info = ConditionForm().form_info(data=data)
     dialog.form_info = form_info
@@ -33,15 +28,9 @@ def test_ok_clicked(qtbot):
     assert len(condition_datastore) == 1
     condition = list(condition_datastore.values())[0]
     assert isinstance(condition, Condition)
-    assert condition.properties["acceleration_x"] == 1.0
-    assert condition.properties["acceleration_y"] == 2.0
-    assert condition.properties["acceleration_z"] == 3.0
-    assert condition.properties["force_x"] == 4.0
-    assert condition.properties["force_y"] == 5.0
-    assert condition.properties["force_z"] == 6.0
-    assert condition.properties["velocity_x"] == 7.0
-    assert condition.properties["velocity_y"] == 8.0
-    assert condition.properties["velocity_z"] == 9.0
-    assert condition.properties["velocity_constraint_x"] == 1
-    assert condition.properties["velocity_constraint_y"] == 1
-    assert condition.properties["velocity_constraint_z"] == 1
+    assert condition.properties["x_value"] == 1.0
+    assert condition.properties["y_value"] == 2.0
+    assert condition.properties["z_value"] == 3.0
+    assert condition.properties["constraint_x"] == "Force"
+    assert condition.properties["constraint_y"] == "Acceleration"
+    assert condition.properties["constraint_z"] == "Velocity"

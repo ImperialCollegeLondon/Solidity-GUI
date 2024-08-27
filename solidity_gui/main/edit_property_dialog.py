@@ -3,7 +3,7 @@
 import logging
 
 from .forms import SimpleFormDialog
-from .material import Property
+from .material import Property, calculate_lame_constants
 
 
 class EditPropertyDialog(SimpleFormDialog):
@@ -23,6 +23,18 @@ class EditPropertyDialog(SimpleFormDialog):
         """Signal handler for clicking ok button."""
         if (data := super()._ok_clicked()) is not None:
             self.material_property.data = data
+
+            # If editing Elasticity, calculate Lame's Constants from Young's Modulus
+            # and Poisson's Ratio.
+            # Formula for Lame's Constants:
+            # https://encyclopediaofmath.org/wiki/Lam%C3%A9_constants
+            if self.material_property.name == "Elasticity":
+                lame_lambda, lame_mu = calculate_lame_constants(
+                    data["youngs_modulus"], data["poissons_ratio"]
+                )
+                self.material_property.data["lame_lambda"] = lame_lambda
+                self.material_property.data["lame_mu"] = lame_mu
+
             self.close()
 
             logging.info(f"Updated {self.material_property.name} ({repr(data)})")

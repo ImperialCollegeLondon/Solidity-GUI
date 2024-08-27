@@ -1,8 +1,10 @@
 """This module provides functionality to run Solidity."""
+
 import html
 import logging
 import weakref
 from collections.abc import Iterable
+from os import cpu_count
 from pathlib import Path
 
 import qtawesome as qta
@@ -14,8 +16,10 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QGridLayout,
+    QLabel,
     QPlainTextEdit,
     QPushButton,
+    QSpinBox,
     QWidget,
 )
 from python_on_whales.exceptions import DockerException
@@ -30,13 +34,21 @@ def get_file_paths() -> list[Path] | None:
     file_paths = []
     file_dialog = QFileDialog()
     file_dialog.setFileMode(QFileDialog.ExistingFiles)
+
+    # Dialog for selecting BST.Y3D file
     file_dialog.setWindowTitle("Select BST.Y3D")
     if file_dialog.exec_() == QFileDialog.DialogCode.Rejected:
         return None
     file_paths.append(Path(file_dialog.selectedFiles()[0]))
     path = QFileInfo(file_paths[0]).path()
 
-    for file in ["layout.txt", "pellet.txt", "mat.txt"]:
+    # Dialog for selecting mat.txt file
+    file_dialog.setWindowTitle("Select mat.txt")
+    if file_dialog.exec_() == QFileDialog.DialogCode.Rejected:
+        return None
+    file_paths.append(Path(file_dialog.selectedFiles()[0]))
+
+    for file in ["layout.txt", "pellet.txt"]:
         file_path = Path(path, file)
         try:
             file_path.resolve(strict=True)
@@ -58,9 +70,9 @@ def run_solidity(parent: QWidget) -> None:
         # Update dialog and show
         _solidity_dlg.update_dialog(
             y3d_file_path=file_paths[0],
-            layout_file_path=file_paths[1],
-            pellet_file_path=file_paths[2],
-            materials_file_path=file_paths[3],
+            layout_file_path=file_paths[2],
+            pellet_file_path=file_paths[3],
+            materials_file_path=file_paths[1],
         )
         _solidity_dlg.exec_()
 
@@ -92,10 +104,19 @@ class SolidityDialog(QDialog):
         cancel_btn.rejected.connect(self.hide)
         layout.addWidget(cancel_btn, 0, 2, Qt.AlignmentFlag.AlignCenter)
 
+        # CPU selection spin box
+        self._cpu_label = QLabel("CPU Cores:")
+        self._cpu_spin_box = QSpinBox()
+        self._cpu_spin_box.setRange(1, cpu_count())
+        self._cpu_spin_box.setValue(cpu_count())
+        self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
+        layout.addWidget(self._cpu_label, 1, 0)
+        layout.addWidget(self._cpu_spin_box, 1, 1)
+
         self._log_text_edit = QPlainTextEdit()
         self._log_text_edit.setFont(QFont("monospace"))
         self._log_text_edit.setReadOnly(True)
-        layout.addWidget(self._log_text_edit, 1, 0, 1, 3)
+        layout.addWidget(self._log_text_edit, 2, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -151,6 +172,7 @@ class SolidityDialog(QDialog):
 
     def _start_solidity(self) -> None:
         self._start_btn.setEnabled(False)
+        self._cpu_spin_box.setEnabled(False)
         self._log("Setting up Solidity (this may take some time)...")
         pub.sendMessage("docker.pull")
 
@@ -162,6 +184,7 @@ class SolidityDialog(QDialog):
             layout_file_path=self.layout_file_path,
             pellet_file_path=self.pellet_file_path,
             materials_file_path=self.materials_file_path,
+            num_cpus=self._cpu_spin_box.value(),
         )
 
     def _on_docker_started(self) -> None:
@@ -176,6 +199,7 @@ class SolidityDialog(QDialog):
     def _on_docker_stopped(self, return_code: int) -> None:
         self._start_btn.setEnabled(True)
         self._stop_btn.setEnabled(False)
+        self._cpu_spin_box.setEnabled(True)
         self._log(f"Solidity stopped (exit code: {return_code})")
 
     def _on_docker_error(self, error: BaseException) -> None:

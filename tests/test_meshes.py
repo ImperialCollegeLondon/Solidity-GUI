@@ -1,4 +1,5 @@
 """Tests for the solidity_gui.main.meshes."""
+
 from unittest.mock import MagicMock, patch
 
 from solidity_gui.main.components import Component
@@ -40,9 +41,10 @@ def test_add_component_to_geometry_end(send_message_mock):
     assert len(mesh_datastore) == 0
     _add_component_to_geometry_end(MESH_NAME, mesh)
     assert mesh_datastore[MESH_NAME] == mesh
-    send_message_mock.assert_called_with(
+    send_message_mock.assert_any_call(
         "geometry.updated", mesh_name=MESH_NAME, mesh=mesh
     )
+    send_message_mock.assert_any_call("create_mesh_button.enable", enabled=True)
 
 
 def test_create_mesh_from_geometry_begin():

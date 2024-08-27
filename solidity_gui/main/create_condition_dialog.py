@@ -8,12 +8,12 @@ from .condition import Condition, ConditionForm, condition_datastore
 
 
 class CreateConditionDialog(SimpleFormDialog):
-    """Dialog for creating a condition."""
+    """Dialog for creating a constant condition."""
 
     def __init__(self) -> None:
         """Initialise a new dialog."""
         super().__init__(ConditionForm)
-        self.setWindowTitle("Create new condition")
+        self.setWindowTitle("Create new constant condition")
 
     def _ok_clicked(self) -> None:
         """Signal handler for clicking ok button."""
@@ -27,4 +27,4 @@ class CreateConditionDialog(SimpleFormDialog):
 
             self.close()
 
-            logging.info(f"Created condition {condition.name} ({data})")
+            logging.info(f"Created constant condition {condition.name} ({data})")
