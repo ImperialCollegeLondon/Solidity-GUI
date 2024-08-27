@@ -1,4 +1,5 @@
 """Module for storage of mesh related data."""
+
 from collections.abc import Iterable
 
 import meshio
@@ -29,6 +30,7 @@ def _add_component_to_geometry_end(mesh_name: str, obj: meshio.Mesh) -> None:
     """Store and broadcast the resulting mesh after component addition."""
     mesh_datastore[mesh_name] = obj
     pub.sendMessage("geometry.updated", mesh_name=mesh_name, mesh=obj)
+    pub.sendMessage("create_mesh_button.enable", enabled=True)
 
 
 def _create_mesh_from_geometry_begin(

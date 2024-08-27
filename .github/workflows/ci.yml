@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: pre-commit/action@v3.0.0
+      - uses: pre-commit/action@v3.0.1
 
   check-links:
     runs-on: ubuntu-latest
@@ -58,7 +58,7 @@ jobs:
           1920x1200x24 -ac +extension GLX +render -noreset
       if: matrix.os == 'ubuntu-20.04'
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
         cache: pip
