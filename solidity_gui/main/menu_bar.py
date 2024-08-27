@@ -22,6 +22,7 @@ from .joint_materials_dialog import JointMaterialsDialog
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
 from .problem_data import ProblemDataDialog
+from .mesh_size_dialog import MeshSizeDialog
 from .session_handling import load_session, save_session, start_new_session
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_output_files
@@ -100,7 +101,14 @@ class MenuBar(QMenuBar):
                 "&Assign Mesh Sizes", lambda: AssignMeshSizeDialog().exec_()
             ),
         )
-        pub.subscribe(self._disable_mesh_size_action, "mesh.create")
+
+        # Create mesh
+        self._mesh_create_action = self._create_action(
+            "Create &Mesh", lambda: MeshSizeDialog().exec_()
+        )
+        mesh_menu.addAction(self._mesh_create_action)
+        self._mesh_create_action.setEnabled(False)
+        pub.subscribe(self._enable_mesh_create_action, "create_mesh_button.enable")
 
         # New session
         file_menu.addAction(self._create_action("&New Session", start_new_session))
@@ -147,11 +155,6 @@ class MenuBar(QMenuBar):
         import_geometry_action.triggered.connect(partial(load_geometry, self))
         geometry_menu.addAction(import_geometry_action)
 
-    def _disable_mesh_size_action(
-        self, mesh_sizes: object, default_size: object
-    ) -> None:
-        self._mesh_size_action.setEnabled(False)
-
     def _disable_exporting_files(self) -> None:
         self.solidity_files_action.setEnabled(False)
         self.save_session_action.setEnabled(False)
@@ -176,3 +179,6 @@ class MenuBar(QMenuBar):
             AddShapeDialog(SHAPES[label]).exec_()
 
         return self._create_action(f"Add {label.capitalize()}", callback)
+
+    def _enable_mesh_create_action(self, enabled: bool) -> None:
+        self._mesh_create_action.setEnabled(enabled)
