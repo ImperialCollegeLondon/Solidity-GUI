@@ -1,16 +1,33 @@
 """Module for checking if the current machine is allowed to run the application."""
 
+import logging
 import sys
 import uuid
-
-from PySide6.QtWidgets import QMessageBox
+from datetime import date
 
 from solidity_gui.config import ALLOWED_MAC_ADDRESSES
 
-from ..config import APP_NAME
+
+def _has_expired(mac_address: str) -> bool:
+    """Check whether the trial period for this program has elapsed."""
+    expiry = ALLOWED_MAC_ADDRESSES.get(mac_address)
+    # Not a trial version
+    if expiry is None:
+        return False
+
+    expiry_date = date.fromisoformat(expiry)
+    if date.today() > expiry_date:
+        logging.warn(
+            f"This trial version expired on {expiry_date.strftime('%d %b %Y')}."
+        )
+        return True
+
+    logging.warn(
+        f"This trial version will expire on {expiry_date.strftime('%d %b %Y')}."
+    )
+    return False
 
 
-# Retrieve the MAC address of the current machine
 def _get_mac_address() -> str:
     """Get the MAC address of the current machine."""
     try:
@@ -20,26 +37,15 @@ def _get_mac_address() -> str:
         raise RuntimeError("Error occurred while trying to retrieve MAC address") from e
 
 
-# Check if the current MAC address is allowed
 def _is_mac_address_allowed() -> bool:
     """Check if the current MAC address is allowed to run the application."""
+    mac_address = _get_mac_address()
     if not ALLOWED_MAC_ADDRESSES:
         return True
-    return _get_mac_address() in ALLOWED_MAC_ADDRESSES
-
-
-def _show_expiry_dialog() -> None:
-    """Show a dialog box when the trial version of the application has expired."""
-    err_box = QMessageBox()
-    err_box.setIcon(QMessageBox.Icon.Critical)
-    err_box.setWindowTitle("Access restricted")
-    err_box.setText(f"The machine you are using is not authorised to run {APP_NAME}.")
-    err_box.exec_()
+    return mac_address in ALLOWED_MAC_ADDRESSES and not _has_expired(mac_address)
 
 
 def quit_if_no_access() -> None:
     """Quit the application if the current machine is not allowed to run it."""
     if not _is_mac_address_allowed():
-        _show_expiry_dialog()
-
         sys.exit(1)

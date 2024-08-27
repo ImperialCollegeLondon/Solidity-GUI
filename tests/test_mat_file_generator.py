@@ -42,7 +42,7 @@ def test_get_mat_data():
     mat_data = get_mat_data([], {}, materials)
 
     assert mat_data["num_materials"] == 1
-    _check_joint_material(mat_data["joint_materials"][0], 0, 0, mat1.properties)
+    _check_joint_material(mat_data["joint_materials"][0], 1, 1, mat1.properties)
 
 
 def test_get_mat_data_joint_interface():
@@ -70,10 +70,10 @@ def test_get_mat_data_joint_interface():
     mat_data = get_mat_data([(mat1, mat3)], joint_materials, materials)
 
     assert mat_data["num_materials"] == 3
-    _check_joint_material(mat_data["joint_materials"][0], 0, 0, mat1.properties)
-    _check_joint_material(mat_data["joint_materials"][1], 2, 2, mat3.properties)
+    _check_joint_material(mat_data["joint_materials"][0], 1, 1, mat1.properties)
+    _check_joint_material(mat_data["joint_materials"][1], 3, 3, mat3.properties)
     assert mat_data["joint_materials"][2] == JointMaterialData(
-        0, 2, joint_material_properties
+        1, 3, joint_material_properties
     )
 
 

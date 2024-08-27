@@ -1,4 +1,5 @@
 """Code to create the toolbar containing the visualisation controls."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
@@ -20,7 +21,9 @@ from .initial_conditions_manager_dialog import InitialConditionsManagerDialog
 from .joint_materials_dialog import JointMaterialsDialog
 from .load_geometry import load_geometry
 from .materials_manager_dialog import MaterialsManagerDialog
-from .session_handling import load_session, save_session
+from .mesh_size_dialog import MeshSizeDialog
+from .problem_data import ProblemDataDialog
+from .session_handling import load_session, save_session, start_new_session
 from .solidity_dialog import run_solidity
 from .solidity_file_generator import generate_output_files
 
@@ -66,7 +69,7 @@ class MenuBar(QMenuBar):
 
         self.conditions_manager_dialog = ConditionsManagerDialog()
         conditions_menu.addAction(
-            "Create and Edit &Conditions", self.conditions_manager_dialog.open
+            "Create and Edit Constant &Conditions", self.conditions_manager_dialog.open
         )
         self.initial_conditions_manager_dialog = InitialConditionsManagerDialog()
         conditions_menu.addAction(
@@ -98,7 +101,17 @@ class MenuBar(QMenuBar):
                 "&Assign Mesh Sizes", lambda: AssignMeshSizeDialog().exec_()
             ),
         )
-        pub.subscribe(self._disable_mesh_size_action, "mesh.create")
+
+        # Create mesh
+        self._mesh_create_action = self._create_action(
+            "Create &Mesh", lambda: MeshSizeDialog().exec_()
+        )
+        mesh_menu.addAction(self._mesh_create_action)
+        self._mesh_create_action.setEnabled(False)
+        pub.subscribe(self._enable_mesh_create_action, "create_mesh_button.enable")
+
+        # New session
+        file_menu.addAction(self._create_action("&New Session", start_new_session))
 
         self.save_session_action = QAction("&Save Session", self)
         self.save_session_action.triggered.connect(partial(save_session, self))
@@ -107,6 +120,11 @@ class MenuBar(QMenuBar):
 
         file_menu.addAction(
             self._create_action("&Load Session", partial(load_session, self))
+        )
+
+        # Problem Data
+        file_menu.addAction(
+            self._create_action("&Problem Data", lambda: ProblemDataDialog().exec_())
         )
 
         self.solidity_files_action = self._create_action(
@@ -121,8 +139,9 @@ class MenuBar(QMenuBar):
         # the first component is added
         pub.subscribe(self._enable_exporting_files, "add_component.finish")
 
-        # We also want to enable the export BST button when a session is loaded
         pub.subscribe(self._enable_exporting_files, "session.enable_export_bst")
+
+        pub.subscribe(self._disable_exporting_files, "session.new")
 
         job_menu.addAction(
             self._create_action("&Run Solidity", partial(run_solidity, self))
@@ -136,10 +155,9 @@ class MenuBar(QMenuBar):
         import_geometry_action.triggered.connect(partial(load_geometry, self))
         geometry_menu.addAction(import_geometry_action)
 
-    def _disable_mesh_size_action(
-        self, mesh_sizes: object, default_size: object
-    ) -> None:
-        self._mesh_size_action.setEnabled(False)
+    def _disable_exporting_files(self) -> None:
+        self.solidity_files_action.setEnabled(False)
+        self.save_session_action.setEnabled(False)
 
     def _enable_exporting_files(self, mesh_name: str, obj: Mesh) -> None:
         self.solidity_files_action.setEnabled(True)
@@ -161,3 +179,6 @@ class MenuBar(QMenuBar):
             AddShapeDialog(SHAPES[label]).exec_()
 
         return self._create_action(f"Add {label.capitalize()}", callback)
+
+    def _enable_mesh_create_action(self, enabled: bool) -> None:
+        self._mesh_create_action.setEnabled(enabled)
