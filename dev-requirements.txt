@@ -294,7 +294,7 @@ typing-extensions==4.7.1
     #   typer
 urllib3==2.0.4
     # via requests
-virtualenv==20.24.3
+virtualenv==20.26.3
     # via pre-commit
 vtk==9.2.6
     # via SolidityGUI (pyproject.toml)
