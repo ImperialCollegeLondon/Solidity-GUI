@@ -6,7 +6,7 @@
 #
 altgraph==0.17.3
     # via pyinstaller
-annotated-types==0.5.0
+annotated-types==0.7.0
     # via pydantic
 babel==2.12.1
     # via mkdocs-material
@@ -40,7 +40,9 @@ colorama==0.4.6
 contourpy==1.1.0
     # via matplotlib
 coverage[toml]==7.3.0
-    # via pytest-cov
+    # via
+    #   coverage
+    #   pytest-cov
 cssselect==1.2.0
     # via pyquery
 cycler==0.11.0
@@ -191,9 +193,9 @@ pre-commit==3.3.3
     # via SolidityGUI (pyproject.toml)
 pycodestyle==2.11.0
     # via flake8
-pydantic==2.3.0
+pydantic==2.8.2
     # via python-on-whales
-pydantic-core==2.23.0
+pydantic-core==2.20.1
     # via pydantic
 pydocstyle==6.3.0
     # via flake8-docstrings
