@@ -1,21 +1,21 @@
      /*   Control     */
-/YD/YDC/MCSTEP {{ num_timesteps}}
+/YD/YDC/MCSTEP {{maximum_time_steps}}
 /YD/YDC/NCSTEP        0
-/YD/YDC/ISAVE  1000000
-/YD/YDC/DCGRAX {{ gravity_x }}
-/YD/YDC/DCGRAY {{ gravity_y }}
-/YD/YDC/DCGRAZ {{ gravity_z }}
-/YD/YDC/DCSTEC {{ time_step_size }}
+/YD/YDC/ISAVE  {{restart_save_number}}
+/YD/YDC/DCGRAX {{gravity_x}}
+/YD/YDC/DCGRAY {{gravity_y}}
+/YD/YDC/DCGRAZ {{gravity_z}}
+/YD/YDC/DCSTEC {{time_step}}
 /YD/YDC/DCTIME +0.00000000000e+00
 /YD/YDC/DCURELX +1.00000000000e+00
-/YD/YDC/DCGRST +0.00000000000e+00
-/YD/YDC/DCRMPT +0.00000000000e+00
-/YD/YDC/DCSTDN +0.00000000000e+00
-/YD/YDC/DCRMJT +0.00000000000e+00
-/YD/YDC/DCRMCT +0.00000000000e+00
-/YD/YDC/DCRMUT +0.00000000000e+00
+/YD/YDC/DCGRST {{gravity_setting_stage}}
+/YD/YDC/DCRMPT {{load_ramping_stage}}
+/YD/YDC/DCSTDN {{stand_off_distance}}
+/YD/YDC/DCRMJT {{jet_load_ramping}}
+/YD/YDC/DCRMCT {{load_constant_stage}}
+/YD/YDC/DCRMUT {{unload_ramping_stage}}
 /YD/YDC/INITER 0
-/YD/YDC/ICOUTF 1000
+/YD/YDC/ICOUTF {{ output_frequency }}
 /YD/YDC/ICOUTI 0
 /YD/YDC/IWFAST 1
 
@@ -41,12 +41,12 @@
 {% for item in element -%}{{ item }}{% if not loop.last %} {% endif %}{% endfor -%}
 {% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
      /*   Interactions     */
-/YD/YDI/MICOUP 10000000
+/YD/YDI/MICOUP {{ maximum_contacting_couples }}
 /YD/YDI/NICOUP 0
 /YD/YDI/IIECFF -2
 /YD/YDI/DIEDI +2e+02
-/YD/YDI/DIEZON {{min_length}}
-/YD/YDI/DRECT {{mean_length}}
+/YD/YDI/DIEZON {{buffer_size_nbs}}
+/YD/YDI/DRECT {{cell_size}}
 /YD/YDI/D1IESL 0
 /YD/YDI/I1STAT 0
 /YD/YDI/I1IECN 0
@@ -96,8 +96,8 @@
 /YD/YDP/NPROP {{ num_materials }}
 {{ render_property("I1INDEX", "_calculated", "material_index", "%d") }}
 {{ render_property("D1PEKS", "other", "mass_damping_coefficient") }}
-{{ render_property("D1PELA", "elasticity", "lames_first_parameter") }}
-{{ render_property("D1PEMU", "elasticity", "lames_second_parameter") }}
+{{ render_property("D1PELA", "elasticity", "lame_lambda") }}
+{{ render_property("D1PEMU", "elasticity", "lame_mu") }}
 {{ render_property("D1PEPE", "other", "penalty_number") }}
 {{ render_property("D1PERO", "density", "density") }}
 {{ render_property("D1PEGFN", "joint", "energy_release_rate_mode_1") }}
@@ -122,29 +122,29 @@
 /YD/YDB/MBCON {{ num_conditions+1}}
 /YD/YDB/NBCON {{ num_conditions}}
 /YD/YDB/D1BNVX {{ num_conditions}}
-{% for condition in conditions -%}{{ condition.properties.velocity_x }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_x == "Velocity" %} {{ condition.properties.x_value }} {% else %} {{0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNVY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_y }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_y == "Velocity" %} {{ condition.properties.y_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNVZ {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_z }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_z == "Velocity" %} {{ condition.properties.z_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/I1BNVX {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_constraint_x | int }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_x == "Velocity" %} {{ 1 }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/I1BNVY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_constraint_y | int }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_y == "Velocity" %} {{ 1 }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/I1BNVZ {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.velocity_constraint_z | int }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_z == "Velocity" %} {{ 1 }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNFX {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.force_x }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_x == "Force" %} {{ condition.properties.x_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNFY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.force_y }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_y == "Force" %} {{ condition.properties.y_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNFZ {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.force_z }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_z == "Force" %} {{ condition.properties.z_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNAX {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.acceleration_x }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_x == "Acceleration" %} {{ condition.properties.x_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNAY {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.acceleration_y }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_y == "Acceleration" %} {{ condition.properties.y_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDB/D1BNAZ {{ num_conditions }}
-{% for condition in conditions -%}{{ condition.properties.acceleration_z }} {% endfor %}
+{% for condition in conditions -%} {% if condition.properties.constraint_z == "Acceleration" %} {{ condition.properties.z_value }} {% else %} {{ 0 }} {% endif %} {% endfor %}
 /YD/YDX/MELEM {{ num_triangles+1}}
 /YD/YDX/NELEM {{ num_triangles }}
 /YD/YDX/NELNO {{ points_per_triangle }}

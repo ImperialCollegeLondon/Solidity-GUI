@@ -106,4 +106,5 @@ def start_new_session() -> None:
     control_datastore.clear()
     gmsh_process_datastore.clear()
     pub.sendMessage("session.new")
+    pub.sendMessage("create_mesh_button.enable", enabled=False)
     logging.info("Started new session")

@@ -27,13 +27,15 @@ class DensityForm(Form):
 class ElasticityForm(Form):
     """Form for collecting material properties related to elasticity."""
 
-    lames_first_parameter = FloatField(
-        display_name="Lamé's First Parameter",
+    youngs_modulus = FloatField(
+        display_name="Young's Modulus",
         validators=[validate.Range(min=0, max=1e11)],
     )
-    lames_second_parameter = FloatField(
-        display_name="Lamé's Second Parameter",
-        validators=[validate.Range(min=0, max=1e11)],
+    poissons_ratio = FloatField(
+        display_name="Poisson's Ratio",
+        validators=[
+            validate.Range(min=-1.0, max=0.5, min_inclusive=False, max_inclusive=False)
+        ],
     )
 
 
@@ -117,8 +119,10 @@ def PROPERTIES() -> Properties_Dict_Type:
             enabled=False,
             attributes=ElasticityForm,
             default_data=dict(
-                lames_first_parameter=2.23325062035e10,
-                lames_second_parameter=2.41935483871e10,
+                poissons_ratio=0.3,
+                youngs_modulus=5.9,
+                lame_mu=5.9 / (2 * (1 + 0.3)),
+                lame_lambda=5.9 * 0.3 / ((1 + 0.3) * (1 - 2 * 0.3)),
             ),
         ),
         "damage": Property(
@@ -347,3 +351,14 @@ def is_iterable_of_2uple_of_string(
             if not isinstance(val, str):
                 return False
     return True
+
+
+def calculate_lame_constants(
+    youngs_modulus: float, poissons_ratio: float
+) -> tuple[float, float]:
+    """Calculate Lame's Constants from Young's Modulus and Poisson's Ratio."""
+    E = youngs_modulus
+    nu = poissons_ratio
+    lame_lambda = E * nu / ((1 + nu) * (1 - 2 * nu))
+    lame_mu = E / (2 * (1 + nu))
+    return lame_lambda, lame_mu
