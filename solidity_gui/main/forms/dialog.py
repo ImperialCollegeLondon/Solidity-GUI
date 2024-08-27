@@ -1,6 +1,6 @@
 """Support for rendering Form objects as individual dialog boxes."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from PySide6.QtWidgets import (
@@ -195,7 +195,7 @@ class SimpleFormDialog(QDialog):
         self,
         form_class: type[Form],
         form_renderer: Callable[[FormInfo], QLayout] = default_form_renderer,
-        initial_data: dict[str, Any] | None = None,
+        initial_data: Mapping[str, Any] | None = None,
         **kwargs: Any,
     ):
         """Initialise a new SimpleFormDialog.
