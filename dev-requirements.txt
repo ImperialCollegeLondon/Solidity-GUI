@@ -261,7 +261,7 @@ pyyaml-env-tag==0.1
     # via mkdocs
 qtawesome==1.2.3
     # via SolidityGUI (pyproject.toml)
-qtpy==2.3.1
+qtpy==2.4.1
     # via qtawesome
 readtime==3.0.0
     # via mkdocs-material
