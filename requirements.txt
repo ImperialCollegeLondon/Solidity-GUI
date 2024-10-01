@@ -85,7 +85,7 @@ python-on-whales==0.64.2
     # via SolidityGUI (pyproject.toml)
 qtawesome==1.2.3
     # via SolidityGUI (pyproject.toml)
-qtpy==2.3.1
+qtpy==2.4.1
     # via qtawesome
 requests==2.31.0
     # via python-on-whales
