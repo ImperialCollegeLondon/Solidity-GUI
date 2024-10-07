@@ -51,7 +51,7 @@ decorator==5.1.1
     # via SolidityGUI (pyproject.toml)
 distlib==0.3.7
     # via virtualenv
-filelock==3.12.2
+filelock==3.16.1
     # via virtualenv
 flake8==6.1.0
     # via
