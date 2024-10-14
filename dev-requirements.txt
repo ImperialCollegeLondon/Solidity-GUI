@@ -311,7 +311,7 @@ vtk==9.2.6
     # via SolidityGUI (pyproject.toml)
 watchdog==3.0.0
     # via mkdocs
-wheel==0.41.2
+wheel==0.44.0
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
