@@ -24,7 +24,7 @@ decorator==5.1.1
     # via SolidityGUI (pyproject.toml)
 fonttools==4.54.1
     # via matplotlib
-gmsh==4.11.1
+gmsh==4.13.1
     # via pygmsh
 idna==3.4
     # via requests
