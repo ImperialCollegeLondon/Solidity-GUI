@@ -63,7 +63,7 @@ fonttools==4.54.1
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-gmsh==4.11.1
+gmsh==4.13.1
     # via pygmsh
 griffe==0.35.0
     # via mkdocstrings-python
