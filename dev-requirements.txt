@@ -67,7 +67,7 @@ gmsh==4.11.1
     # via pygmsh
 griffe==0.35.0
     # via mkdocstrings-python
-identify==2.5.27
+identify==2.6.2
     # via pre-commit
 idna==3.4
     # via requests
