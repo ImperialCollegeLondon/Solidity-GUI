@@ -231,7 +231,7 @@ pyside6-essentials==6.5.2
     # via
     #   pyside6
     #   pyside6-addons
-pytest==7.4.0
+pytest==8.3.3
     # via
     #   SolidityGUI (pyproject.toml)
     #   pytest-cov
