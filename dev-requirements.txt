@@ -59,7 +59,7 @@ flake8==6.1.0
     #   flake8-docstrings
 flake8-docstrings==1.7.0
     # via SolidityGUI (pyproject.toml)
-fonttools==4.42.1
+fonttools==4.54.1
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs

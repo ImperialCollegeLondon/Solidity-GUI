@@ -22,7 +22,7 @@ cycler==0.11.0
     # via matplotlib
 decorator==5.1.1
     # via SolidityGUI (pyproject.toml)
-fonttools==4.42.1
+fonttools==4.54.1
     # via matplotlib
 gmsh==4.11.1
     # via pygmsh
