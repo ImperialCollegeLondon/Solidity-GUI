@@ -12,7 +12,7 @@ babel==2.12.1
     # via mkdocs-material
 beautifulsoup4==4.12.2
     # via readtime
-black==23.7.0
+black==24.10.0
     # via SolidityGUI (pyproject.toml)
 build==1.2.2.post1
     # via pip-tools
