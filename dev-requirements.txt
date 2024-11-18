@@ -247,7 +247,7 @@ python-dateutil==2.8.2
     # via
     #   ghp-import
     #   matplotlib
-python-on-whales==0.64.2
+python-on-whales==0.73.0
     # via SolidityGUI (pyproject.toml)
 pywin32-ctypes==0.2.3
     # via pyinstaller
