@@ -81,7 +81,7 @@ pyside6-essentials==6.5.2
     #   pyside6-addons
 python-dateutil==2.8.2
     # via matplotlib
-python-on-whales==0.64.2
+python-on-whales==0.73.0
     # via SolidityGUI (pyproject.toml)
 qtawesome==1.2.3
     # via SolidityGUI (pyproject.toml)
