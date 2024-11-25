@@ -10,7 +10,7 @@ annotated-types==0.7.0
     # via pydantic
 babel==2.12.1
     # via mkdocs-material
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
     # via readtime
 black==24.10.0
     # via SolidityGUI (pyproject.toml)
