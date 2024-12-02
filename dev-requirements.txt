@@ -307,7 +307,7 @@ urllib3==2.0.4
     # via requests
 virtualenv==20.26.3
     # via pre-commit
-vtk==9.2.6
+vtk==9.4.0
     # via SolidityGUI (pyproject.toml)
 watchdog==3.0.0
     # via mkdocs
