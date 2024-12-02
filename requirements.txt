@@ -110,5 +110,5 @@ typing-extensions==4.7.1
     #   typer
 urllib3==2.0.4
     # via requests
-vtk==9.2.6
+vtk==9.4.0
     # via SolidityGUI (pyproject.toml)
