@@ -87,7 +87,7 @@ qtawesome==1.2.3
     # via SolidityGUI (pyproject.toml)
 qtpy==2.4.1
     # via qtawesome
-requests==2.31.0
+requests==2.32.3
     # via python-on-whales
 rich==13.8.1
     # via meshio
