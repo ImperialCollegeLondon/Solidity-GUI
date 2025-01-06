@@ -215,7 +215,7 @@ pymdown-extensions==10.9
     # via
     #   mkdocs-material
     #   mkdocstrings
-pyparsing==3.0.9
+pyparsing==3.2.1
     # via matplotlib
 pyproject-hooks==1.2.0
     # via build
