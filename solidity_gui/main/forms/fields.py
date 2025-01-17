@@ -213,6 +213,12 @@ class WiderFloatField(FloatField):
     _default_widget = DoubleSpinBoxWidget(decimals=5)
 
 
+class EvenWiderFloatField(FloatField):
+    """FloatField with widget providing even more decimals."""
+
+    _default_widget = DoubleSpinBoxWidget(decimals=10)
+
+
 class BoolField(SingleField[bool]):
     """A field for float data."""
 
