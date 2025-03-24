@@ -100,7 +100,7 @@ six==1.16.0
     # via python-dateutil
 tqdm==4.67.1
     # via python-on-whales
-typer==0.9.0
+typer==0.15.2
     # via python-on-whales
 typing-extensions==4.7.1
     # via
