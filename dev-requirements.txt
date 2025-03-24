@@ -130,7 +130,7 @@ mkdocs-autorefs==0.5.0
     # via mkdocstrings
 mkdocs-gen-files==0.5.0
     # via SolidityGUI (pyproject.toml)
-mkdocs-literate-nav==0.6.0
+mkdocs-literate-nav==0.6.2
     # via SolidityGUI (pyproject.toml)
 mkdocs-material==9.2.3
     # via SolidityGUI (pyproject.toml)
