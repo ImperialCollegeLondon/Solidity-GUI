@@ -191,7 +191,7 @@ pluggy==1.3.0
     # via pytest
 pre-commit==4.0.1
     # via SolidityGUI (pyproject.toml)
-pycodestyle==2.11.0
+pycodestyle==2.13.0
     # via flake8
 pydantic==2.8.2
     # via python-on-whales
