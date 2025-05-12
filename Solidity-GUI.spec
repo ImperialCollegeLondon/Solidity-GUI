@@ -4,6 +4,7 @@ from gmsh import libpath as gmsh_lib
 import logging
 import os
 from pathlib import Path
+from PyInstaller.utils.hooks import collect_submodules
 
 block_cipher = None
 
@@ -33,14 +34,8 @@ a = Analysis(
     hiddenimports=[
         "gmsh",
         "PySide6.plugins",
-        # VTK imports need to be added explicitly
-        "vtkmodules",
-        "vtkmodules.all",
-        "vtkmodules.util",
-        "vtkmodules.util.numpy_support",
-        "vtkmodules.qt.QVTKRenderWindowInteractor",
-    ]
-    + extra_hiddenimports,
+    ] + collect_submodules("vtkmodules") + extra_hiddenimports,
+
     hookspath=[],
     hooksconfig={},
     runtime_hooks=runtime_hooks,
