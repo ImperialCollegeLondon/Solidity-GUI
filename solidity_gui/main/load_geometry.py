@@ -31,7 +31,7 @@ def load_geometry(parent: QWidget) -> None:
     filename, _ = QFileDialog.getOpenFileName(
         parent,
         caption="Select gmsh geometry file",
-        filter="GMSH geometry (*.geo *.step *.brep)",
+        filter="GMSH geometry (*.geo *.step *.brep *.msh)",
     )
     if not filename:
         return
