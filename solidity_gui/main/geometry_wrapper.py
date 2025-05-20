@@ -123,7 +123,11 @@ class GeometryWrapper:
         mesh.cell_sets = cell_sets
         self.entities = entities
         self.cell_set_to_entity = cell_set_to_entity
+        return mesh
 
+    def _process_mesh(self) -> Mesh:
+        """Process an imported mesh, tagging its surfaces and volumes."""
+        mesh = self.geom.generate_mesh()
         return mesh
 
     def generate_mesh(
@@ -150,7 +154,7 @@ class GeometryWrapper:
     def import_geometry(self, geom_name: str, filename: str) -> Mesh:
         """Import a system geometry from an input file."""
         gmsh.open(filename)
-        return self._generate_mesh()
+        return self._process_mesh()
 
     def merge_mesh(self, filename: str) -> None:
         """Merge a mesh into the current geometry."""
