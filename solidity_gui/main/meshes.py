@@ -73,5 +73,5 @@ def get_cell_offset(cells_dict: dict[str, np.ndarray], cell_type: str) -> int:
     for type_ in ("vertex", "line", "triangle"):
         if cell_type == type_:
             break
-        offset += cells_dict[type_].shape[0]
+        offset += cells_dict.get(type_, np.array([])).shape[0]
     return offset
