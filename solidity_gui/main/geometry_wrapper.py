@@ -1,4 +1,5 @@
 """Module for GeometryWrapper class."""
+
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -65,8 +66,10 @@ class GeometryWrapper:
         return self._generate_mesh(default_size=mesh_size)
 
     def _generate_mesh(
-        self, mesh_sizes: Iterable[MeshSize] = [], default_size: float | None = None,
-        imported = False
+        self,
+        mesh_sizes: Iterable[MeshSize] = [],
+        default_size: float | None = None,
+        imported=False,
     ) -> Mesh:
         if imported:
             mesh = self.geom.generate_mesh()
@@ -92,7 +95,9 @@ class GeometryWrapper:
             if default_size is not None:
                 gmsh.model.mesh.set_size(
                     tuple(
-                        set(gmsh.model.get_entities(dim=0)).difference(points_with_sizes)
+                        set(gmsh.model.get_entities(dim=0)).difference(
+                            points_with_sizes
+                        )
                     ),
                     default_size,
                 )
@@ -210,39 +215,40 @@ def get_joined_volumes(volumes: list[Dummy]) -> list[tuple[Dummy, Dummy]]:
     return shared_surfaces
 
 
-
 def compute_normal(triangle, nodes, node_tags):
     # Extract the coordinates of the triangle vertices
     p1 = np.array(nodes[np.argmax(node_tags == triangle[0])])
     p2 = np.array(nodes[np.argmax(node_tags == triangle[1])])
     p3 = np.array(nodes[np.argmax(node_tags == triangle[2])])
-    
+
     # Compute vectors
     v1 = p2 - p1
     v2 = p3 - p1
-    
+
     # Compute the normal vector using the cross product
     normal = np.cross(v1, v2)
-    
+
     # Normalize the normal vector
     normal = normal / np.linalg.norm(normal)
-    
+
     return normal
+
 
 def angle_between_normals(normal1, normal2):
     # Compute the dot product of the normals
     dot_product = np.dot(normal1, normal2)
-    
+
     # Compute the angle in radians and convert to degrees
     angle = np.arccos(dot_product) * 180 / np.pi
-    
+
     return angle
+
 
 def flag_sharp_angles(triangle_tags, triangles, node_tags, nodes, threshold=30):
     normals = [compute_normal(triangle, nodes, node_tags) for triangle in triangles]
     surfaces = []
     neighbours_found = defaultdict(int)
-    
+
     for i in range(len(triangles)):
         for j in range(i + 1, len(triangles)):
             # We compare only first neighbours, which share two nodes
@@ -259,26 +265,27 @@ def flag_sharp_angles(triangle_tags, triangles, node_tags, nodes, threshold=30):
             # If we have 3 neighbours, we break the loop and move to the next triangle
             if neighbours_found[i] == 3:
                 break
-    
+
     return sorted(surfaces)
+
 
 def cluster_into_surfaces(pairs):
     """Cluster pairs of triangles into surfaces."""
     out = []
-    while len(pairs)>0:
+    while len(pairs) > 0:
         first, *rest = pairs
         first = set(first)
 
         lf = -1
-        while len(first)>lf:
+        while len(first) > lf:
             lf = len(first)
 
             rest2 = []
             for r in rest:
-                if len(first.intersection(set(r)))>0:
+                if len(first.intersection(set(r))) > 0:
                     first |= set(r)
                 else:
-                    rest2.append(r)     
+                    rest2.append(r)
             rest = rest2
 
         out.append(first)
@@ -298,16 +305,24 @@ def create_surfaces(threshold: int = 30):
     # Dict of the triangle ids and their node coordinates
     tri_id_to_coords = {tag: coord for tag, coord in zip(tri_tags, tri_coord)}
 
-    flagged_pairs = flag_sharp_angles(tri_tags, tri_coord, node_tags, nodes_coord, threshold)
+    flagged_pairs = flag_sharp_angles(
+        tri_tags, tri_coord, node_tags, nodes_coord, threshold
+    )
     surfaces = cluster_into_surfaces(flagged_pairs)
 
     for tag in range(len(surfaces)):
-        gmsh.model.addDiscreteEntity(2, tag+1)
+        gmsh.model.addDiscreteEntity(2, tag + 1)
 
     element_type = 2  # Triangle
     for i, surface_tri in enumerate(surfaces):
         flat_node_tags = list([i for tri in surface_tri for i in tri_id_to_coords[tri]])
-        gmsh.model.mesh.addElementsByType(i+1, element_type, list(surface_tri), flat_node_tags)
+        gmsh.model.mesh.addElementsByType(
+            i + 1, element_type, list(surface_tri), flat_node_tags
+        )
 
     if (2, 0) in gmsh.model.getEntities():
-        gmsh.model.removeEntities([(2, 0), ])
+        gmsh.model.removeEntities(
+            [
+                (2, 0),
+            ]
+        )
