@@ -7,6 +7,7 @@ from itertools import chain
 
 import gmsh
 import numpy as np
+import numpy.typing as npt
 import pygmsh
 from meshio import Mesh
 from meshio.gmsh import gmsh_to_meshio_type
@@ -69,40 +70,47 @@ class GeometryWrapper:
         self,
         mesh_sizes: Iterable[MeshSize] = [],
         default_size: float | None = None,
-        imported=False,
     ) -> Mesh:
-        if imported:
-            mesh = self.geom.generate_mesh()
-            create_surfaces()
-        else:
-            # we have to manually clear the old mesh before we can generate a new one
-            gmsh.model.mesh.clear()
-            gmsh.model.mesh.remove_constraints()
+        """Generate a mesh out of the input for the geometry available.
 
-            points_with_sizes = set()
-            for entity_name in ("volume", "surface", "line", "point"):
-                for mesh_size in mesh_sizes:
-                    if entity_name not in mesh_size.cell_set_name:
-                        continue
-                    try:
-                        dim_tag = self.cell_set_to_entity[mesh_size.cell_set_name]
-                    except KeyError:
-                        continue
-                    points = gmsh.model.get_boundary((dim_tag,), False, False, True)
-                    gmsh.model.mesh.set_size(points, mesh_size.size)
-                    points_with_sizes.update(points)
+        Args:
+            mesh_sizes (Iterable[MeshSize], optional): The mesh sizes for the
+            components. Defaults to [].
+            default_size (float | None, optional): The default size, if not provided
+            for the components. Defaults to None.
 
-            if default_size is not None:
-                gmsh.model.mesh.set_size(
-                    tuple(
-                        set(gmsh.model.get_entities(dim=0)).difference(
-                            points_with_sizes
-                        )
-                    ),
-                    default_size,
-                )
-            mesh = self.geom.generate_mesh()
+        Returns:
+            Mesh: The constructed mesh object.
+        """
+        # we have to manually clear the old mesh before we can generate a new one
+        gmsh.model.mesh.clear()
+        gmsh.model.mesh.remove_constraints()
 
+        points_with_sizes = set()
+        for entity_name in ("volume", "surface", "line", "point"):
+            for mesh_size in mesh_sizes:
+                if entity_name not in mesh_size.cell_set_name:
+                    continue
+                try:
+                    dim_tag = self.cell_set_to_entity[mesh_size.cell_set_name]
+                except KeyError:
+                    continue
+                points = gmsh.model.get_boundary((dim_tag,), False, False, True)
+                gmsh.model.mesh.set_size(points, mesh_size.size)
+                points_with_sizes.update(points)
+
+        if default_size is not None:
+            gmsh.model.mesh.set_size(
+                tuple(
+                    set(gmsh.model.get_entities(dim=0)).difference(points_with_sizes)
+                ),
+                default_size,
+            )
+
+        mesh = self.geom.generate_mesh()
+        return self._process_mesh(mesh)
+
+    def _process_mesh(self, mesh: Mesh) -> Mesh:
         # create a cell set for each geometric entity
         cell_sets = {}
         cell_set_to_entity = {}
@@ -156,10 +164,15 @@ class GeometryWrapper:
         ]
         return np.sort(np.unique(np.concatenate(nodes))) - 1
 
-    def import_geometry(self, geom_name: str, filename: str) -> Mesh:
+    def import_geometry(
+        self, geom_name: str, filename: str, resurface: bool = False
+    ) -> Mesh:
         """Import a system geometry from an input file."""
         gmsh.open(filename)
-        return self._generate_mesh(imported=True)
+        mesh = self.geom.generate_mesh()
+        if resurface:
+            create_surfaces()
+        return self._process_mesh(mesh)
 
     def merge_mesh(self, filename: str) -> None:
         """Merge a mesh into the current geometry."""
@@ -234,7 +247,18 @@ def compute_normal(triangle, nodes, node_tags):
     return normal
 
 
-def angle_between_normals(normal1, normal2):
+def angle_between_normals(
+    normal1: npt.NDArray[np.float64], normal2: npt.NDArray[np.float64]
+) -> float:
+    """Compute the angle between two surface normals.
+
+    Args:
+        normal1 (npt.NDArray[np.float64]): Array with the first surface normal.
+        normal2 (npt.NDArray[np.float64]): And the second one.
+
+    Returns:
+        float: Angle, in degrees, between both normals. It is between 0 and 180 deg.
+    """
     # Compute the dot product of the normals
     dot_product = np.dot(normal1, normal2)
 
