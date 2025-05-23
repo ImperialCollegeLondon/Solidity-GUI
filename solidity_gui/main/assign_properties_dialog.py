@@ -1,4 +1,5 @@
 """Module for the AssignPropertiesDialog class."""
+
 import logging
 from operator import attrgetter
 
@@ -79,8 +80,8 @@ class AssignPropertiesDialog(QDialog):
             [
                 key
                 for mesh in mesh_datastore.values()
-                for key, value in mesh.cell_sets.items()
-                if value[2] is not None
+                for key in mesh.cell_sets.keys()
+                if "volume" in key
                 and key
                 not in [
                     assignment.cell_set_name
