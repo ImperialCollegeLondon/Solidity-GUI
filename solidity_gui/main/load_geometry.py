@@ -68,6 +68,10 @@ def load_geometry(parent: QWidget) -> None:
 
     logging.info(f"Importing geometry from file: {filename}")
     mesh = gmsh_process.call_function(
-        "import_geometry", geom_name=geom_name, filename=filename, resurface=resurface
+        "import_geometry",
+        geom_name=geom_name,
+        filename=filename,
+        resurface=resurface,
+        threshold=threshold,
     )
     pub.sendMessage("add_component.finish", mesh_name=geom_name, obj=mesh)

@@ -165,13 +165,17 @@ class GeometryWrapper:
         return np.sort(np.unique(np.concatenate(nodes))) - 1
 
     def import_geometry(
-        self, geom_name: str, filename: str, resurface: bool = False
+        self,
+        geom_name: str,
+        filename: str,
+        resurface: bool = False,
+        threshold: float = 30.0,
     ) -> Mesh:
         """Import a system geometry from an input file."""
         gmsh.open(filename)
         mesh = self.geom.generate_mesh()
         if resurface:
-            create_surfaces()
+            create_surfaces(threshold)
         return self._process_mesh(mesh)
 
     def merge_mesh(self, filename: str) -> None:
@@ -317,7 +321,7 @@ def cluster_into_surfaces(pairs):
     return out
 
 
-def create_surfaces(threshold: int = 30):
+def create_surfaces(threshold: float = 30):
     """Create surfaces based on the angle of first neighbours."""
     node_tags, nodes_coord, _ = gmsh.model.mesh.getNodes()
     nodes_coord = nodes_coord.reshape(-1, 3)
