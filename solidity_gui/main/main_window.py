@@ -5,10 +5,11 @@ import logging
 from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QMainWindow, QStatusBar
 
 from .. import config
 from .components import Component
+from .logger_bar import QTextEditLogger
 from .mac_restriction import quit_if_no_access
 from .menu_bar import MenuBar
 from .uncaught_exceptions import set_uncaught_exception_handler
@@ -42,6 +43,13 @@ class MainWindow(QMainWindow):
         # create the toolbar containing the various visualisation buttons
         visualisation_toolbar = VisualisationToolbar()
         self.addToolBar(Qt.TopToolBarArea, visualisation_toolbar)
+
+        # create the status bar
+        status_bar = QStatusBar(self)
+        log_bar = QTextEditLogger(status_bar)
+        logging.getLogger().addHandler(log_bar)
+        status_bar.addPermanentWidget(log_bar.widget, 1)
+        self.setStatusBar(status_bar)
 
         logging.info("Creating main window")
 
