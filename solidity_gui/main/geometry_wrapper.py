@@ -211,9 +211,17 @@ def get_joined_volumes(volumes: list[Dummy]) -> list[tuple[Dummy, Dummy]]:
     Args:
       volumes: the volumes to check
     """
-    surface_tags = [
-        list(gmsh.model.occ.get_surface_loops(vol._id)[1][0]) for vol in volumes
-    ]
+    surface_tags = []
+    for vol in volumes:
+        try:
+            surface_tags.append(list(gmsh.model.occ.get_surface_loops(vol._id)[1][0]))
+        except Exception:
+            # Not an OpenCASCADE model, so ignoring this.
+            pass
+
+    if not surface_tags:
+        return []
+
     repeated_surface_tags = [
         item for item, count in Counter(chain(*surface_tags)).items() if count > 1
     ]
