@@ -19,7 +19,7 @@ def test_assign_populate_combos(qtbot):
     material = Material(name="foo")
     material_datastore.add(material)
 
-    cell_set_name = "cell_set_name"
+    cell_set_name = "volume_set_name"
     mesh = Mesh(points=[], cells={"line": []}, cell_sets={cell_set_name: [[], [], []]})
     mesh_name = "default"
     mesh_datastore[mesh_name] = mesh
