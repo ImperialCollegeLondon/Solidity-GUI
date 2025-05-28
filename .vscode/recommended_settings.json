@@ -1,9 +1,9 @@
 // This file contains recommended settings for VS code users. To use it, copy it to
 // .vscode/settings.json (or create a symlink)
 {
-    "python.formatting.provider": "black",
     "[python]": {
         "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.black-formatter"
     },
     "editor.rulers": [88],
 
