@@ -27,9 +27,9 @@ class DensityForm(Form):
 class ElasticityForm(Form):
     """Form for collecting material properties related to elasticity."""
 
-    youngs_modulus = FloatField(
+    youngs_modulus = LargeFloatField(
         display_name="Young's Modulus",
-        validators=[validate.Range(min=0, max=1e11)],
+        validators=[validate.Range(min=0, max=1e18)],
     )
     poissons_ratio = FloatField(
         display_name="Poisson's Ratio",
@@ -74,7 +74,7 @@ class JointForm(Form):
     internal_friction_coefficient = FloatField(
         display_name="Internal Friction Coefficient"
     )
-    spring_stiffness = FloatField(display_name="Spring Stiffness")
+    spring_stiffness = LargeFloatField(display_name="Spring Stiffness")
 
 
 @dataclass
