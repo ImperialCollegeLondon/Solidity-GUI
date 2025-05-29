@@ -240,7 +240,21 @@ def get_joined_volumes(volumes: list[Dummy]) -> list[tuple[Dummy, Dummy]]:
     return shared_surfaces
 
 
-def compute_normal(triangle, nodes, node_tags):
+def compute_normal(
+    triangle: npt.NDArray[np.int32],
+    nodes: npt.NDArray[np.float64],
+    node_tags: npt.NDArray[np.int32],
+) -> npt.NDArray[np.float64]:
+    """Calculates the normal vector of a triangle.
+
+    Args:
+        triangle (npt.NDArray[np.int32]): The triangle in question.
+        nodes (npt.NDArray[np.int32]): The array of nodes.
+        node_tags (npt.NDArray[np.int32]): The array of node labels.
+
+    Returns:
+        npt.NDArray[np.int32]: _description_
+    """
     # Extract the coordinates of the triangle vertices
     p1 = np.array(nodes[np.argmax(node_tags == triangle[0])])
     p2 = np.array(nodes[np.argmax(node_tags == triangle[1])])
@@ -280,10 +294,29 @@ def angle_between_normals(
     return angle
 
 
-def flag_sharp_angles(triangle_tags, triangles, node_tags, nodes, threshold=30):
+def flag_sharp_angles(
+    triangle_tags: npt.NDArray[np.int32],
+    triangles: npt.NDArray[np.int32],
+    node_tags: npt.NDArray[np.int32],
+    nodes: npt.NDArray[np.float64],
+    threshold: float = 30,
+) -> list[list[int]]:
+    """Finds triangles whose normal angles differ by less than certain angle.
+
+    Args:
+        triangle_tags (npt.NDArray[np.int32]): Array of triangle tags.
+        triangles (npt.NDArray[np.int32]): The triangles coordinates.
+        node_tags (npt.NDArray[np.int32]): The node tags.
+        nodes (npt.NDArray[np.float64]): The nodes coordinates.
+        threshold (float, optional): Threshold hangle between the normals. Defaults to 30.
+
+    Returns:
+        list[list[int, int]]: List of list pairing neighbouring triangles that belong
+        to the same surface based on their separation angle.
+    """
     normals = [compute_normal(triangle, nodes, node_tags) for triangle in triangles]
-    surfaces = []
-    neighbours_found = defaultdict(int)
+    surfaces: list[list[int]] = []
+    neighbours_found: dict[int, int] = defaultdict(int)
 
     for i in range(len(triangles)):
         for j in range(i + 1, len(triangles)):
@@ -305,12 +338,20 @@ def flag_sharp_angles(triangle_tags, triangles, node_tags, nodes, threshold=30):
     return sorted(surfaces)
 
 
-def cluster_into_surfaces(pairs):
-    """Cluster pairs of triangles into surfaces."""
+def cluster_into_surfaces(pairs: list[list[int]]) -> list[list[int]]:
+    """Cluster pairs of triangles into surfaces.
+
+    Args:
+        pairs (list[list[int]]): List of list pairing neighbouring triangles that belong
+        to the same surface based on their separation angle.
+
+    Returns:
+        list[list[int]]: Clustered triangles into surfaces.
+    """
     out = []
     while len(pairs) > 0:
         first, *rest = pairs
-        first = set(first)
+        first = set(first)  # type: ignore
 
         lf = -1
         while len(first) > lf:
@@ -318,8 +359,8 @@ def cluster_into_surfaces(pairs):
 
             rest2 = []
             for r in rest:
-                if len(first.intersection(set(r))) > 0:
-                    first |= set(r)
+                if len(first.intersection(set(r))) > 0:  # type: ignore
+                    first |= set(r)  # type: ignore
                 else:
                     rest2.append(r)
             rest = rest2
@@ -329,7 +370,7 @@ def cluster_into_surfaces(pairs):
     return out
 
 
-def create_surfaces(threshold: float = 30):
+def create_surfaces(threshold: float = 30) -> None:
     """Create surfaces based on the angle of first neighbours."""
     node_tags, nodes_coord, _ = gmsh.model.mesh.getNodes()
     nodes_coord = nodes_coord.reshape(-1, 3)
