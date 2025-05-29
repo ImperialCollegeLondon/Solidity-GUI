@@ -6,7 +6,7 @@ import sys
 from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QErrorMessage, QMainWindow, QStatusBar
+from PySide6.QtWidgets import QMainWindow, QMessageBox, QStatusBar
 
 from .. import config
 from .components import Component
@@ -58,16 +58,17 @@ class MainWindow(QMainWindow):
 
     def show(self) -> None:
         """Show the main window."""
-        super().show()
-
-        # Access verification
         allowed, mac = is_mac_address_allowed()
         if not allowed:
-            QErrorMessage(self).showMessage(
-                f"Your MAC address {mac} is not allowed to use this copy of "
-                "Solidity GUI"
+            QMessageBox.critical(
+                self,
+                "Computer not authorized",
+                f"Your MAC address '{mac}' is not allowed to use this copy of "
+                "Solidity GUI",
             )
             sys.exit(1)
+
+        super().show()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Send message when window is closed."""
