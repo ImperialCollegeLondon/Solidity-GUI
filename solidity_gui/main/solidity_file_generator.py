@@ -499,6 +499,7 @@ def get_mat_data(
                         energy_release_rate_mode_2=joint_data[
                             "energy_release_rate_mode_2"
                         ],
+                        spring_stiffness=joint_data["spring_stiffness"],
                     ),
                 )
             )
@@ -527,7 +528,7 @@ def get_mat_data(
 def create_mat_template() -> str:
     """Render file contents for a Solidity mat file using Jinja2."""
     template = env.get_template(config.SOLIDITY_MAT_TEMPLATE_FILE)
-    logging.info(f"Generating Y3D file from {template.filename}")
+    logging.info(f"Generating material file from {template.filename}")
     joint_material_interfaces = get_joint_material_interfaces(
         gmsh_process_datastore, material_assignment_datastore
     )

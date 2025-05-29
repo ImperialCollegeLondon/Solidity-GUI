@@ -74,6 +74,7 @@ class JointForm(Form):
     internal_friction_coefficient = FloatField(
         display_name="Internal Friction Coefficient"
     )
+    spring_stiffness = FloatField(display_name="Spring Stiffness")
 
 
 @dataclass
@@ -163,6 +164,7 @@ def PROPERTIES() -> Properties_Dict_Type:
                 tensile_strength=1e7,
                 cohesion=3.5e7,
                 internal_friction_coefficient=0.577,
+                spring_stiffness=12,
             ),
         ),
     }
