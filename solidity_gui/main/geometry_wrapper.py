@@ -158,6 +158,8 @@ class GeometryWrapper:
         """Get the indices of the mesh nodes that are on the system surface."""
         volume_dim_tags = gmsh.model.get_entities(dim=3)
         surface_dim_tags = gmsh.model.get_boundary(volume_dim_tags, oriented=False)
+        if not surface_dim_tags:
+            surface_dim_tags = gmsh.model.get_entities(dim=2)
         nodes = [
             gmsh.model.mesh.getNodes(*dim_tags, includeBoundary=True)[0]
             for dim_tags in surface_dim_tags
