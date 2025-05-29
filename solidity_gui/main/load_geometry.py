@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QFileDialog, QWidget
 
 from .error_message import display_error_message
 from .forms import Form, SimpleFormDialog
-from .forms.fields import StrField, BoolField, FloatField
+from .forms.fields import BoolField, FloatField, StrField
 from .gmsh_process import GmshProcess, gmsh_process_datastore
 
 

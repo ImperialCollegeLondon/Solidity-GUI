@@ -1,3 +1,5 @@
+"""Includes the bar for logging at the bottom."""
+
 import logging
 
 from PySide6.QtCore import QObject, Signal
@@ -5,11 +7,15 @@ from PySide6.QtWidgets import QPlainTextEdit, QWidget
 
 
 class QTextEditLogger(logging.Handler):
+    """The GUI logger."""
 
     class Emitter(QObject):
+        """The emitter, in charge of sending signals to update the GUI."""
+
         log = Signal(str)
 
     def __init__(self, parent: QWidget):
+        """Initialisation of the GUI logger."""
         super().__init__()
         self.widget = QPlainTextEdit(parent)
         self.widget.setReadOnly(True)
