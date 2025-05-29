@@ -122,7 +122,7 @@ class DoubleSpinBoxWidget(SpinBoxBase[QDoubleSpinBox, float]):
     _default_min = -1000000000
     _default_max = 1000000000
 
-    def __init__(self, decimals: int = 3):
+    def __init__(self, decimals: int = 6):
         """Initialise a new instance.
 
         Args:

@@ -210,7 +210,7 @@ class FloatField(SingleField[float]):
 class WiderFloatField(FloatField):
     """FloatField with widget providing more decimals."""
 
-    _default_widget = DoubleSpinBoxWidget(decimals=5)
+    _default_widget = DoubleSpinBoxWidget(decimals=8)
 
 
 class EvenWiderFloatField(FloatField):
