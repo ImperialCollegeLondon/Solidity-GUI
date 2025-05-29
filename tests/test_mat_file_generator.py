@@ -27,6 +27,7 @@ def _check_joint_material(joint_material_data, index1, index2, properties):
             cohesion=joint["cohesion"],
             energy_release_rate_mode_1=joint["energy_release_rate_mode_1"],
             energy_release_rate_mode_2=joint["energy_release_rate_mode_2"],
+            spring_stiffness=joint["spring_stiffness"],
         ),
     )
 

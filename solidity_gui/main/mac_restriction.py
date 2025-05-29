@@ -1,7 +1,6 @@
 """Module for checking if the current machine is allowed to run the application."""
 
 import logging
-import sys
 import uuid
 from datetime import date
 
@@ -37,15 +36,12 @@ def _get_mac_address() -> str:
         raise RuntimeError("Error occurred while trying to retrieve MAC address") from e
 
 
-def _is_mac_address_allowed() -> bool:
+def is_mac_address_allowed() -> tuple[bool, str]:
     """Check if the current MAC address is allowed to run the application."""
     mac_address = _get_mac_address()
     if not ALLOWED_MAC_ADDRESSES:
-        return True
-    return mac_address in ALLOWED_MAC_ADDRESSES and not _has_expired(mac_address)
-
-
-def quit_if_no_access() -> None:
-    """Quit the application if the current machine is not allowed to run it."""
-    if not _is_mac_address_allowed():
-        sys.exit(1)
+        return True, ""
+    return (
+        mac_address in ALLOWED_MAC_ADDRESSES and not _has_expired(mac_address),
+        mac_address,
+    )
