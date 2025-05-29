@@ -29,6 +29,7 @@ from .widgets import (
     CheckBoxWidget,
     ComboBox,
     DoubleSpinBoxWidget,
+    LargeFloatLineWidget,
     LineEditWidget,
     SpinBoxWidget,
     TrueWidget,
@@ -205,6 +206,13 @@ class FloatField(SingleField[float]):
 
     _marshmallow_field = marshmallow_fields.Float
     _default_widget = DoubleSpinBoxWidget()
+
+
+class LargeFloatField(SingleField[float]):
+    """A field for large float data, requiring a line edit widget."""
+
+    _marshmallow_field = marshmallow_fields.Float
+    _default_widget = LargeFloatLineWidget()
 
 
 class WiderFloatField(FloatField):

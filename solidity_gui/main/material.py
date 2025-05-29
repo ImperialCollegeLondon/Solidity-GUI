@@ -11,7 +11,7 @@ from pubsub import pub
 from .assignment_base import AssignmentBase
 from .datastore import Datastore, IndexDatastore
 from .forms import Form
-from .forms.fields import FloatField, WiderFloatField
+from .forms.fields import FloatField, LargeFloatField, WiderFloatField
 from .gmsh_process import GmshProcess
 from .meshes import mesh_datastore
 
@@ -51,7 +51,7 @@ class OtherForm(Form):
     """Temporary form for all remaining material properties."""
 
     mass_damping_coefficient = FloatField(display_name="Mass Damping Coefficient")
-    penalty_number = FloatField(display_name="Penalty Number")
+    penalty_number = LargeFloatField(display_name="Penalty Number")
     sliding_friction_coefficient = FloatField(
         display_name="Sliding Friction Coefficient"
     )

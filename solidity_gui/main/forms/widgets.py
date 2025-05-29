@@ -176,6 +176,33 @@ class LineEditWidget(Widget[QLineEdit, str]):
         return input_.text()
 
 
+class LargeFloatLineWidget(Widget[QLineEdit, float]):
+    """Widget for collecting strings via a QLineEdit."""
+
+    qt_input_class = QLineEdit
+
+    def create(self, data: float | None, validators: Iterable[Callable]) -> QLineEdit:
+        """Return a QLineEdit instance.
+
+        Args:
+          data: value to populate into the QLineEdit
+          validators: marshmallow validators (passed by associated Field)
+        """
+        qt_input = self.qt_input_class()
+        if data is not None:
+            qt_input.setText(str(data))
+        return qt_input
+
+    @staticmethod
+    def process(input_: QLineEdit) -> float:
+        """Extract form data from an instance of QLineEdit.
+
+        Args:
+          input_: QLineEdit instance containing data
+        """
+        return float(input_.text())
+
+
 class CheckBoxWidget(Widget[QCheckBox, bool]):
     """Widget for collecting bools via a QCheckBox."""
 
