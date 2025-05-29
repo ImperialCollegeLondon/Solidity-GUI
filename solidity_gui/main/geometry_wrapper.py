@@ -308,7 +308,8 @@ def flag_sharp_angles(
         triangles (npt.NDArray[np.int32]): The triangles coordinates.
         node_tags (npt.NDArray[np.int32]): The node tags.
         nodes (npt.NDArray[np.float64]): The nodes coordinates.
-        threshold (float, optional): Threshold hangle between the normals. Defaults to 30.
+        threshold (float, optional): Threshold angle between the normals.
+        Defaults to 30.
 
     Returns:
         list[list[int, int]]: List of list pairing neighbouring triangles that belong
@@ -395,11 +396,4 @@ def create_surfaces(threshold: float = 30) -> None:
         flat_node_tags = list([i for tri in surface_tri for i in tri_id_to_coords[tri]])
         gmsh.model.mesh.addElementsByType(
             i + 1, element_type, list(surface_tri), flat_node_tags
-        )
-
-    if (2, 0) in gmsh.model.getEntities():
-        gmsh.model.removeEntities(
-            [
-                (2, 0),
-            ]
         )
