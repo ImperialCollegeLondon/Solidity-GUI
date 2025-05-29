@@ -12,7 +12,7 @@ Cases that meet these criteria should make of use the [Forms module]. The refere
 documentation for the module provides an introduction to its design, functionality and
 usage.
 
-[Forms module]: ../reference/solidity_gui/main/forms/
+[Forms module]: reference/solidity_gui/main/forms/index.md
 
 The Forms module is still in an early stage of development so it's expected that it will
 have to be extended to suit future use-cases. Please note that if the Forms module does

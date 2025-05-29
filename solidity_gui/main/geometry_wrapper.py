@@ -304,16 +304,15 @@ def flag_sharp_angles(
     """Finds triangles whose normal angles differ by less than certain angle.
 
     Args:
-        triangle_tags (npt.NDArray[np.int32]): Array of triangle tags.
-        triangles (npt.NDArray[np.int32]): The triangles coordinates.
-        node_tags (npt.NDArray[np.int32]): The node tags.
-        nodes (npt.NDArray[np.float64]): The nodes coordinates.
-        threshold (float, optional): Threshold angle between the normals.
-        Defaults to 30.
+        triangle_tags: Array of triangle tags.
+        triangles: The triangles coordinates.
+        node_tags: The node tags.
+        nodes: The nodes coordinates.
+        threshold: Threshold angle between the normals. Defaults to 30.
 
     Returns:
-        list[list[int, int]]: List of list pairing neighbouring triangles that belong
-        to the same surface based on their separation angle.
+        List of list pairing neighbouring triangles that belong to the same surface
+            based on their separation angle.
     """
     normals = [compute_normal(triangle, nodes, node_tags) for triangle in triangles]
     surfaces: list[list[int]] = []
@@ -343,11 +342,11 @@ def cluster_into_surfaces(pairs: list[list[int]]) -> list[list[int]]:
     """Cluster pairs of triangles into surfaces.
 
     Args:
-        pairs (list[list[int]]): List of list pairing neighbouring triangles that belong
-        to the same surface based on their separation angle.
+        pairs: List of list pairing neighbouring triangles that belong to the same
+            surface based on their separation angle.
 
     Returns:
-        list[list[int]]: Clustered triangles into surfaces.
+        Clustered triangles into surfaces.
     """
     out = []
     while len(pairs) > 0:
