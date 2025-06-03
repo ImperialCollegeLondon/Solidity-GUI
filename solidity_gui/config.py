@@ -59,7 +59,7 @@ _DOCKER_IMAGE_DIGEST = (
 )
 """The SHA256 digest for the Docker image. Used to pull a specific version."""
 
-DOCKER_IMAGE_ID = "7abca18855f19333e407788f2b3681c8706003554f9ab2b1310c38b87e2ff93e"
+DOCKER_IMAGE_ID = "9bb01c610e0e4bef14f2cbfd2bb4855c502825dc23558ad313e267ea8993b97f"
 """The content-addressable image ID for the Docker image. This is different from the
 image digest above. To check what the image ID is, use the get_docker_image_id.py
 script."""
