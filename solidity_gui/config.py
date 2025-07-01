@@ -55,11 +55,11 @@ SOLIDITY_MAT_TEMPLATE_FILE = "mat.txt.jinja"
 """Solidity mat.txt template file."""
 
 _DOCKER_IMAGE_DIGEST = (
-    "9bb01c610e0e4bef14f2cbfd2bb4855c502825dc23558ad313e267ea8993b97f"
+    "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
 )
 """The SHA256 digest for the Docker image. Used to pull a specific version."""
 
-DOCKER_IMAGE_ID = "9bb01c610e0e4bef14f2cbfd2bb4855c502825dc23558ad313e267ea8993b97f"
+DOCKER_IMAGE_ID = "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
 """The content-addressable image ID for the Docker image. This is different from the
 image digest above. To check what the image ID is, use the get_docker_image_id.py
 script."""
