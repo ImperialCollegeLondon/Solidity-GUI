@@ -1,7 +1,9 @@
 """Module for the AssignConditionsDialog class."""
+
 import logging
 from operator import attrgetter
 
+from pubsub import pub
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -72,6 +74,11 @@ class AssignConditionsDialog(QDialog):
         button_layout.addWidget(close_button)
 
         layout.addLayout(button_layout)
+
+        pub.subscribe(self._clear_assignments, "session.new")
+
+    def _clear_assignments(self) -> None:
+        self.condition_assignment_table.setRowCount(0)
 
     def _populate_combos(self) -> None:
         self.select_component_combo.clear()

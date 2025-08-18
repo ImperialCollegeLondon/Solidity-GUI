@@ -1,4 +1,5 @@
 """Module for the MaterialsManagerDialog class."""
+
 import logging
 from copy import deepcopy
 
@@ -78,6 +79,10 @@ class MaterialsManagerDialog(QDialog):
         for key, material in material_datastore.items():
             self._add_material(key, material)
         pub.subscribe(self._add_material, material_datastore.update_topic)
+        pub.subscribe(self._clear_materials, "session.new")
+
+    def _clear_materials(self) -> None:
+        self.materials_table.setRowCount(0)
 
     def _create_click_handler(self) -> None:
         CreateMaterialDialog(material_datastore).exec()

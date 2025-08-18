@@ -77,6 +77,10 @@ class ConditionsManagerDialog(QDialog):
         self.conditions_table.cellChanged.connect(self._condition_renamed)
 
         pub.subscribe(self._add_condition, condition_datastore.update_topic)
+        pub.subscribe(self._clear_conditions, "session.new")
+
+    def _clear_conditions(self) -> None:
+        self.conditions_table.setRowCount(0)
 
     def _create_click_handler(self) -> None:
         CreateConditionDialog().exec()
