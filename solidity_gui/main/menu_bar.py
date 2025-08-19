@@ -121,17 +121,20 @@ class MenuBar(QMenuBar):
         file_menu.addAction(
             self._create_action("&Load Session", partial(load_session, self))
         )
+        file_menu.addSeparator()
 
         # Problem Data
         file_menu.addAction(
             self._create_action("&Problem Data", lambda: ProblemDataDialog().exec_())
         )
+        file_menu.addSeparator()
 
         self.solidity_files_action = self._create_action(
             "&Create Solidity Input Files", generate_output_files
         )
         self.solidity_files_action.setEnabled(False)
         file_menu.addAction(self.solidity_files_action)
+        file_menu.addSeparator()
 
         file_menu.addAction(self._create_action("E&xit", QGuiApplication.quit))
 
