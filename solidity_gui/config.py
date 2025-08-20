@@ -54,21 +54,26 @@ SOLIDITY_Y3D_TEMPLATE_FILE = "BST.Y3D.jinja"
 SOLIDITY_MAT_TEMPLATE_FILE = "mat.txt.jinja"
 """Solidity mat.txt template file."""
 
-_DOCKER_IMAGE_DIGEST = (
-    "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
-)
+DOCKER_IMAGE_DIGEST = "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
 """The SHA256 digest for the Docker image. Used to pull a specific version."""
 
-DOCKER_IMAGE_ID = "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
-"""The content-addressable image ID for the Docker image. This is different from the
-image digest above. To check what the image ID is, use the get_docker_image_id.py
-script."""
+DOCKER_IMAGE_FILE_HASH = (
+    "98a96b9ed55147e9660229710003c295e387363ee0abf2d9c548d8d72cb150bc"
+)
+"""The SHA256 digest for the Docker image file, used to verify its integrity.
 
-DOCKER_IMAGE_ID_SHORT = DOCKER_IMAGE_ID[:12]
-"""A shorter, more human-readable version of the image ID."""
+This can be obtained, for example, by running in the terminal (both windows and linux):
+    openssl dgst -sha256 solidity_image_XXXXXXXXXXXX.tar.gz
+
+The last 12 digits of the has should be included in the filename. This does not change
+the actual hash, but makes it easier to identify the file.
+"""
+
+DOCKER_IMAGE_FILE_HASH_SHORT = DOCKER_IMAGE_FILE_HASH[:12]
+"""A shorter, more human-readable version of the image file hash."""
 
 SOLIDITY_DOCKER_IMAGE = (
-    f"ghcr.io/imperialcollegelondon/solidity_project_dev@sha256:{_DOCKER_IMAGE_DIGEST}"
+    f"ghcr.io/imperialcollegelondon/solidity_project_dev@sha256:{DOCKER_IMAGE_DIGEST}"
 )
 """The path to the Docker image to run."""
 

@@ -3,7 +3,9 @@
 It achieves this by using the docker image.
 """
 
+import contextlib
 import logging
+import platform
 import sys
 from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
@@ -17,8 +19,9 @@ from python_on_whales.exceptions import DockerException, NoSuchContainer, NoSuch
 import solidity_gui
 
 from ..config import (
-    DOCKER_IMAGE_ID,
-    DOCKER_IMAGE_ID_SHORT,
+    DOCKER_IMAGE_DIGEST,
+    DOCKER_IMAGE_FILE_HASH,
+    DOCKER_IMAGE_FILE_HASH_SHORT,
     SOLIDITY_CONTAINER_NAME,
     SOLIDITY_DOCKER_IMAGE,
 )
@@ -37,32 +40,78 @@ def _get_exe_folder() -> Path:
     return Path(solidity_gui.__path__[0]).parent.absolute()
 
 
+def _get_sha256_hash(image_path: Path) -> str:
+    """Get the SHA256 has of the image file.
+
+    The has is calculated in blocks of 4096 bytes to avoid memory issues with large
+    files. It assumes that the file exists and is readable.
+
+    Returns:
+        The SHA256 hash of the image file.
+    """
+    import hashlib
+
+    sha256_hash = hashlib.sha256()
+    with open(image_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
+
+
 def _try_load_image() -> Image | None:
-    """Try to load the image from the local filesystem."""
+    """Try to load the image from the local filesystem.
+
+    First it checks if the image file exists and has the correct hash. Then it loads it
+    and gets the image ID from the tags. Finally, it returns the image object.
+
+    Returns:
+        The loaded image object or None if the image file does not exist or has the
+        wrong hash.
+    """
     exe_folder = _get_exe_folder()
-    image_path = exe_folder / f"solidity_image_{DOCKER_IMAGE_ID_SHORT}.tar.gz"
+    image_path = exe_folder / f"solidity_image_{DOCKER_IMAGE_FILE_HASH_SHORT}.tar.gz"
     if not image_path.exists():
         return None
 
-    logging.info(f"Loading docker image from {image_path}...")
-    docker.load(str(image_path))
-
-    try:
-        return docker.image.inspect(DOCKER_IMAGE_ID)
-    except NoSuchImage:
-        # This is an eminently unlikely outcome given that we embed the image ID in the
-        # filename, but let's be extra careful
-        logging.warn("Image ID for local file is wrong; ignoring")
+    if (hash := _get_sha256_hash(image_path)) != DOCKER_IMAGE_FILE_HASH:
+        logging.error(
+            f"Image file {image_path} has wrong hash; "
+            f"expected {DOCKER_IMAGE_FILE_HASH}, got {hash}"
+        )
         return None
+
+    logging.info(f"Loading docker image from {image_path}...")
+    tags = docker.load(str(image_path))
+    image_id = ""
+    for tag in tags:
+        if tag.startswith("sha256:"):
+            image_id = tag
+            break
+    if not image_id:
+        logging.error(f"Image file {image_path} does not contain a valid image ID")
+        return None
+    img = docker.image.inspect(image_id)
+
+    if platform.system() == "Windows":
+        # On Windows, the ID of the image loaded from file is the same as the digest,
+        # so we can check it directly, as a sanity check
+        if img.id != "sha256:" + DOCKER_IMAGE_DIGEST:
+            logging.error(
+                f"Image file {image_path} has wrong ID; "
+                f"expected sha256:{DOCKER_IMAGE_DIGEST}, got {img.id}"
+            )
+            return None
+
+    # Tag the image using the configured image digest for easier identification
+    img.tag("solidity:" + DOCKER_IMAGE_DIGEST)
+    return img
 
 
 def _pull_image_sync() -> Image:
     """Pull the Docker image or load from local archive, if available."""
     # Check if the image is already available in Docker
-    try:
-        return docker.image.inspect(DOCKER_IMAGE_ID)
-    except NoSuchImage:
-        pass
+    with contextlib.suppress(NoSuchImage):
+        return docker.image.inspect(DOCKER_IMAGE_DIGEST)
 
     # Try to import from local filesystem
     if image := _try_load_image():
@@ -70,7 +119,9 @@ def _pull_image_sync() -> Image:
 
     # Fall back on doing a docker pull
     logging.info("Downloading Docker image")
-    return cast(Image, docker.pull(SOLIDITY_DOCKER_IMAGE))
+    image = cast(Image, docker.pull(SOLIDITY_DOCKER_IMAGE))
+    image.tag("solidity:" + DOCKER_IMAGE_DIGEST)
+    return image
 
 
 def _pull_image_async() -> None:
@@ -138,10 +189,9 @@ def _run_solidity(
         f"{pellet_file_path.name}, {materials_file_path.name})"
     )
 
-    logging.info(f"Running Docker image: {DOCKER_IMAGE_ID_SHORT}")
-
     # Get the Docker image
     image = _pull_image_sync()
+    logging.info(f"Running Docker image ID: {DOCKER_IMAGE_DIGEST}")
 
     path_on_container = PurePosixPath("/home/software/solidity/run")
     return docker.run(
