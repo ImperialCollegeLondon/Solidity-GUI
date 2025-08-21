@@ -17,11 +17,11 @@ class ConditionsMenu(QMenu):
 
         self.conditions_manager_dialog = ConditionsManagerDialog()
         self.addAction(
-            "Create and Edit Constant &Conditions", self.conditions_manager_dialog.open
+            "Constant &Conditions Manager", self.conditions_manager_dialog.open
         )
         self.initial_conditions_manager_dialog = InitialConditionsManagerDialog()
         self.addAction(
-            "Create and Edit &Initial Conditions",
+            "Initial Conditions Manager",
             self.initial_conditions_manager_dialog.open,
         )
 
