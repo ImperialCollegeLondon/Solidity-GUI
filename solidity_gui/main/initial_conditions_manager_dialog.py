@@ -1,14 +1,17 @@
 """Module for the MaterialsManagerDialog class."""
 
 import logging
+import pickle
 from copy import deepcopy
 
 from pubsub import pub
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
+    QFileDialog,
     QHBoxLayout,
     QHeaderView,
+    QMessageBox,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -57,6 +60,8 @@ class InitialConditionsManagerDialog(QDialog):
         self.rename_button = QPushButton("Rename")
         self.copy_button = QPushButton("Copy")
         self.delete_button = QPushButton("Delete")
+        self.export_button = QPushButton("Export")
+        self.import_button = QPushButton("Import")
 
         buttons_layout = QVBoxLayout()
         buttons_layout.addWidget(self.create_button)
@@ -64,6 +69,8 @@ class InitialConditionsManagerDialog(QDialog):
         buttons_layout.addWidget(self.rename_button)
         buttons_layout.addWidget(self.copy_button)
         buttons_layout.addWidget(self.delete_button)
+        buttons_layout.addWidget(self.export_button)
+        buttons_layout.addWidget(self.import_button)
 
         layout.addLayout(buttons_layout)
 
@@ -72,6 +79,8 @@ class InitialConditionsManagerDialog(QDialog):
         self.rename_button.clicked.connect(self._rename_click_handler)
         self.copy_button.clicked.connect(self._copy_click_handler)
         self.delete_button.clicked.connect(self._delete_click_handler)
+        self.export_button.clicked.connect(self._export_click_handler)
+        self.import_button.clicked.connect(self._import_click_handler)
 
         self.table.cellChanged.connect(self._condition_renamed)
 
@@ -149,3 +158,37 @@ class InitialConditionsManagerDialog(QDialog):
         row = self.table.currentIndex().row()
 
         self.table.removeRow(row)
+
+    def _export_click_handler(self) -> None:
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Initial Conditions",
+            filter="Solidity Initial Condition Library (*.sicl)",
+        )
+        if not filename:
+            return
+        with open(filename, "wb") as f:
+            pickle.dump(initial_condition_datastore, f)
+        QMessageBox.information(
+            self,
+            "Export Initial Conditions",
+            f"Initial Conditions library exported to {filename}",
+        )
+
+    def _import_click_handler(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "Import Initial Conditions",
+            filter="Solidity Initial Condition Library (*.sicl)",
+        )
+        if not filename:
+            return
+        with open(filename, "rb") as f:
+            imported_conditions = pickle.load(f)
+        for key, condition in imported_conditions.items():
+            initial_condition_datastore.add(condition)
+        QMessageBox.information(
+            self,
+            "Import Initial Conditions",
+            f"Initial Conditions library imported from {filename}",
+        )

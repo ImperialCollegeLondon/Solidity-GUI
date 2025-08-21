@@ -19,7 +19,7 @@ class MaterialsMenu(QMenu):
         self.addAction(
             create_action(
                 self,
-                "Create and Edit &Materials",
+                "&Materials Manager",
                 self.materials_manager_dialog.open,
             )
         )
