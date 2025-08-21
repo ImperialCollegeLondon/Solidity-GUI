@@ -1,4 +1,5 @@
 """Test the AssignMeshSizeDialog class."""
+
 import pytest
 from meshio import Mesh
 
@@ -59,3 +60,15 @@ def test_assign_remove_clicked(qtbot):
     dialog._remove_clicked()
 
     assert mesh_size_datastore == {}
+
+
+def test_assign_clear_new_session(qtbot):
+    """Test the _clear_assignments method of the AssignMeshSizeDialog class."""
+    from pubsub import pub
+
+    dialog = AssignMeshSizeDialog()
+    dialog.table.insertRow(0)
+    assert dialog.table.rowCount() == 1
+
+    pub.sendMessage("session.new")
+    assert dialog.table.rowCount() == 0

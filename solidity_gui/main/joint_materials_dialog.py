@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from pubsub import pub
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
@@ -57,6 +58,11 @@ class JointMaterialsDialog(QDialog):
         add_button = QPushButton("Edit parameters")
         add_button.clicked.connect(self._edit_clicked)
         layout.addWidget(add_button)
+
+        pub.subscribe(self._clear_assignments, "session.new")
+
+    def _clear_assignments(self) -> None:
+        self.table.setRowCount(0)
 
     def _update_parameters_set_column(self) -> None:
         for i in range(self.table.rowCount()):

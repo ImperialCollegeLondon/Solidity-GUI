@@ -1,4 +1,5 @@
 """Module for the MaterialsManagerDialog class."""
+
 import logging
 from copy import deepcopy
 
@@ -75,6 +76,10 @@ class InitialConditionsManagerDialog(QDialog):
         self.table.cellChanged.connect(self._condition_renamed)
 
         pub.subscribe(self._add_condition, initial_condition_datastore.update_topic)
+        pub.subscribe(self._clear_conditions, "session.new")
+
+    def _clear_conditions(self) -> None:
+        self.table.setRowCount(0)
 
     def _create_click_handler(self) -> None:
         CreateInitialConditionDialog().exec()

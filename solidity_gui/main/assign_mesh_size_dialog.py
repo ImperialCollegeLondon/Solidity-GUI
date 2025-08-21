@@ -1,7 +1,9 @@
 """Module for the AssignMeshSizeDialog class."""
+
 import logging
 from operator import attrgetter
 
+from pubsub import pub
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -71,6 +73,11 @@ class AssignMeshSizeDialog(QDialog):
         button_layout.addWidget(close_button)
 
         layout.addLayout(button_layout)
+
+        pub.subscribe(self._clear_assignments, "session.new")
+
+    def _clear_assignments(self) -> None:
+        self.table.setRowCount(0)
 
     def _populate_combo(self) -> None:
         self.component_combo.clear()
