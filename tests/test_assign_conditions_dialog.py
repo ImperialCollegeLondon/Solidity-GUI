@@ -67,3 +67,15 @@ def test_assign_remove_clicked(qtbot):
     dialog._remove_clicked()
 
     assert condition_assignment_datastore == {}
+
+
+def test_assign_clear_new_session(qtbot):
+    """Test the _clear_assignments method of the AssignConditionsDialog class."""
+    from pubsub import pub
+
+    dialog = AssignConditionsDialog()
+    dialog.condition_assignment_table.insertRow(0)
+    assert dialog.condition_assignment_table.rowCount() == 1
+
+    pub.sendMessage("session.new")
+    assert dialog.condition_assignment_table.rowCount() == 0
