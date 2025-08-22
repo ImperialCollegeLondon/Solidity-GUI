@@ -35,23 +35,12 @@ class MenuBar(QMenuBar):
         """Create a new VisualisationToolbar."""
         super().__init__(*args, **kwargs)
 
-        file_menu = FileMenu()
-        self.addMenu(file_menu)
-
-        geometry_menu = GeometryMenu()
-        self.addMenu(geometry_menu)
-
-        materials_menu = MaterialsMenu()
-        self.addMenu(materials_menu)
-
-        conditions_menu = ConditionsMenu()
-        self.addMenu(conditions_menu)
-
-        mesh_menu = MeshMenu()
-        self.addMenu(mesh_menu)
-
-        job_menu = JobMenu()
-        self.addMenu(job_menu)
+        self.addMenu(FileMenu())
+        self.addMenu(GeometryMenu())
+        self.addMenu(MaterialsMenu())
+        self.addMenu(ConditionsMenu())
+        self.addMenu(MeshMenu())
+        self.addMenu(JobMenu())
 
         for item in extra_menu_items:
             menu = self._get_or_create_menu(item.menu_title)
