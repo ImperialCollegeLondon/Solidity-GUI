@@ -5,7 +5,6 @@ It achieves this by using the docker image.
 
 import contextlib
 import logging
-import platform
 import sys
 from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
@@ -92,16 +91,6 @@ def _try_load_image() -> Image | None:
         return None
     img = docker.image.inspect(image_id)
 
-    if platform.system() == "Windows":
-        # On Windows, the ID of the image loaded from file is the same as the digest,
-        # so we can check it directly, as a sanity check
-        if img.id != "sha256:" + DOCKER_IMAGE_DIGEST:
-            logging.error(
-                f"Image file {image_path} has wrong ID; "
-                f"expected sha256:{DOCKER_IMAGE_DIGEST}, got {img.id}"
-            )
-            return None
-
     # Tag the image using the configured image digest for easier identification
     img.tag("solidity:" + DOCKER_IMAGE_DIGEST)
     return img
@@ -111,7 +100,7 @@ def _pull_image_sync() -> Image:
     """Pull the Docker image or load from local archive, if available."""
     # Check if the image is already available in Docker
     with contextlib.suppress(NoSuchImage):
-        return docker.image.inspect(DOCKER_IMAGE_DIGEST)
+        return docker.image.inspect("solidity:" + DOCKER_IMAGE_DIGEST)
 
     # Try to import from local filesystem
     if image := _try_load_image():

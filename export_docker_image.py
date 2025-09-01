@@ -9,21 +9,15 @@ from typing import cast
 
 from python_on_whales import Image, docker
 
-from solidity_gui.config import (
-    DOCKER_IMAGE_ID,
-    DOCKER_IMAGE_ID_SHORT,
-    SOLIDITY_DOCKER_IMAGE,
-)
+from solidity_gui.config import DOCKER_IMAGE_FILE_HASH_SHORT, SOLIDITY_DOCKER_IMAGE
 
 if __name__ == "__main__":
     # Download image
     image = cast(Image, docker.pull(SOLIDITY_DOCKER_IMAGE))
 
-    # Check that the image ID in config.py is correct
-    image_id = image.id.removeprefix("sha256:")
-    assert image_id == DOCKER_IMAGE_ID
-
-    output_path = Path(__file__).parent / f"solidity_image_{DOCKER_IMAGE_ID_SHORT}.tar"
+    output_path = (
+        Path(__file__).parent / f"solidity_image_{DOCKER_IMAGE_FILE_HASH_SHORT}.tar"
+    )
 
     print(f"Exporting {SOLIDITY_DOCKER_IMAGE}...")
     docker.save(SOLIDITY_DOCKER_IMAGE, output_path)
