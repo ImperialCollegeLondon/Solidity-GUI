@@ -69,7 +69,7 @@ def load_session(parent: QWidget) -> None:
         mesh_datastore.update(session_data["meshes"])
         for mesh_name, mesh in mesh_datastore.items():
             # Get the filename, minus the extension
-            session_name = filename.split(".")[0]
+            session_name = Path(filename).parent / Path(filename).stem
             gmsh_process = GmshProcess(mesh_name)
             gmsh_process.start()
             gmsh_process_datastore[mesh_name] = gmsh_process

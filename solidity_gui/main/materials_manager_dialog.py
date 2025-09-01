@@ -1,14 +1,17 @@
 """Module for the MaterialsManagerDialog class."""
 
 import logging
+import pickle
 from copy import deepcopy
 
 from pubsub import pub
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
+    QFileDialog,
     QHBoxLayout,
     QHeaderView,
+    QMessageBox,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -58,6 +61,8 @@ class MaterialsManagerDialog(QDialog):
         self.rename_button = QPushButton("Rename")
         self.copy_button = QPushButton("Copy")
         self.delete_button = QPushButton("Delete")
+        self.export_button = QPushButton("Export")
+        self.import_button = QPushButton("Import")
 
         buttons_layout = QVBoxLayout()
         buttons_layout.addWidget(self.create_button)
@@ -65,6 +70,8 @@ class MaterialsManagerDialog(QDialog):
         buttons_layout.addWidget(self.rename_button)
         buttons_layout.addWidget(self.copy_button)
         buttons_layout.addWidget(self.delete_button)
+        buttons_layout.addWidget(self.export_button)
+        buttons_layout.addWidget(self.import_button)
 
         layout.addLayout(buttons_layout)
 
@@ -73,6 +80,8 @@ class MaterialsManagerDialog(QDialog):
         self.rename_button.clicked.connect(self._rename_click_handler)
         self.copy_button.clicked.connect(self._copy_click_handler)
         self.delete_button.clicked.connect(self._delete_click_handler)
+        self.export_button.clicked.connect(self._export_click_handler)
+        self.import_button.clicked.connect(self._import_click_handler)
 
         self.materials_table.cellChanged.connect(self._material_renamed)
 
@@ -151,3 +160,33 @@ class MaterialsManagerDialog(QDialog):
         row = self.materials_table.currentIndex().row()
 
         self.materials_table.removeRow(row)
+
+    def _export_click_handler(self) -> None:
+        filename, _ = QFileDialog.getSaveFileName(
+            self, "Export Materials", filter="Solidity Material Library (*.sml)"
+        )
+        if not filename:
+            return
+        with open(filename, "wb") as f:
+            pickle.dump(material_datastore, f)
+        QMessageBox.information(
+            self,
+            "Export Materials",
+            f"Materials library exported to {filename}",
+        )
+
+    def _import_click_handler(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(
+            self, "Import Materials", filter="Solidity Material Library (*.sml)"
+        )
+        if not filename:
+            return
+        with open(filename, "rb") as f:
+            imported_materials = pickle.load(f)
+        for key, material in imported_materials.items():
+            material_datastore.add(material)
+        QMessageBox.information(
+            self,
+            "Import Materials",
+            f"Materials library imported from {filename}",
+        )
