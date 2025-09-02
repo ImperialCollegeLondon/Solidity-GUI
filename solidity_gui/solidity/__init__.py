@@ -40,9 +40,9 @@ def _get_exe_folder() -> Path:
 
 
 def _get_sha256_hash(image_path: Path) -> str:
-    """Get the SHA256 has of the image file.
+    """Get the SHA256 hash of the image file.
 
-    The has is calculated in blocks of 4096 bytes to avoid memory issues with large
+    The hash is calculated in blocks of 4096 bytes to avoid memory issues with large
     files. It assumes that the file exists and is readable.
 
     Returns:
