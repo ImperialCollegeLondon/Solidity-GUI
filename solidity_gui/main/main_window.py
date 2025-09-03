@@ -1,12 +1,11 @@
 """Code for the main window containing all the frames and menus of the GUI."""
 
 import logging
-import sys
 
 from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QMainWindow, QMessageBox, QStatusBar
+from PySide6.QtWidgets import QMainWindow, QStatusBar
 
 from .. import config
 from .components import Component

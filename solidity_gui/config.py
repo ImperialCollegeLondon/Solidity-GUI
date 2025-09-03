@@ -74,4 +74,3 @@ SOLIDITY_DOCKER_IMAGE = (
 
 SOLIDITY_CONTAINER_NAME = "solidity"
 """The name to use for the Docker container running Solidity."""
-
