@@ -11,7 +11,6 @@ from PySide6.QtWidgets import QMainWindow, QMessageBox, QStatusBar
 from .. import config
 from .components import Component
 from .logger_bar import QTextEditLogger
-from .mac_restriction import is_mac_address_allowed
 from .menu_bar import MenuBar
 from .uncaught_exceptions import set_uncaught_exception_handler
 from .visualisation_toolbar import VisualisationToolbar
@@ -55,20 +54,6 @@ class MainWindow(QMainWindow):
         logging.info("Creating main window")
 
         pub.subscribe(_log_geometry_update, "geometry.update")
-
-    def show(self) -> None:
-        """Show the main window."""
-        allowed, mac = is_mac_address_allowed()
-        if not allowed:
-            QMessageBox.critical(
-                self,
-                "Computer not authorized",
-                f"Your MAC address '{mac}' is not allowed to use this copy of "
-                "Solidity GUI",
-            )
-            sys.exit(1)
-
-        super().show()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Send message when window is closed."""

@@ -75,6 +75,3 @@ SOLIDITY_DOCKER_IMAGE = (
 SOLIDITY_CONTAINER_NAME = "solidity"
 """The name to use for the Docker container running Solidity."""
 
-# ALLOWED_MAC_ADDRESSES is a JSON dictionary
-ALLOWED_MAC_ADDRESSES: dict[str, str] = {}
-"""The list of allowed MAC addresses for running the GUI."""
