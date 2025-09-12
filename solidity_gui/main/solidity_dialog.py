@@ -9,20 +9,26 @@ from pathlib import Path
 
 import qtawesome as qta
 from pubsub import pub
-from PySide6.QtCore import QFileInfo, Qt, Signal, Slot
+from PySide6.QtCore import QFileInfo, Signal, Slot
 from PySide6.QtGui import QCloseEvent, QFont
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
+    QDoubleSpinBox,
     QFileDialog,
-    QGridLayout,
+    QHBoxLayout,
     QLabel,
     QPlainTextEdit,
     QPushButton,
     QSpinBox,
+    QVBoxLayout,
     QWidget,
 )
 from python_on_whales.exceptions import DockerException
+
+from solidity_gui.main.material import material_datastore
 
 from .error_message import display_error_message
 
@@ -91,32 +97,70 @@ class SolidityDialog(QDialog):
         super().__init__(parent)
         self.resize(350, 500)
 
-        layout = QGridLayout()
+        layout = QVBoxLayout()
+
+        self.setWindowTitle("Run Solidity")
+
+        self._sweep_checkbox = QCheckBox("Parameter Sweep (Young's Modulus)")
+
+        self._sweep_material_combo = QComboBox()
+        self._sweep_material_combo.setEnabled(False)
+        self._sweep_start = QDoubleSpinBox()
+        self._sweep_start.setPrefix("Start: ")
+        self._sweep_start.setEnabled(False)
+        self._sweep_stop = QDoubleSpinBox()
+        self._sweep_stop.setPrefix("Stop: ")
+        self._sweep_stop.setEnabled(False)
+        self._sweep_step = QDoubleSpinBox()
+        self._sweep_step.setPrefix("Step: ")
+        self._sweep_step.setEnabled(False)
+
+        # Populate the material combo with materials that have "elasticity" enabled
+        self._populate_sweep_material_combo()
+        self._sweep_material_combo.currentIndexChanged.connect(self._update_sweep_start)
+
+        self._sweep_checkbox.stateChanged.connect(self._toggle_sweep_controls)
+
+        layout_parameter_sweep = QVBoxLayout()
+        layout_parameter_sweep.addWidget(self._sweep_checkbox)
+        layout_parameter_sweep.addWidget(self._sweep_material_combo)
+        layout.addLayout(layout_parameter_sweep)
+
+        layout_parameter_values = QHBoxLayout()
+        layout_parameter_values.addWidget(self._sweep_start)
+        layout_parameter_values.addWidget(self._sweep_stop)
+        layout_parameter_values.addWidget(self._sweep_step)
+        layout.addLayout(layout_parameter_values)
+
         self._start_btn = QPushButton(qta.icon("ei.play"), "Start Solidity")
         self._start_btn.clicked.connect(self._start_solidity)
-        layout.addWidget(self._start_btn, 0, 0, Qt.AlignmentFlag.AlignCenter)
+        layout_solver_controls = QHBoxLayout()
+        layout_solver_controls.addWidget(self._start_btn)
         self._stop_btn = QPushButton(qta.icon("ei.stop"), "Stop Solidity")
         self._stop_btn.clicked.connect(self._stop_solidity)
         self._stop_btn.setEnabled(False)
-        layout.addWidget(self._stop_btn, 0, 1, Qt.AlignmentFlag.AlignCenter)
+        layout_solver_controls.addWidget(self._stop_btn)
 
-        cancel_btn = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
-        cancel_btn.rejected.connect(self.hide)
-        layout.addWidget(cancel_btn, 0, 2, Qt.AlignmentFlag.AlignCenter)
+        self._cancel_btn = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        self._cancel_btn.rejected.connect(self.hide)
+        layout_solver_controls.addWidget(self._cancel_btn)
+        layout.addLayout(layout_solver_controls)
 
         # CPU selection spin box
+        layout_cpu_controls = QHBoxLayout()
         self._cpu_label = QLabel("CPU Cores:")
         self._cpu_spin_box = QSpinBox()
         self._cpu_spin_box.setRange(1, cpu_count())
         self._cpu_spin_box.setValue(cpu_count())
         self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
-        layout.addWidget(self._cpu_label, 1, 0)
-        layout.addWidget(self._cpu_spin_box, 1, 1)
+        layout_cpu_controls.addWidget(self._cpu_label)
+        layout_cpu_controls.addWidget(self._cpu_spin_box)
+        layout.addLayout(layout_cpu_controls)
 
         self._log_text_edit = QPlainTextEdit()
         self._log_text_edit.setFont(QFont("monospace"))
         self._log_text_edit.setReadOnly(True)
-        layout.addWidget(self._log_text_edit, 2, 0, 1, 3)
+        layout.addWidget(self._log_text_edit)
 
         self.setLayout(layout)
 
@@ -128,6 +172,38 @@ class SolidityDialog(QDialog):
 
         self._logger = self._create_logger()
         self.log_updated.connect(self._update_log_text_edit)
+
+    def _toggle_sweep_controls(self, _: int) -> None:
+        state = self._sweep_checkbox.isChecked()
+        self._sweep_material_combo.setEnabled(state)
+        self._sweep_start.setEnabled(state)
+        self._sweep_stop.setEnabled(state)
+        self._sweep_step.setEnabled(state)
+
+    def _populate_sweep_material_combo(self) -> None:
+        self._sweep_material_combo.clear()
+        for _, material in material_datastore.items():
+            if material.properties["elasticity"].enabled:
+                self._sweep_material_combo.addItem(material.name)
+        self._update_sweep_start()
+
+    def _update_sweep_start(self) -> None:
+        idx = self._sweep_material_combo.currentIndex()
+        if idx < 0:
+            return
+        material_name = self._sweep_material_combo.currentData()
+        _, material = material_datastore.get_by_name(material_name)
+
+        elasticity_property = material.properties["elasticity"]
+        elasticity_data = (
+            elasticity_property.data
+            if elasticity_property.enabled
+            else elasticity_property.default_data
+        )
+        youngs_modulus = (
+            elasticity_data["youngs_modulus"] if elasticity_data is not None else 0.0
+        )
+        self._sweep_start.setValue(youngs_modulus)
 
     def update_dialog(
         self,
