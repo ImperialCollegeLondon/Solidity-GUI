@@ -237,7 +237,7 @@ pytest==7.4.0
     #   pytest-cov
     #   pytest-qt
     #   pytest-timeout
-pytest-cov==4.1.0
+pytest-cov==7.0.0
     # via SolidityGUI (pyproject.toml)
 pytest-qt==4.2.0
     # via SolidityGUI (pyproject.toml)
