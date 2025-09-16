@@ -13,7 +13,6 @@ from pubsub import pub
 from PySide6.QtCore import QFileInfo, Signal, Slot
 from PySide6.QtGui import QCloseEvent, QFont
 from PySide6.QtWidgets import (
-    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -157,49 +156,51 @@ class SolidityDialog(QDialog):
             self._log("File selection cancelled or incomplete.")
 
     def _setup_parameter_sweep_ui(self, layout: QVBoxLayout) -> None:
-        """Set up the UI elements for parameter sweep."""
-        self._sweep_checkbox = QCheckBox("Parameter Sweep (Young's Modulus)")
+        """Set up the UI elements for parameter sweep using a QGroupBox."""
+        from PySide6.QtWidgets import QGroupBox
+
+        self._sweep_group = QGroupBox("Parameter Sweep (Young's Modulus)")
+        self._sweep_group.setCheckable(True)
+        self._sweep_group.setChecked(False)
+        self._sweep_group.setToolTip(
+            "Enable this option to run a parameter sweep over Young's modulus. "
+            "All sweep controls will be enabled, and input file selection will be "
+            "disabled."
+        )
+        sweep_layout = QVBoxLayout()
+
         self._sweep_material_combo = QComboBox()
-        self._sweep_material_combo.setEnabled(False)
         self._sweep_start = QDoubleSpinBox()
         self._sweep_start.setPrefix("Start: ")
         self._sweep_start.setMinimum(0.0)
         self._sweep_start.setMaximum(1e18)
-        self._sweep_start.setEnabled(False)
         self._sweep_stop = QDoubleSpinBox()
         self._sweep_stop.setPrefix("Stop: ")
         self._sweep_stop.setMinimum(0.0)
         self._sweep_stop.setMaximum(1e18)
-        self._sweep_stop.setEnabled(False)
         self._sweep_step = QDoubleSpinBox()
         self._sweep_step.setPrefix("Step: ")
         self._sweep_step.setMinimum(0.0)
         self._sweep_step.setMaximum(1e18)
-        self._sweep_step.setEnabled(False)
 
         self._populate_sweep_material_combo()
         self._sweep_material_combo.currentIndexChanged.connect(
             self._update_sweep_values
         )
-        self._sweep_checkbox.stateChanged.connect(self._toggle_sweep_controls)
+        self._sweep_group.toggled.connect(self._toggle_sweep_controls)
 
-        layout_parameter_sweep = QVBoxLayout()
-        layout_parameter_sweep.addWidget(self._sweep_checkbox)
-        layout_parameter_sweep.addWidget(self._sweep_material_combo)
-        layout.addLayout(layout_parameter_sweep)
+        sweep_layout.addWidget(self._sweep_material_combo)
+        param_values_layout = QHBoxLayout()
+        param_values_layout.addWidget(self._sweep_start)
+        param_values_layout.addWidget(self._sweep_stop)
+        param_values_layout.addWidget(self._sweep_step)
+        sweep_layout.addLayout(param_values_layout)
+        self._sweep_group.setLayout(sweep_layout)
+        layout.addWidget(self._sweep_group)
 
-        layout_parameter_values = QHBoxLayout()
-        layout_parameter_values.addWidget(self._sweep_start)
-        layout_parameter_values.addWidget(self._sweep_stop)
-        layout_parameter_values.addWidget(self._sweep_step)
-        layout.addLayout(layout_parameter_values)
-
-    def _toggle_sweep_controls(self, _: int) -> None:
-        state = self._sweep_checkbox.isChecked()
-        self._sweep_material_combo.setEnabled(state)
-        self._sweep_start.setEnabled(state)
-        self._sweep_stop.setEnabled(state)
-        self._sweep_step.setEnabled(state)
+    def _toggle_sweep_controls(self, checked: bool) -> None:
+        # Also disable file selection when sweep is enabled
+        self._select_files_btn.setEnabled(not checked)
 
     def _populate_sweep_material_combo(self) -> None:
         self._sweep_material_combo.clear()
