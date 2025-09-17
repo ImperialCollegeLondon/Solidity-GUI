@@ -94,11 +94,24 @@ class SolidityDialog(QDialog):
         self.pellet_file_path: Path | None = None
         self.materials_file_path: Path | None = None
 
+        self._setup_parameter_sweep_ui(layout)
+
         self._select_files_btn = QPushButton("Select Input Files")
         self._select_files_btn.clicked.connect(self._select_input_files)
-        layout.addWidget(self._select_files_btn)
 
-        self._setup_parameter_sweep_ui(layout)
+        self._cpu_label = QLabel("CPU Cores:")
+        self._cpu_spin_box = QSpinBox()
+        self._cpu_spin_box.setRange(1, cpu_count())
+        self._cpu_spin_box.setValue(cpu_count())
+        self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
+
+        self._input_group = QWidget()
+        input_layout = QHBoxLayout()
+        input_layout.addWidget(self._select_files_btn)
+        input_layout.addWidget(self._cpu_label)
+        input_layout.addWidget(self._cpu_spin_box)
+        self._input_group.setLayout(input_layout)
+        layout.addWidget(self._input_group)
 
         self._start_btn = QPushButton(qta.icon("ei.play"), "Start Solidity")
         self._start_btn.clicked.connect(self._start_solidity)
@@ -114,17 +127,6 @@ class SolidityDialog(QDialog):
         self._cancel_btn.rejected.connect(self.hide)
         layout_solver_controls.addWidget(self._cancel_btn)
         layout.addLayout(layout_solver_controls)
-
-        # CPU selection spin box
-        layout_cpu_controls = QHBoxLayout()
-        self._cpu_label = QLabel("CPU Cores:")
-        self._cpu_spin_box = QSpinBox()
-        self._cpu_spin_box.setRange(1, cpu_count())
-        self._cpu_spin_box.setValue(cpu_count())
-        self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
-        layout_cpu_controls.addWidget(self._cpu_label)
-        layout_cpu_controls.addWidget(self._cpu_spin_box)
-        layout.addLayout(layout_cpu_controls)
 
         self._log_text_edit = QPlainTextEdit()
         self._log_text_edit.setFont(QFont("monospace"))
@@ -199,8 +201,7 @@ class SolidityDialog(QDialog):
         layout.addWidget(self._sweep_group)
 
     def _toggle_sweep_controls(self, checked: bool) -> None:
-        # Also disable file selection when sweep is enabled
-        self._select_files_btn.setEnabled(not checked)
+        self._input_group.setEnabled(not checked)
 
     def _populate_sweep_material_combo(self) -> None:
         self._sweep_material_combo.clear()
