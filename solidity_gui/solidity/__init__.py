@@ -3,6 +3,7 @@
 It achieves this by using the docker image.
 """
 
+import contextlib
 import logging
 import sys
 from collections.abc import Iterable
@@ -17,7 +18,7 @@ from python_on_whales.exceptions import DockerException, NoSuchContainer, NoSuch
 import solidity_gui
 
 from ..config import (
-    DOCKER_IMAGE_ID,
+    DOCKER_IMAGE_DIGEST,
     DOCKER_IMAGE_ID_SHORT,
     SOLIDITY_CONTAINER_NAME,
     SOLIDITY_DOCKER_IMAGE,
@@ -44,25 +45,30 @@ def _try_load_image() -> Image | None:
     if not image_path.exists():
         return None
 
+    # We asume that the image is the right one, as that it has the ID in the filename
     logging.info(f"Loading docker image from {image_path}...")
-    docker.load(str(image_path))
-
-    try:
-        return docker.image.inspect(DOCKER_IMAGE_ID)
-    except NoSuchImage:
-        # This is an eminently unlikely outcome given that we embed the image ID in the
-        # filename, but let's be extra careful
-        logging.warn("Image ID for local file is wrong; ignoring")
+    tags = docker.load(str(image_path))
+    image_id = ""
+    for tag in tags:
+        if tag.startswith("sha256:"):
+            image_id = tag
+            break
+    if not image_id:
+        logging.error(f"Image file {image_path} does not contain a valid image ID")
         return None
+    img = docker.image.inspect(image_id)
+
+    # Tag the image using the configured image digest for easier identification
+    # ignoring the actual ID as this might differ between OS
+    img.tag("solidity:" + DOCKER_IMAGE_DIGEST)
+    return img
 
 
 def _pull_image_sync() -> Image:
     """Pull the Docker image or load from local archive, if available."""
     # Check if the image is already available in Docker
-    try:
-        return docker.image.inspect(DOCKER_IMAGE_ID)
-    except NoSuchImage:
-        pass
+    with contextlib.suppress(NoSuchImage):
+        return docker.image.inspect("solidity:" + DOCKER_IMAGE_DIGEST)
 
     # Try to import from local filesystem
     if image := _try_load_image():
@@ -70,7 +76,9 @@ def _pull_image_sync() -> Image:
 
     # Fall back on doing a docker pull
     logging.info("Downloading Docker image")
-    return cast(Image, docker.pull(SOLIDITY_DOCKER_IMAGE))
+    image = cast(Image, docker.pull(SOLIDITY_DOCKER_IMAGE))
+    image.tag("solidity:" + DOCKER_IMAGE_DIGEST)
+    return image
 
 
 def _pull_image_async() -> None:
