@@ -54,9 +54,7 @@ SOLIDITY_Y3D_TEMPLATE_FILE = "BST.Y3D.jinja"
 SOLIDITY_MAT_TEMPLATE_FILE = "mat.txt.jinja"
 """Solidity mat.txt template file."""
 
-_DOCKER_IMAGE_DIGEST = (
-    "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
-)
+DOCKER_IMAGE_DIGEST = "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
 """The SHA256 digest for the Docker image. Used to pull a specific version."""
 
 DOCKER_IMAGE_ID = "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
@@ -68,7 +66,7 @@ DOCKER_IMAGE_ID_SHORT = DOCKER_IMAGE_ID[:12]
 """A shorter, more human-readable version of the image ID."""
 
 SOLIDITY_DOCKER_IMAGE = (
-    f"ghcr.io/imperialcollegelondon/solidity_project_dev@sha256:{_DOCKER_IMAGE_DIGEST}"
+    f"ghcr.io/imperialcollegelondon/solidity_project_dev@sha256:{DOCKER_IMAGE_DIGEST}"
 )
 """The path to the Docker image to run."""
 
