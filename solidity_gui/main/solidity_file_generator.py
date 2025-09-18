@@ -52,12 +52,16 @@ class SystemValidationError(Exception):
     pass
 
 
-def write_file(file_content: str, output_file: Path | str) -> None:
+def write_file(
+    file_content: str, output_file: Path | str, output_dir: Path | None = None
+) -> None:
     """Write the contents of file_content to file.
 
     Raises:
         IOError: If there is a problem writing to the output file.
     """
+    if output_dir is not None:
+        output_file = Path(output_dir) / output_file
     with open(output_file, "w") as f:
         f.write(file_content)
 
@@ -452,10 +456,10 @@ def create_y3d_template() -> str:
     return template.render(data)
 
 
-def generate_y3d_file() -> None:
+def generate_y3d_file(output_dir: Path | None = None) -> None:
     """Generates a Solidity input file based on a Jinja2 template."""
     file_content = create_y3d_template()
-    write_file(file_content, config.SOLIDITY_Y3D_FILE_NAME)
+    write_file(file_content, config.SOLIDITY_Y3D_FILE_NAME, output_dir=output_dir)
 
 
 @dataclass
@@ -540,16 +544,16 @@ def create_mat_template() -> str:
     return template.render(data)
 
 
-def generate_mat_file() -> None:
+def generate_mat_file(output_dir: Path | None = None) -> None:
     """Generates a Solidity mat file from a Jinja2 template."""
     file_content = create_mat_template()
-    write_file(file_content, config.SOLIDITY_MAT_FILE_NAME)
+    write_file(file_content, config.SOLIDITY_MAT_FILE_NAME, output_dir=output_dir)
 
 
-def generate_output_files() -> None:
+def generate_output_files(output_dir: Path | None = None) -> None:
     """Generate all output files and write them to disk."""
     try:
-        generate_y3d_file()
-        generate_mat_file()
+        generate_y3d_file(output_dir=output_dir)
+        generate_mat_file(output_dir=output_dir)
     except SystemValidationError as e:
         display_error_message(e.args[0])

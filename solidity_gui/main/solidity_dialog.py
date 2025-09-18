@@ -29,7 +29,8 @@ from PySide6.QtWidgets import (
 from python_on_whales.exceptions import DockerException
 
 from .error_message import display_error_message
-from .material import material_datastore
+from .material import calculate_lame_constants, material_datastore
+from .solidity_file_generator import generate_output_files
 
 OutputStream = Iterable[tuple[str, bytes]]
 
@@ -202,6 +203,7 @@ class SolidityDialog(QDialog):
 
     def _toggle_sweep_controls(self, checked: bool) -> None:
         self._input_group.setEnabled(not checked)
+        self._start_btn.setEnabled(checked)
 
     def _populate_sweep_material_combo(self) -> None:
         self._sweep_material_combo.clear()
@@ -273,20 +275,52 @@ class SolidityDialog(QDialog):
             )
 
     def _start_solidity(self) -> None:
-        if not all(
-            [
-                self.y3d_file_path,
-                self.layout_file_path,
-                self.pellet_file_path,
-                self.materials_file_path,
+        if self._sweep_group.isChecked():
+            self._log("Parameter sweep mode is enabled")
+            dir_path = QFileDialog.getExistingDirectory(
+                self, "Select output directory for parameter sweep"
+            )
+            if not dir_path:
+                self._log("Parameter sweep cancelled.")
+                return
+            material_key = self._sweep_material_combo.currentData()
+            start = self._sweep_start.value()
+            stop = self._sweep_stop.value()
+            step = self._sweep_step.value()
+            sweep_values = [
+                start + i * step for i in range(int((stop - start) / step) + 1)
             ]
-        ):
-            display_error_message("Please select all input files before starting.")
-            return
-        self._start_btn.setEnabled(False)
-        self._cpu_spin_box.setEnabled(False)
-        self._log("Setting up Solidity (this may take some time)...")
-        pub.sendMessage("docker.pull")
+            elastic_property = material_datastore[material_key].properties["elasticity"]
+            for value in sweep_values:
+                self._log(f"Sweeping Young's modulus: {value:.3e}")
+                if elastic_property.data is None:
+                    elastic_property.data = {}
+                elastic_property.data["youngs_modulus"] = value
+                lame_lambda, lame_mu = calculate_lame_constants(
+                    cast(float, elastic_property.data["youngs_modulus"]),
+                    cast(float, elastic_property.data["poissons_ratio"]),
+                )
+                elastic_property.data["lame_lambda"] = lame_lambda
+                elastic_property.data["lame_mu"] = lame_mu
+                output_dir = Path(dir_path) / f"{value:.3e}"
+                output_dir.mkdir(parents=True, exist_ok=True)
+                generate_output_files(output_dir=output_dir)
+
+        else:
+            if not all(
+                [
+                    self.y3d_file_path,
+                    self.layout_file_path,
+                    self.pellet_file_path,
+                    self.materials_file_path,
+                ]
+            ):
+                display_error_message("Please select all input files before starting.")
+                return
+            self._start_btn.setEnabled(False)
+            self._cpu_spin_box.setEnabled(False)
+            self._log("Setting up Solidity (this may take some time)...")
+            pub.sendMessage("docker.pull")
 
     def _on_docker_pulled(self) -> None:
         self._log("Starting Solidity...")
