@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 from python_on_whales.exceptions import DockerException
 
 from .error_message import display_error_message
-from .material import calculate_lame_constants, material_datastore
+from .material import Property, calculate_lame_constants, material_datastore
 from .solidity_file_generator import generate_output_files
 
 OutputStream = Iterable[tuple[str, bytes]]
@@ -280,6 +280,23 @@ class SolidityDialog(QDialog):
                 f'<font color="red">{html.escape(msg)}</font>'
             )
 
+    def sweep_and_generate_output(
+        self, elastic_property: Property, value: int, dir_path: str
+    ) -> None:
+        """Set the material property sweep value and generate output files."""
+        if elastic_property.data is None:
+            elastic_property.data = {}
+        elastic_property.data["youngs_modulus"] = value
+        lame_lambda, lame_mu = calculate_lame_constants(
+            cast(float, elastic_property.data["youngs_modulus"]),
+            cast(float, elastic_property.data["poissons_ratio"]),
+        )
+        elastic_property.data["lame_lambda"] = lame_lambda
+        elastic_property.data["lame_mu"] = lame_mu
+        output_dir = Path(dir_path) / f"{value:.3e}"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        generate_output_files(output_dir=output_dir)
+
     def _start_solidity(self) -> None:
         if self._sweep_group.isChecked():
             self._log("Parameter sweep mode is enabled")
@@ -299,18 +316,7 @@ class SolidityDialog(QDialog):
             elastic_property = material_datastore[material_key].properties["elasticity"]
             for value in sweep_values:
                 self._log(f"Sweeping Young's modulus: {value:.3e}")
-                if elastic_property.data is None:
-                    elastic_property.data = {}
-                elastic_property.data["youngs_modulus"] = value
-                lame_lambda, lame_mu = calculate_lame_constants(
-                    cast(float, elastic_property.data["youngs_modulus"]),
-                    cast(float, elastic_property.data["poissons_ratio"]),
-                )
-                elastic_property.data["lame_lambda"] = lame_lambda
-                elastic_property.data["lame_mu"] = lame_mu
-                output_dir = Path(dir_path) / f"{value:.3e}"
-                output_dir.mkdir(parents=True, exist_ok=True)
-                generate_output_files(output_dir=output_dir)
+                self.sweep_and_generate_output(elastic_property, value, dir_path)
 
         else:
             if not all(
