@@ -97,22 +97,13 @@ class SolidityDialog(QDialog):
 
         self._setup_parameter_sweep_ui(layout)
 
+        layout_cpu_controls = QHBoxLayout()
+
         self._select_files_btn = QPushButton("Select Input Files")
         self._select_files_btn.clicked.connect(self._select_input_files)
+        layout_cpu_controls.addWidget(self._select_files_btn)
 
-        self._cpu_label = QLabel("CPU Cores:")
-        self._cpu_spin_box = QSpinBox()
-        self._cpu_spin_box.setRange(1, cpu_count())
-        self._cpu_spin_box.setValue(cpu_count())
-        self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
-
-        self._input_group = QWidget()
-        input_layout = QHBoxLayout()
-        input_layout.addWidget(self._select_files_btn)
-        input_layout.addWidget(self._cpu_label)
-        input_layout.addWidget(self._cpu_spin_box)
-        self._input_group.setLayout(input_layout)
-        layout.addWidget(self._input_group)
+        self._setup_cpu_ui(layout_cpu_controls, layout)
 
         self._start_btn = QPushButton(qta.icon("ei.play"), "Start Solidity")
         self._start_btn.clicked.connect(self._start_solidity)
@@ -200,6 +191,21 @@ class SolidityDialog(QDialog):
         sweep_layout.addLayout(param_values_layout)
         self._sweep_group.setLayout(sweep_layout)
         layout.addWidget(self._sweep_group)
+
+    def _setup_cpu_ui(
+        self, layout_cpu_controls: QHBoxLayout, layout: QVBoxLayout
+    ) -> None:
+        self._cpu_label = QLabel("CPU Cores:")
+        self._cpu_spin_box = QSpinBox()
+        self._cpu_spin_box.setRange(1, cpu_count())
+        self._cpu_spin_box.setValue(cpu_count())
+        self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
+
+        self._input_group = QWidget()
+        layout_cpu_controls.addWidget(self._cpu_label)
+        layout_cpu_controls.addWidget(self._cpu_spin_box)
+        self._input_group.setLayout(layout_cpu_controls)
+        layout.addWidget(self._input_group)
 
     def _toggle_sweep_controls(self, checked: bool) -> None:
         self._input_group.setEnabled(not checked)
