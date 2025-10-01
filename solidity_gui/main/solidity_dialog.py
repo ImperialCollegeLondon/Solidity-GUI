@@ -97,13 +97,7 @@ class SolidityDialog(QDialog):
 
         self._setup_parameter_sweep_ui(layout)
 
-        layout_cpu_controls = QHBoxLayout()
-
-        self._select_files_btn = QPushButton("Select Input Files")
-        self._select_files_btn.clicked.connect(self._select_input_files)
-        layout_cpu_controls.addWidget(self._select_files_btn)
-
-        self._setup_cpu_ui(layout_cpu_controls, layout)
+        self._setup_cpu_ui(layout)
 
         self._start_btn = QPushButton(qta.icon("ei.play"), "Start Solidity")
         self._start_btn.clicked.connect(self._start_solidity)
@@ -192,9 +186,13 @@ class SolidityDialog(QDialog):
         self._sweep_group.setLayout(sweep_layout)
         layout.addWidget(self._sweep_group)
 
-    def _setup_cpu_ui(
-        self, layout_cpu_controls: QHBoxLayout, layout: QVBoxLayout
-    ) -> None:
+    def _setup_cpu_ui(self, layout: QVBoxLayout) -> None:
+        layout_cpu_controls = QHBoxLayout()
+
+        self._select_files_btn = QPushButton("Select Input Files")
+        self._select_files_btn.clicked.connect(self._select_input_files)
+        layout_cpu_controls.addWidget(self._select_files_btn)
+
         self._cpu_label = QLabel("CPU Cores:")
         self._cpu_spin_box = QSpinBox()
         self._cpu_spin_box.setRange(1, cpu_count())
