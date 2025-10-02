@@ -178,6 +178,24 @@ class SolidityDialog(QDialog):
         self._sweep_group.toggled.connect(self._toggle_sweep_controls)
 
         sweep_layout.addWidget(self._sweep_material_combo)
+
+        # Add file selectors for layout.txt and pellet.txt
+        self._layout_file_label = QLabel("No layout.txt selected")
+        self._layout_file_btn = QPushButton("Select layout.txt")
+        self._layout_file_btn.clicked.connect(self._select_layout_file)
+        layout_file_row = QHBoxLayout()
+        layout_file_row.addWidget(self._layout_file_btn)
+        layout_file_row.addWidget(self._layout_file_label)
+        sweep_layout.addLayout(layout_file_row)
+
+        self._pellet_file_label = QLabel("No pellet.txt selected")
+        self._pellet_file_btn = QPushButton("Select pellet.txt")
+        self._pellet_file_btn.clicked.connect(self._select_pellet_file)
+        pellet_file_row = QHBoxLayout()
+        pellet_file_row.addWidget(self._pellet_file_btn)
+        pellet_file_row.addWidget(self._pellet_file_label)
+        sweep_layout.addLayout(pellet_file_row)
+
         param_values_layout = QHBoxLayout()
         param_values_layout.addWidget(self._sweep_start)
         param_values_layout.addWidget(self._sweep_stop)
@@ -185,6 +203,28 @@ class SolidityDialog(QDialog):
         sweep_layout.addLayout(param_values_layout)
         self._sweep_group.setLayout(sweep_layout)
         layout.addWidget(self._sweep_group)
+
+    def _select_layout_file(self) -> None:
+        """Select layout.txt file for Solidity."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select layout.txt", "", "Text Files (*.txt)"
+        )
+        if file_path:
+            self.layout_file_path = Path(file_path)
+            self._layout_file_label.setText(str(file_path))
+        else:
+            self._layout_file_label.setText("No layout.txt selected")
+
+    def _select_pellet_file(self) -> None:
+        """Select pellet.txt file for Solidity."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select pellet.txt", "", "Text Files (*.txt)"
+        )
+        if file_path:
+            self.pellet_file_path = Path(file_path)
+            self._pellet_file_label.setText(str(file_path))
+        else:
+            self._pellet_file_label.setText("No pellet.txt selected")
 
     def _setup_cpu_ui(self, layout: QVBoxLayout) -> None:
         layout_cpu_controls = QHBoxLayout()
