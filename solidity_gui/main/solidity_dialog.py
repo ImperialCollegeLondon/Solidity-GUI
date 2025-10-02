@@ -284,6 +284,10 @@ class SolidityDialog(QDialog):
         """Set the material property sweep value and generate output files."""
         if elastic_property.data is None:
             elastic_property.data = {}
+        if not elastic_property.data["poissons_ratio"]:
+            elastic_property.data["poissons_ratio"] = elastic_property.default_data[
+                "poissons_ratio"
+            ]
         elastic_property.data["youngs_modulus"] = value
         lame_lambda, lame_mu = calculate_lame_constants(
             cast(float, elastic_property.data["youngs_modulus"]),
