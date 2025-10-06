@@ -2,6 +2,7 @@
 
 import html
 import logging
+import shutil
 import weakref
 from collections.abc import Iterable
 from os import cpu_count
@@ -338,6 +339,9 @@ class SolidityDialog(QDialog):
         output_dir = Path(dir_path) / f"{value:.3e}"
         output_dir.mkdir(parents=True, exist_ok=True)
         generate_output_files(output_dir=output_dir)
+        if self.layout_file_path and self.pellet_file_path:
+            shutil.copy(self.layout_file_path, output_dir / "layout.txt")
+            shutil.copy(self.pellet_file_path, output_dir / "pellet.txt")
 
     def _start_solidity(self) -> None:
         if self._sweep_group.isChecked():
