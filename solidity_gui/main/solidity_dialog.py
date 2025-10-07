@@ -1,5 +1,6 @@
 """This module provides functionality to run Solidity."""
 
+import concurrent.futures
 import html
 import logging
 import shutil
@@ -360,10 +361,39 @@ class SolidityDialog(QDialog):
                 start + i * step for i in range(int((stop - start) / step) + 1)
             ]
             elastic_property = material_datastore[material_key].properties["elasticity"]
+            sweep_dirs = []
             for value in sweep_values:
                 self._log(f"Sweeping Young's modulus: {value:.3e}")
                 self.sweep_and_generate_output(elastic_property, value, dir_path)
+                sweep_dir = Path(dir_path) / f"{value:.3e}"
+                sweep_dirs.append(sweep_dir)
 
+                num_cpus = self._cpu_spin_box.value()
+                total_cpus = cpu_count() or 1
+                max_workers = max(1, min(len(sweep_dirs), total_cpus // num_cpus))
+                self._log(
+                    f"Running {len(sweep_dirs)} jobs in parallel "
+                    f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
+                    f"{total_cpus} CPUs available)"
+                )
+
+            def log_result(future: concurrent.futures.Future) -> None:
+                """Log the result of a completed future."""
+                result = future.result()
+                if result["status"] == "success":
+                    self._log(f"Completed: {result['sweep_dir']}")
+                else:
+                    self._log(f"Error in {result['sweep_dir']}: {result['error']}")
+
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=max_workers
+            ) as executor:
+                futures = [
+                    executor.submit(self._run_solidity_job, sweep_dir, num_cpus)
+                    for sweep_dir in sweep_dirs
+                ]
+                for future in futures:
+                    future.add_done_callback(log_result)
         else:
             if not all(
                 [
@@ -415,6 +445,38 @@ class SolidityDialog(QDialog):
             )
         else:
             self._log(f"Error occurred: {repr(error)}", level=logging.ERROR)
+
+    def _run_solidity_job(self, sweep_dir: Path, num_cpus: int) -> dict:
+        """Run the Solidity solver for a given sweep directory."""
+        try:
+            y3d_file = sweep_dir / "BST.Y3D"
+            mat_file = sweep_dir / "mat.txt"
+            layout_file = sweep_dir / "layout.txt"
+            pellet_file = sweep_dir / "pellet.txt"
+            # Check all files exist
+            for f in [y3d_file, mat_file, layout_file, pellet_file]:
+                if not f.exists():
+                    return {
+                        "sweep_dir": str(sweep_dir),
+                        "status": "error",
+                        "error": f"Missing file: {f.name}",
+                    }
+            from solidity_gui.solidity import run_solidity_no_stream
+
+            container = run_solidity_no_stream(
+                y3d_file_path=y3d_file,
+                layout_file_path=layout_file,
+                pellet_file_path=pellet_file,
+                materials_file_path=mat_file,
+                num_cpus=num_cpus,
+            )
+            return {
+                "sweep_dir": str(sweep_dir),
+                "status": "success",
+                "container_id": str(container.id),
+            }
+        except Exception as e:
+            return {"sweep_dir": str(sweep_dir), "status": "error", "error": str(e)}
 
 
 class _DockerLogHandler(logging.Handler):
