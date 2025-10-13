@@ -94,6 +94,7 @@ def _run_solidity(
     pellet_file_path: Path,
     materials_file_path: Path,
     num_cpus: int,
+    container_name: str,
     stream: bool,
 ) -> Container | str | OutputStream:
     """Run Solidity using the specified input files, using docker.run().
@@ -122,7 +123,11 @@ def _run_solidity(
     _return_code = 0
 
     # Remove the Solidity container if it already exists
-    remove_container_sync()
+    try:
+        container = docker.container.inspect(container_name)
+        container.remove(force=True)
+    except NoSuchContainer:
+        pass
 
     # Reset flag
     _quitting = False
@@ -163,7 +168,7 @@ def _run_solidity(
         ],
         volumes=[(input_files_path.absolute(), str(path_on_container))],
         detach=not stream,
-        name=SOLIDITY_CONTAINER_NAME,
+        name=container_name,
         stream=stream,
         envs={"OMP_NUM_THREADS": str(num_cpus)},
         cpus=num_cpus,
@@ -176,6 +181,7 @@ def run_solidity_no_stream(
     pellet_file_path: Path,
     materials_file_path: Path,
     num_cpus: int,
+    container_name: str = SOLIDITY_CONTAINER_NAME,
 ) -> Container:
     """Run Solidity using the specified input files.
 
@@ -208,6 +214,7 @@ def run_solidity_no_stream(
             pellet_file_path,
             materials_file_path,
             num_cpus=num_cpus,
+            container_name=container_name,
             stream=False,
         ),
     )
@@ -248,6 +255,7 @@ def run_solidity_stream_sync(
     pellet_file_path: Path,
     materials_file_path: Path,
     num_cpus: int,
+    container_name: str = SOLIDITY_CONTAINER_NAME,
 ) -> None:
     """Run Solidity using the specified input files.
 
@@ -278,6 +286,7 @@ def run_solidity_stream_sync(
             pellet_file_path,
             materials_file_path,
             num_cpus,
+            container_name=container_name,
             stream=True,
         ),
     )
@@ -293,6 +302,7 @@ def run_solidity_stream_async(
     pellet_file_path: Path,
     materials_file_path: Path,
     num_cpus: int,
+    container_name: str = SOLIDITY_CONTAINER_NAME,
 ) -> None:
     """Start Solidity in the background.
 
@@ -303,6 +313,7 @@ def run_solidity_stream_async(
         pellet_file_path: Path to file with elements and particles (pellet.txt)
         materials_file_path: Path to materials file (mat.txt)
         num_cpus: Number of CPUs to use for the Solidity process
+        container_name: Name to give the Docker container
     """
     Thread(
         target=run_solidity_stream_sync,
@@ -312,6 +323,7 @@ def run_solidity_stream_async(
             pellet_file_path,
             materials_file_path,
             num_cpus,
+            container_name,
         ),
     ).start()
 

@@ -22,12 +22,15 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QLabel,
+    QListWidget,
     QPlainTextEdit,
+    QProgressBar,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
     QWidget,
 )
+from python_on_whales import docker
 from python_on_whales.exceptions import DockerException
 
 from .error_message import display_error_message
@@ -80,6 +83,7 @@ class SolidityDialog(QDialog):
     """A dialog for interacting with the Solidity backend and viewing the output."""
 
     log_updated = Signal(str, int)
+    job_done_signal = Signal(dict)
 
     def __init__(self, parent: QWidget | None) -> None:
         """Create a new SolidityDialog.
@@ -100,6 +104,17 @@ class SolidityDialog(QDialog):
         self._setup_parameter_sweep_ui(layout)
 
         self._setup_cpu_ui(layout)
+
+        # Progress bar for sweep jobs
+        self._progress_bar = QProgressBar()
+        self._progress_bar.setValue(0)
+        self._progress_bar.setTextVisible(True)
+        layout.addWidget(self._progress_bar)
+
+        # Job list widget for selecting jobs
+        self._job_list_widget = QListWidget()
+        self._job_list_widget.setMinimumHeight(80)
+        layout.addWidget(self._job_list_widget)
 
         self._start_btn = QPushButton(qta.icon("ei.play"), "Start Solidity")
         self._start_btn.clicked.connect(self._start_solidity)
@@ -128,6 +143,7 @@ class SolidityDialog(QDialog):
         pub.subscribe(self._on_docker_stopped, "docker.stopped")
         pub.subscribe(self._on_docker_error, "docker.error")
         pub.subscribe(self._log, "docker.output")
+        self.job_done_signal.connect(self._on_job_done)
 
         self._logger = self._create_logger()
         self.log_updated.connect(self._update_log_text_edit)
@@ -361,29 +377,38 @@ class SolidityDialog(QDialog):
                 start + i * step for i in range(int((stop - start) / step) + 1)
             ]
             elastic_property = material_datastore[material_key].properties["elasticity"]
+
             sweep_dirs = []
+            self._job_list_widget.clear()
+            self._job_outputs: dict[Path, dict] = {}  # sweep_dir -> result dict
             for value in sweep_values:
                 self._log(f"Sweeping Young's modulus: {value:.3e}")
                 self.sweep_and_generate_output(elastic_property, value, dir_path)
                 sweep_dir = Path(dir_path) / f"{value:.3e}"
                 sweep_dirs.append(sweep_dir)
+                self._job_list_widget.addItem(str(sweep_dir))
 
-                num_cpus = self._cpu_spin_box.value()
-                total_cpus = cpu_count() or 1
-                max_workers = max(1, min(len(sweep_dirs), total_cpus // num_cpus))
-                self._log(
-                    f"Running {len(sweep_dirs)} jobs in parallel "
-                    f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
-                    f"{total_cpus} CPUs available)"
-                )
+            self._progress_bar.setMaximum(len(sweep_dirs))
+            self._progress_bar.setValue(0)
 
-            def log_result(future: concurrent.futures.Future) -> None:
-                """Log the result of a completed future."""
+            total_cpus = cpu_count() or 1
+            num_jobs = len(sweep_dirs)
+            if num_jobs <= total_cpus:
+                num_cpus = max(1, total_cpus // num_jobs)
+                max_workers = num_jobs
+            else:
+                num_cpus = 1
+                max_workers = total_cpus
+            self._log(
+                f"Running {num_jobs} jobs in parallel "
+                f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
+                f"{total_cpus} CPUs available)"
+            )
+
+            def job_done_callback(future: concurrent.futures.Future) -> None:
+                """Log the result of a completed future and update progress."""
                 result = future.result()
-                if result["status"] == "success":
-                    self._log(f"Completed: {result['sweep_dir']}")
-                else:
-                    self._log(f"Error in {result['sweep_dir']}: {result['error']}")
+                self.job_done_signal.emit(result)
 
             with concurrent.futures.ThreadPoolExecutor(
                 max_workers=max_workers
@@ -393,7 +418,7 @@ class SolidityDialog(QDialog):
                     for sweep_dir in sweep_dirs
                 ]
                 for future in futures:
-                    future.add_done_callback(log_result)
+                    future.add_done_callback(job_done_callback)
         else:
             if not all(
                 [
@@ -463,20 +488,45 @@ class SolidityDialog(QDialog):
                     }
             from solidity_gui.solidity import run_solidity_no_stream
 
+            container_name = f"solidity_{sweep_dir.name.replace('+', '_')}"
+
             container = run_solidity_no_stream(
                 y3d_file_path=y3d_file,
                 layout_file_path=layout_file,
                 pellet_file_path=pellet_file,
                 materials_file_path=mat_file,
                 num_cpus=num_cpus,
+                container_name=container_name,
             )
+
+            # We need to wait for the container to finish before returning from the job
+            exit_code = docker.container.wait(container_name)
+            # And then clean up the container
+            container.remove()
             return {
                 "sweep_dir": str(sweep_dir),
                 "status": "success",
                 "container_id": str(container.id),
+                "exit_code": exit_code,
             }
         except Exception as e:
             return {"sweep_dir": str(sweep_dir), "status": "error", "error": str(e)}
+
+    def _on_job_done(self, result: dict) -> None:
+        """Handle a completed job."""
+        sweep_dir = Path(result["sweep_dir"])
+        self._job_outputs[sweep_dir] = result
+        completed_jobs = len(self._job_outputs)
+        self._progress_bar.setValue(completed_jobs)
+        if result["status"] == "success":
+            self._log(f"Completed {sweep_dir}")
+        else:
+            self._log(f"Error in {sweep_dir}: {result['error']}")
+        if completed_jobs == self._progress_bar.maximum():
+            self._log("All jobs completed.")
+            self._start_btn.setEnabled(True)
+            self._stop_btn.setEnabled(False)
+            self._cpu_spin_box.setEnabled(True)
 
 
 class _DockerLogHandler(logging.Handler):
