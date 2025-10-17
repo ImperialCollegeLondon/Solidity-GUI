@@ -410,15 +410,14 @@ class SolidityDialog(QDialog):
                 result = future.result()
                 self.job_done_signal.emit(result)
 
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=max_workers
-            ) as executor:
-                futures = [
-                    executor.submit(self._run_solidity_job, sweep_dir, num_cpus)
-                    for sweep_dir in sweep_dirs
-                ]
-                for future in futures:
-                    future.add_done_callback(job_done_callback)
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+
+            futures = [
+                executor.submit(self._run_solidity_job, sweep_dir, num_cpus)
+                for sweep_dir in sweep_dirs
+            ]
+            for future in futures:
+                future.add_done_callback(job_done_callback)
         else:
             if not all(
                 [
