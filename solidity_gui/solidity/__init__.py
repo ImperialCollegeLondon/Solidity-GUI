@@ -3,10 +3,10 @@
 It achieves this by using the docker image.
 """
 
-import contextlib
 import logging
 import sys
 from collections.abc import Iterable
+from contextlib import suppress
 from pathlib import Path, PurePosixPath
 from threading import Thread, current_thread
 from typing import cast
@@ -67,7 +67,7 @@ def _try_load_image() -> Image | None:
 def _pull_image_sync() -> Image:
     """Pull the Docker image or load from local archive, if available."""
     # Check if the image is already available in Docker
-    with contextlib.suppress(NoSuchImage):
+    with suppress(NoSuchImage):
         return docker.image.inspect("solidity:" + DOCKER_IMAGE_DIGEST)
 
     # Try to import from local filesystem
@@ -123,11 +123,9 @@ def _run_solidity(
     _return_code = 0
 
     # Remove the Solidity container if it already exists
-    try:
+    with suppress(NoSuchContainer):
         container = docker.container.inspect(container_name)
         container.remove(force=True)
-    except NoSuchContainer:
-        pass
 
     # Reset flag
     _quitting = False
