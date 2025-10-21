@@ -1,9 +1,13 @@
 """This module provides functionality to run Solidity."""
 
+import concurrent.futures
 import html
 import logging
+import shutil
+import threading
 import weakref
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from contextlib import suppress
 from os import cpu_count
 from pathlib import Path
 from typing import cast
@@ -20,12 +24,15 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QLabel,
+    QListWidget,
     QPlainTextEdit,
+    QProgressBar,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
     QWidget,
 )
+from python_on_whales import docker
 from python_on_whales.exceptions import DockerException
 
 from .error_message import display_error_message
@@ -78,6 +85,7 @@ class SolidityDialog(QDialog):
     """A dialog for interacting with the Solidity backend and viewing the output."""
 
     log_updated = Signal(str, int)
+    job_done_signal = Signal(dict)
 
     def __init__(self, parent: QWidget | None) -> None:
         """Create a new SolidityDialog.
@@ -95,9 +103,26 @@ class SolidityDialog(QDialog):
         self.pellet_file_path: Path | None = None
         self.materials_file_path: Path | None = None
 
+        self._executor: concurrent.futures.ThreadPoolExecutor | None = None
+        self._futures: list[concurrent.futures.Future] = []
+        self._job_outputs: dict[Path, dict] = {}
+        # Track sweep dirs for running jobs so we can stop their containers
+        self._sweep_dirs: list[Path] = []
+
         self._setup_parameter_sweep_ui(layout)
 
         self._setup_cpu_ui(layout)
+
+        # Progress bar for sweep jobs
+        self._progress_bar = QProgressBar()
+        self._progress_bar.setValue(0)
+        self._progress_bar.setTextVisible(True)
+        layout.addWidget(self._progress_bar)
+
+        # Job list widget for selecting jobs
+        self._job_list_widget = QListWidget()
+        self._job_list_widget.setMinimumHeight(80)
+        layout.addWidget(self._job_list_widget)
 
         self._start_btn = QPushButton(qta.icon("ei.play"), "Start Solidity")
         self._start_btn.clicked.connect(self._start_solidity)
@@ -126,9 +151,37 @@ class SolidityDialog(QDialog):
         pub.subscribe(self._on_docker_stopped, "docker.stopped")
         pub.subscribe(self._on_docker_error, "docker.error")
         pub.subscribe(self._log, "docker.output")
+        self.job_done_signal.connect(self._on_job_done)
 
         self._logger = self._create_logger()
         self.log_updated.connect(self._update_log_text_edit)
+
+    def _set_running_ui(self, running: bool) -> None:
+        """Set the UI state for running or stopped."""
+        self._start_btn.setEnabled(not running)
+        self._stop_btn.setEnabled(running)
+        self._cpu_spin_box.setEnabled(not running)
+
+    def _shutdown_executor(self, cancel_futures: bool) -> None:
+        """Shut down the executor and cancel any running futures."""
+        if self._executor is not None:
+            self._log("Shutting down executor...")
+            # If cancelling futures, also stop their containers
+            if cancel_futures and self._sweep_dirs:
+                for sweep_dir in self._sweep_dirs:
+                    container_name = f"solidity_{sweep_dir.name.replace('+', '_')}"
+                    with suppress(DockerException):
+                        docker.container.stop(container_name)
+                # Clear tracked dirs immediately
+                self._sweep_dirs.clear()
+            if cancel_futures:
+                for f in self._futures:
+                    with suppress(Exception):
+                        f.cancel()
+            with suppress(Exception):
+                self._executor.shutdown(wait=False, cancel_futures=cancel_futures)
+            self._executor = None
+            self._futures.clear()
 
     def _select_input_files(self) -> None:
         """Select input files for Solidity."""
@@ -178,6 +231,24 @@ class SolidityDialog(QDialog):
         self._sweep_group.toggled.connect(self._toggle_sweep_controls)
 
         sweep_layout.addWidget(self._sweep_material_combo)
+
+        # Add file selectors for layout.txt and pellet.txt
+        self._layout_file_label = QLabel("No layout.txt selected")
+        self._layout_file_btn = QPushButton("Select layout.txt")
+        self._layout_file_btn.clicked.connect(self._select_layout_file)
+        layout_file_row = QHBoxLayout()
+        layout_file_row.addWidget(self._layout_file_btn)
+        layout_file_row.addWidget(self._layout_file_label)
+        sweep_layout.addLayout(layout_file_row)
+
+        self._pellet_file_label = QLabel("No pellet.txt selected")
+        self._pellet_file_btn = QPushButton("Select pellet.txt")
+        self._pellet_file_btn.clicked.connect(self._select_pellet_file)
+        pellet_file_row = QHBoxLayout()
+        pellet_file_row.addWidget(self._pellet_file_btn)
+        pellet_file_row.addWidget(self._pellet_file_label)
+        sweep_layout.addLayout(pellet_file_row)
+
         param_values_layout = QHBoxLayout()
         param_values_layout.addWidget(self._sweep_start)
         param_values_layout.addWidget(self._sweep_stop)
@@ -185,6 +256,28 @@ class SolidityDialog(QDialog):
         sweep_layout.addLayout(param_values_layout)
         self._sweep_group.setLayout(sweep_layout)
         layout.addWidget(self._sweep_group)
+
+    def _select_layout_file(self) -> None:
+        """Select layout.txt file for Solidity."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select layout.txt", "", "Text Files (*.txt)"
+        )
+        if file_path:
+            self.layout_file_path = Path(file_path)
+            self._layout_file_label.setText(str(file_path))
+        else:
+            self._layout_file_label.setText("No layout.txt selected")
+
+    def _select_pellet_file(self) -> None:
+        """Select pellet.txt file for Solidity."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select pellet.txt", "", "Text Files (*.txt)"
+        )
+        if file_path:
+            self.pellet_file_path = Path(file_path)
+            self._pellet_file_label.setText(str(file_path))
+        else:
+            self._pellet_file_label.setText("No pellet.txt selected")
 
     def _setup_cpu_ui(self, layout: QVBoxLayout) -> None:
         layout_cpu_controls = QHBoxLayout()
@@ -195,8 +288,9 @@ class SolidityDialog(QDialog):
 
         self._cpu_label = QLabel("CPU Cores:")
         self._cpu_spin_box = QSpinBox()
-        self._cpu_spin_box.setRange(1, cpu_count())
-        self._cpu_spin_box.setValue(cpu_count())
+        cpus = cpu_count() or 1
+        self._cpu_spin_box.setRange(1, cpus)
+        self._cpu_spin_box.setValue(cpus)
         self._cpu_spin_box.setToolTip("Number of CPU cores for running Solidity")
 
         self._input_group = QWidget()
@@ -279,7 +373,7 @@ class SolidityDialog(QDialog):
             )
 
     def sweep_and_generate_output(
-        self, elastic_property: Property, value: int, dir_path: str
+        self, elastic_property: Property, value: float, dir_path: str
     ) -> None:
         """Set the material property sweep value and generate output files."""
         if elastic_property.data is None:
@@ -298,6 +392,25 @@ class SolidityDialog(QDialog):
         output_dir = Path(dir_path) / f"{value:.3e}"
         output_dir.mkdir(parents=True, exist_ok=True)
         generate_output_files(output_dir=output_dir)
+        if self.layout_file_path and self.pellet_file_path:
+            shutil.copy(self.layout_file_path, output_dir / "layout.txt")
+            shutil.copy(self.pellet_file_path, output_dir / "pellet.txt")
+
+    def _sweep_then_run(
+        self, elastic_property: Property, value: float, dir_path: str, num_cpus: int
+    ) -> dict:
+        """Worker wrapper: create output files for one sweep value, then run the job."""
+        try:
+            # generate files (runs on worker thread)
+            self.sweep_and_generate_output(elastic_property, value, dir_path)
+            sweep_dir = Path(dir_path) / f"{value:.3e}"
+            return self._run_solidity_job(sweep_dir, num_cpus)
+        except Exception as e:
+            return {
+                "sweep_dir": str(Path(dir_path) / f"{value:.3e}"),
+                "status": "error",
+                "error": str(e),
+            }
 
     def _start_solidity(self) -> None:
         if self._sweep_group.isChecked():
@@ -312,13 +425,94 @@ class SolidityDialog(QDialog):
             start = self._sweep_start.value()
             stop = self._sweep_stop.value()
             step = self._sweep_step.value()
+            if step <= 0.0 or start >= stop:
+                display_error_message(
+                    "Invalid sweep parameters: ensure that Stop > Start and Step > 0."
+                )
+                return
             sweep_values = [
                 start + i * step for i in range(int((stop - start) / step) + 1)
             ]
             elastic_property = material_datastore[material_key].properties["elasticity"]
-            for value in sweep_values:
-                self._log(f"Sweeping Young's modulus: {value:.3e}")
-                self.sweep_and_generate_output(elastic_property, value, dir_path)
+
+            sweep_dirs: list[Path] = [
+                Path(dir_path) / f"{value:.3e}" for value in sweep_values
+            ]
+            # Reset outputs from any previous runs so progress counting is accurate
+            self._job_outputs.clear()
+            self._job_list_widget.clear()
+            self._progress_bar.setValue(0)
+
+            for sweep_dir in sweep_dirs:
+                # populate the UI immediately with job entries
+                self._job_list_widget.addItem(str(sweep_dir))
+
+            self._progress_bar.setMaximum(len(sweep_dirs))
+            self._progress_bar.setValue(0)
+
+            total_cpus = cpu_count() or 1
+            num_jobs = len(sweep_dirs)
+            if num_jobs <= total_cpus:
+                num_cpus = max(1, total_cpus // num_jobs)
+                max_workers = num_jobs
+            else:
+                num_cpus = 1
+                max_workers = total_cpus
+            self._log(
+                f"Running {num_jobs} jobs in parallel "
+                f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
+                f"{total_cpus} CPUs available)"
+            )
+
+            def make_done_callback(
+                sweep_dir: Path,
+            ) -> Callable[[concurrent.futures.Future], None]:
+                """Create a callback function for a given sweep directory."""
+
+                def job_done_callback(future: concurrent.futures.Future) -> None:
+                    """Log the result of a completed future and update progress."""
+                    if future.cancelled():
+                        result = {
+                            "sweep_dir": str(sweep_dir),
+                            "status": "cancelled",
+                            "error": "job cancelled",
+                        }
+                    else:
+                        try:
+                            result = future.result()
+                            result.setdefault("sweep_dir", str(sweep_dir))
+                        except Exception as e:
+                            result = {
+                                "sweep_dir": str(sweep_dir),
+                                "status": "error",
+                                "error": str(e),
+                            }
+                    self.job_done_signal.emit(result)
+
+                return job_done_callback
+
+            # Immediately update UI
+            self._set_running_ui(True)
+            self._log("Scheduling parameter sweep jobs...")
+
+            # Cancel any previous run before starting a new one
+            self._shutdown_executor(cancel_futures=True)
+
+            self._executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=max_workers
+            )
+            # remember sweep dirs for shutdown logic
+            self._sweep_dirs = list(sweep_dirs)
+
+            # Submit tasks that first generate outputs then run the container
+            # This keeps the file creation off the UI thread
+            for v in sweep_values:
+                sweep_dir = Path(dir_path) / f"{v:.3e}"
+                future = self._executor.submit(
+                    self._sweep_then_run, elastic_property, v, dir_path, num_cpus
+                )
+                future.add_done_callback(make_done_callback(sweep_dir))
+                self._futures.append(future)
 
         else:
             if not all(
@@ -352,9 +546,18 @@ class SolidityDialog(QDialog):
         self._log("Solidity started\n==========")
 
     def _stop_solidity(self) -> None:
+        # Stop button pressed — update UI immediately and perform shutdown in background
         self._stop_btn.setEnabled(False)
-        self._log("==========\nStopping Solidity...")
+        self._log("==========\nStop requested — cancelling jobs...")
+        # Flip UI immediately so user sees the state change
+        self._set_running_ui(False)
+        # Broadcast docker stop so in-job docker waits can return
         pub.sendMessage("docker.stop")
+        # Perform cancel/stop/shutdown asynchronously to avoid blocking UI
+        threading.Thread(
+            target=lambda: self._shutdown_executor(cancel_futures=True), daemon=True
+        ).start()
+        self._log("Stop requested — shutdown running in background.")
 
     def _on_docker_stopped(self, return_code: int) -> None:
         self._start_btn.setEnabled(True)
@@ -371,6 +574,74 @@ class SolidityDialog(QDialog):
             )
         else:
             self._log(f"Error occurred: {repr(error)}", level=logging.ERROR)
+
+    def _run_solidity_job(self, sweep_dir: Path, num_cpus: int) -> dict:
+        """Run the Solidity solver for a given sweep directory."""
+        try:
+            y3d_file = sweep_dir / "BST.Y3D"
+            mat_file = sweep_dir / "mat.txt"
+            layout_file = sweep_dir / "layout.txt"
+            pellet_file = sweep_dir / "pellet.txt"
+            # Check all files exist
+            for f in [y3d_file, mat_file, layout_file, pellet_file]:
+                if not f.exists():
+                    return {
+                        "sweep_dir": str(sweep_dir),
+                        "status": "error",
+                        "error": f"Missing file: {f.name}",
+                    }
+            from solidity_gui.solidity import run_solidity_no_stream
+
+            container_name = f"solidity_{sweep_dir.name.replace('+', '_')}"
+
+            container = run_solidity_no_stream(
+                y3d_file_path=y3d_file,
+                layout_file_path=layout_file,
+                pellet_file_path=pellet_file,
+                materials_file_path=mat_file,
+                num_cpus=num_cpus,
+                container_name=container_name,
+            )
+
+            # We need to wait for the container to finish before returning from the job
+            wait_result = docker.container.wait(container_name)
+            # python-on-whales may return {'StatusCode': int} or an int
+            if isinstance(wait_result, dict):
+                exit_code = wait_result.get("StatusCode", -1)
+            else:
+                exit_code = int(wait_result)
+            with suppress(DockerException, Exception):
+                container.remove()
+            return {
+                "sweep_dir": str(sweep_dir),
+                "status": "success",
+                "container_id": str(container.id),
+                "exit_code": exit_code,
+            }
+        except Exception as e:
+            return {"sweep_dir": str(sweep_dir), "status": "error", "error": str(e)}
+
+    def _on_job_done(self, result: dict) -> None:
+        """Handle a completed job."""
+        sweep_dir = Path(result.get("sweep_dir", "<unknown>"))
+        self._job_outputs[sweep_dir] = result
+        # Remove from tracked dirs since it's done
+        with suppress(ValueError):
+            if sweep_dir in self._sweep_dirs:
+                self._sweep_dirs.remove(sweep_dir)
+        completed_jobs = len(self._job_outputs)
+        self._progress_bar.setValue(completed_jobs)
+        if result["status"] == "success":
+            self._log(f"Completed {sweep_dir}")
+        else:
+            self._log(f"Error in {sweep_dir}: {result['error']}")
+        if completed_jobs == self._progress_bar.maximum():
+            self._log("All jobs completed.")
+
+            # Only teardown executor if we actually have one and all futures are done
+            if self._executor is not None and all(f.done() for f in self._futures):
+                self._shutdown_executor(cancel_futures=False)
+            self._set_running_ui(False)
 
 
 class _DockerLogHandler(logging.Handler):
