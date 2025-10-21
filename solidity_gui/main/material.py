@@ -69,8 +69,8 @@ class JointForm(Form):
 
     energy_release_rate_mode_1 = FloatField(display_name="Energy Release Rate - Mode 1")
     energy_release_rate_mode_2 = FloatField(display_name="Energy Release Rate - Mode 2")
-    tensile_strength = FloatField(display_name="Tensile Strength")
-    cohesion = FloatField(display_name="Cohesion")
+    tensile_strength = LargeFloatField(display_name="Tensile Strength")
+    cohesion = LargeFloatField(display_name="Cohesion")
     internal_friction_coefficient = FloatField(
         display_name="Internal Friction Coefficient"
     )
