@@ -228,7 +228,7 @@ class EvenWiderFloatField(FloatField):
 
 
 class BoolField(SingleField[bool]):
-    """A field for float data."""
+    """A field for bool data."""
 
     _marshmallow_field = marshmallow_fields.Boolean
     _default_widget = CheckBoxWidget()
