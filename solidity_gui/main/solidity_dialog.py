@@ -20,7 +20,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
-    QDoubleSpinBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -36,6 +35,7 @@ from python_on_whales import docker
 from python_on_whales.exceptions import DockerException
 
 from .error_message import display_error_message
+from .forms.widgets import LargeFloatLineWidget
 from .material import Property, calculate_lame_constants, material_datastore
 from .solidity_file_generator import generate_output_files
 
@@ -211,18 +211,18 @@ class SolidityDialog(QDialog):
         sweep_layout = QVBoxLayout()
 
         self._sweep_material_combo = QComboBox()
-        self._sweep_start = QDoubleSpinBox()
-        self._sweep_start.setPrefix("Start: ")
-        self._sweep_start.setMinimum(0.0)
-        self._sweep_start.setMaximum(1e18)
-        self._sweep_stop = QDoubleSpinBox()
-        self._sweep_stop.setPrefix("Stop: ")
-        self._sweep_stop.setMinimum(0.0)
-        self._sweep_stop.setMaximum(1e18)
-        self._sweep_step = QDoubleSpinBox()
-        self._sweep_step.setPrefix("Step: ")
-        self._sweep_step.setMinimum(0.0)
-        self._sweep_step.setMaximum(1e18)
+
+        start_widget = LargeFloatLineWidget()
+        stop_widget = LargeFloatLineWidget()
+        step_widget = LargeFloatLineWidget()
+
+        self._sweep_start = start_widget.create(None, [])
+        self._sweep_stop = stop_widget.create(None, [])
+        self._sweep_step = step_widget.create(None, [])
+
+        self._sweep_start.setPlaceholderText("Start (e.g. 1.23E+04)")
+        self._sweep_stop.setPlaceholderText("Stop (e.g. 1.00E+18)")
+        self._sweep_step.setPlaceholderText("Step (e.g. 1.23E+03)")
 
         self._populate_sweep_material_combo()
         self._sweep_material_combo.currentIndexChanged.connect(
@@ -250,9 +250,23 @@ class SolidityDialog(QDialog):
         sweep_layout.addLayout(pellet_file_row)
 
         param_values_layout = QHBoxLayout()
-        param_values_layout.addWidget(self._sweep_start)
-        param_values_layout.addWidget(self._sweep_stop)
-        param_values_layout.addWidget(self._sweep_step)
+
+        # LargeFloatLineWidget does not support a prefix text, so let's use labels
+        start_col = QVBoxLayout()
+        start_col.addWidget(QLabel("Start:"))
+        start_col.addWidget(self._sweep_start)
+        param_values_layout.addLayout(start_col)
+
+        stop_col = QVBoxLayout()
+        stop_col.addWidget(QLabel("Stop:"))
+        stop_col.addWidget(self._sweep_stop)
+        param_values_layout.addLayout(stop_col)
+
+        step_col = QVBoxLayout()
+        step_col.addWidget(QLabel("Step:"))
+        step_col.addWidget(self._sweep_step)
+        param_values_layout.addLayout(step_col)
+
         sweep_layout.addLayout(param_values_layout)
         self._sweep_group.setLayout(sweep_layout)
         layout.addWidget(self._sweep_group)
@@ -314,7 +328,7 @@ class SolidityDialog(QDialog):
     def _update_sweep_values(self) -> None:
         material_name = self._sweep_material_combo.currentData()
         if material_name is None:
-            self._sweep_start.setValue(0.0)
+            self._sweep_start.setText("0.0")
             return
 
         material = material_datastore[material_name]
@@ -327,9 +341,11 @@ class SolidityDialog(QDialog):
             youngs_modulus = cast(
                 float, elasticity_property.default_data["youngs_modulus"]
             )
-        self._sweep_start.setValue(youngs_modulus)
-        self._sweep_stop.setValue(1e18)
-        self._sweep_step.setValue(youngs_modulus / 10 if youngs_modulus > 0 else 1.0)
+        self._sweep_start.setText(f"{youngs_modulus:E}")
+        self._sweep_stop.setText(f"{1e18:E}")
+        self._sweep_step.setText(
+            f"{youngs_modulus / 10 if youngs_modulus > 0 else 1.0:E}"
+        )
 
     def update_dialog(
         self,
@@ -422,12 +438,18 @@ class SolidityDialog(QDialog):
                 self._log("Parameter sweep cancelled.")
                 return
             material_key = self._sweep_material_combo.currentData()
-            start = self._sweep_start.value()
-            stop = self._sweep_stop.value()
-            step = self._sweep_step.value()
-            if step <= 0.0 or start >= stop:
+            try:
+                start = float(self._sweep_start.text())
+                stop = float(self._sweep_stop.text())
+                step = float(self._sweep_step.text())
+            except ValueError:
                 display_error_message(
-                    "Invalid sweep parameters: ensure that Stop > Start and Step > 0."
+                    "Please enter valid numeric values for the sweep."
+                )
+                return
+            if step <= 0 or stop < start:
+                display_error_message(
+                    "Please ensure that Stop > Start and Step > 0 for the sweep."
                 )
                 return
             sweep_values = [
