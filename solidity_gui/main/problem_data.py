@@ -8,7 +8,7 @@ from solidity_gui.main.forms.forms import Form
 
 from .control import control_datastore
 from .forms import SimpleFormDialog
-from .forms.fields import ComboBoxField, EvenWiderFloatField, FloatField, IntField
+from .forms.fields import ComboBoxField, FloatField, IntField, LargeFloatField
 
 
 class ProblemDataForm(Form):
@@ -20,7 +20,7 @@ class ProblemDataForm(Form):
     gravity_x = FloatField(display_name="Gravity in X direction")
     gravity_y = FloatField(display_name="Gravity in Y direction")
     gravity_z = FloatField(display_name="Gravity in Z direction")
-    time_step = EvenWiderFloatField(display_name="Time-Step")
+    time_step = LargeFloatField(display_name="Time-Step")
     output_frequency = IntField(
         display_name="Output-Frequency", validators=[validate.Range(min=0)]
     )
