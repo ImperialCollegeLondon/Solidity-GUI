@@ -190,7 +190,7 @@ class LargeFloatLineWidget(Widget[QLineEdit, float]):
         """
         qt_input = self.qt_input_class()
         if data is not None:
-            qt_input.setText(str(data))
+            qt_input.setText("%E" % data)
         return qt_input
 
     @staticmethod
