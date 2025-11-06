@@ -109,9 +109,8 @@ class SolidityDialog(QDialog):
         # Track sweep dirs for running jobs so we can stop their containers
         self._sweep_dirs: list[Path] = []
 
-        self._setup_parameter_sweep_ui(layout)
-
-        self._setup_cpu_ui(layout)
+        # self._setup_cpu_ui(layout)
+        self._setup_mode_tabs(layout)
 
         # Progress bar for sweep jobs
         self._progress_bar = QProgressBar()
@@ -145,6 +144,8 @@ class SolidityDialog(QDialog):
         layout.addWidget(self._log_text_edit)
 
         self.setLayout(layout)
+
+        self._update_mode_ui()
 
         pub.subscribe(self._on_docker_pulled, "docker.pulled")
         pub.subscribe(self._on_docker_started, "docker.started")
@@ -183,6 +184,43 @@ class SolidityDialog(QDialog):
             self._executor = None
             self._futures.clear()
 
+    def _compute_worker_assignment(self, num_jobs: int) -> tuple[int, int, int]:
+        """Compute the number of CPUs per job and max workers for the executor."""
+        total_cpus = cpu_count() or 1
+        if num_jobs <= total_cpus:
+            num_cpus = max(1, total_cpus // num_jobs)
+            max_workers = num_jobs
+        else:
+            num_cpus = 1
+            max_workers = total_cpus
+        return num_cpus, max_workers, total_cpus
+
+    def _make_done_callback(
+        self, sweep_dir: Path
+    ) -> Callable[[concurrent.futures.Future], None]:
+        """Return a done-callback that emits a result dict."""
+
+        def job_done_callback(future: concurrent.futures.Future) -> None:
+            if future.cancelled():
+                result = {
+                    "sweep_dir": str(sweep_dir),
+                    "status": "cancelled",
+                    "error": "job cancelled",
+                }
+            else:
+                try:
+                    result = future.result()
+                    result.setdefault("sweep_dir", str(sweep_dir))
+                except Exception as e:
+                    result = {
+                        "sweep_dir": str(sweep_dir),
+                        "status": "error",
+                        "error": str(e),
+                    }
+            self.job_done_signal.emit(result)
+
+        return job_done_callback
+
     def _select_input_files(self) -> None:
         """Select input files for Solidity."""
         file_paths = get_file_paths()
@@ -191,7 +229,7 @@ class SolidityDialog(QDialog):
             self.layout_file_path = file_paths[2]
             self.pellet_file_path = file_paths[3]
             self.materials_file_path = file_paths[1]
-            self._start_btn.setEnabled(True)
+            self._update_mode_ui()
             self._log("Input files selected.")
         else:
             self._log("File selection cancelled or incomplete.")
@@ -201,8 +239,6 @@ class SolidityDialog(QDialog):
         from PySide6.QtWidgets import QGroupBox
 
         self._sweep_group = QGroupBox("Parameter Sweep (Young's Modulus)")
-        self._sweep_group.setCheckable(True)
-        self._sweep_group.setChecked(False)
         self._sweep_group.setToolTip(
             "Enable this option to run a parameter sweep over Young's modulus. "
             "All sweep controls will be enabled, and input file selection will be "
@@ -228,7 +264,6 @@ class SolidityDialog(QDialog):
         self._sweep_material_combo.currentIndexChanged.connect(
             self._update_sweep_values
         )
-        self._sweep_group.toggled.connect(self._toggle_sweep_controls)
 
         sweep_layout.addWidget(self._sweep_material_combo)
 
@@ -270,6 +305,43 @@ class SolidityDialog(QDialog):
         sweep_layout.addLayout(param_values_layout)
         self._sweep_group.setLayout(sweep_layout)
         layout.addWidget(self._sweep_group)
+
+    def _setup_mode_tabs(self, parent_layout: QVBoxLayout) -> None:
+        """Create QTabWidget and populate three pages (Single, Batch, Sweep)."""
+        from PySide6.QtWidgets import QTabWidget
+
+        self._mode_tabs = QTabWidget()
+
+        # Single Run tab
+        single = QWidget()
+        single_layout = QVBoxLayout()
+        self._setup_cpu_ui(single_layout)
+        single.setLayout(single_layout)
+        self._mode_tabs.addTab(single, "Single Run")
+
+        # Batch Run tab
+        batch = QWidget()
+        batch_layout = QVBoxLayout()
+        batch_row = QHBoxLayout()
+        self._batch_dir_btn = QPushButton("Select Batch Run Directory")
+        self._batch_dir_btn.clicked.connect(self._select_batch_parent_dir)
+        self._batch_dir_label = QLabel("No directory selected")
+        self._batch_parent_dir: Path | None = None
+        batch_row.addWidget(self._batch_dir_btn)
+        batch_row.addWidget(self._batch_dir_label)
+        batch_layout.addLayout(batch_row)
+        batch.setLayout(batch_layout)
+        self._mode_tabs.addTab(batch, "Batch Run")
+
+        # Parameter Sweep tab
+        sweep = QWidget()
+        sweep_layout = QVBoxLayout()
+        self._setup_parameter_sweep_ui(sweep_layout)
+        sweep.setLayout(sweep_layout)
+        self._mode_tabs.addTab(sweep, "Parameter Sweep")
+
+        parent_layout.addWidget(self._mode_tabs)
+        self._mode_tabs.currentChanged.connect(self._update_mode_ui)
 
     def _select_layout_file(self) -> None:
         """Select layout.txt file for Solidity."""
@@ -313,9 +385,39 @@ class SolidityDialog(QDialog):
         self._input_group.setLayout(layout_cpu_controls)
         layout.addWidget(self._input_group)
 
-    def _toggle_sweep_controls(self, checked: bool) -> None:
-        self._input_group.setEnabled(not checked)
-        self._start_btn.setEnabled(checked)
+    def _select_batch_parent_dir(self) -> None:
+        """Select the parent directory for batch run."""
+        dir_path = QFileDialog.getExistingDirectory(
+            self, "Select Batch Run Parent Directory"
+        )
+        if dir_path:
+            self._batch_parent_dir = Path(dir_path)
+            self._batch_dir_label.setText(str(dir_path))
+        else:
+            self._batch_parent_dir = None
+            self._batch_dir_label.setText("No directory selected")
+
+        self._update_mode_ui()
+
+    def _update_mode_ui(self) -> None:
+        """Update minimal runtime UI state (Start button) based on active tab."""
+        idx = self._mode_tabs.currentIndex()
+
+        have_inputs = all(
+            [
+                self.y3d_file_path,
+                self.layout_file_path,
+                self.pellet_file_path,
+                self.materials_file_path,
+            ]
+        )
+
+        if idx == 0:  # Single Run
+            self._start_btn.setEnabled(have_inputs)
+        elif idx == 1:  # Batch Run
+            self._start_btn.setEnabled(self._batch_parent_dir is not None)
+        else:  # Parameter Sweep
+            self._start_btn.setEnabled(have_inputs)
 
     def _populate_sweep_material_combo(self) -> None:
         self._sweep_material_combo.clear()
@@ -429,7 +531,8 @@ class SolidityDialog(QDialog):
             }
 
     def _start_solidity(self) -> None:
-        if self._sweep_group.isChecked():
+        tab = self._mode_tabs.currentIndex()
+        if tab == 2:
             self._log("Parameter sweep mode is enabled")
             dir_path = QFileDialog.getExistingDirectory(
                 self, "Select output directory for parameter sweep"
@@ -472,46 +575,15 @@ class SolidityDialog(QDialog):
             self._progress_bar.setMaximum(len(sweep_dirs))
             self._progress_bar.setValue(0)
 
-            total_cpus = cpu_count() or 1
             num_jobs = len(sweep_dirs)
-            if num_jobs <= total_cpus:
-                num_cpus = max(1, total_cpus // num_jobs)
-                max_workers = num_jobs
-            else:
-                num_cpus = 1
-                max_workers = total_cpus
+            num_cpus, max_workers, total_cpus = self._compute_worker_assignment(
+                num_jobs
+            )
             self._log(
                 f"Running {num_jobs} jobs in parallel "
                 f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
-                f"{total_cpus} CPUs available)"
+                f"{total_cpus} CPUs available) (Parameter Sweep)"
             )
-
-            def make_done_callback(
-                sweep_dir: Path,
-            ) -> Callable[[concurrent.futures.Future], None]:
-                """Create a callback function for a given sweep directory."""
-
-                def job_done_callback(future: concurrent.futures.Future) -> None:
-                    """Log the result of a completed future and update progress."""
-                    if future.cancelled():
-                        result = {
-                            "sweep_dir": str(sweep_dir),
-                            "status": "cancelled",
-                            "error": "job cancelled",
-                        }
-                    else:
-                        try:
-                            result = future.result()
-                            result.setdefault("sweep_dir", str(sweep_dir))
-                        except Exception as e:
-                            result = {
-                                "sweep_dir": str(sweep_dir),
-                                "status": "error",
-                                "error": str(e),
-                            }
-                    self.job_done_signal.emit(result)
-
-                return job_done_callback
 
             # Immediately update UI
             self._set_running_ui(True)
@@ -533,10 +605,61 @@ class SolidityDialog(QDialog):
                 future = self._executor.submit(
                     self._sweep_then_run, elastic_property, v, dir_path, num_cpus
                 )
-                future.add_done_callback(make_done_callback(sweep_dir))
+                future.add_done_callback(self._make_done_callback(sweep_dir))
                 self._futures.append(future)
 
-        else:
+        elif tab == 1:
+            # Batch Run: use existing sub-directories under a chosen parent directory
+            if not self._batch_parent_dir:
+                display_error_message("Please select a batch run directory first.")
+                return
+
+            parent = Path(self._batch_parent_dir)
+            subdirs = sorted([p for p in parent.iterdir() if p.is_dir()])
+            if not subdirs:
+                display_error_message(
+                    "No sub-directories found in the selected batch run directory."
+                )
+                return
+
+            # Reset outputs from any previous runs so progress counting is accurate
+            self._job_outputs.clear()
+            self._job_list_widget.clear()
+            self._progress_bar.setValue(0)
+            for sd in subdirs:
+                self._job_list_widget.addItem(str(sd))
+            self._progress_bar.setMaximum(len(subdirs))
+
+            num_jobs = len(subdirs)
+            num_cpus, max_workers, total_cpus = self._compute_worker_assignment(
+                num_jobs
+            )
+            self._log(
+                f"Running {num_jobs} jobs in parallel "
+                f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
+                f"{total_cpus} CPUs available) (Batch Run)"
+            )
+
+            # Immediately update UI
+            self._set_running_ui(True)
+            self._log("Scheduling batch run jobs...")
+
+            # Cancel any previous run before starting a new one
+            self._shutdown_executor(cancel_futures=True)
+
+            self._executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=max_workers
+            )
+            # remember sweep dirs for shutdown logic
+            self._sweep_dirs = list(subdirs)
+
+            # Submit tasks: run solver in each subdir
+            for sd in subdirs:
+                future = self._executor.submit(self._run_solidity_job, sd, num_cpus)
+                future.add_done_callback(self._make_done_callback(sd))
+                self._futures.append(future)
+
+        elif tab == 0:
             if not all(
                 [
                     self.y3d_file_path,
