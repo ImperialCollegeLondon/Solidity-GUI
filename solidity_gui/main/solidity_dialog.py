@@ -402,8 +402,6 @@ class SolidityDialog(QDialog):
 
     def _update_mode_ui(self) -> None:
         """Update minimal runtime UI state (Start button) based on active tab."""
-        idx = self._mode_tabs.currentIndex()
-
         have_inputs = all(
             [
                 self.y3d_file_path,
@@ -413,9 +411,9 @@ class SolidityDialog(QDialog):
             ]
         )
 
-        if idx == 0:  # Single Run
+        if self._mode_tabs.currentIndex() == 0:  # Single Run
             self._start_btn.setEnabled(have_inputs)
-        elif idx == 1:  # Batch Run
+        elif self._mode_tabs.currentIndex() == 1:  # Batch Run
             self._start_btn.setEnabled(self._batch_parent_dir is not None)
         else:  # Parameter Sweep
             self._start_btn.setEnabled(have_inputs)
@@ -563,6 +561,19 @@ class SolidityDialog(QDialog):
         self._sweep_dirs = list(dirs)
         return num_cpus
 
+    def _validate_batch_subdirs(
+        self, parent: Path
+    ) -> tuple[list[Path], dict[Path, list[str]]]:
+        """Check if sub-directories exist and validate for batch run."""
+        subdirs = sorted([p for p in parent.iterdir() if p.is_dir()])
+        required_files = ["BST.Y3D", "layout.txt", "pellet.txt", "mat.txt"]
+        invalid_info: dict[Path, list[str]] = {}
+        for sd in subdirs:
+            missing_files = [f for f in required_files if not (sd / f).exists()]
+            if missing_files:
+                invalid_info[sd] = missing_files
+        return subdirs, invalid_info
+
     def _start_solidity_sweep(self) -> None:
         self._log("Parameter sweep mode is enabled")
         dir_path = QFileDialog.getExistingDirectory(
@@ -573,18 +584,20 @@ class SolidityDialog(QDialog):
             return
         material_key = self._sweep_material_combo.currentData()
         if material_key is None:
-            display_error_message("Please select a material for the sweep.")
+            display_error_message("Please select a material for the sweep.", self)
             return
         try:
             start = float(self._sweep_start.text())
             stop = float(self._sweep_stop.text())
             step = float(self._sweep_step.text())
         except ValueError:
-            display_error_message("Please enter valid numeric values for the sweep.")
+            display_error_message(
+                "Please enter valid numeric values for the sweep.", self
+            )
             return
         if step <= 0 or stop < start:
             display_error_message(
-                "Please ensure that Stop > Start and Step > 0 for the sweep."
+                "Please ensure that Stop > Start and Step > 0 for the sweep.", self
             )
             return
         sweep_values = [start + i * step for i in range(int((stop - start) / step) + 1)]
@@ -611,15 +624,18 @@ class SolidityDialog(QDialog):
     def _start_solidity_batch(self) -> None:
         # Batch Run: use existing sub-directories under a chosen parent directory
         if not self._batch_parent_dir:
-            display_error_message("Please select a batch run directory first.")
+            display_error_message("Please select a batch run directory first.", self)
             return
-
         parent = Path(self._batch_parent_dir)
-        subdirs = sorted([p for p in parent.iterdir() if p.is_dir()])
+        subdirs, invalid_info = self._validate_batch_subdirs(parent)
         if not subdirs:
-            display_error_message(
-                "No sub-directories found in the selected batch run directory."
-            )
+            display_error_message("No sub-directories found for batch run.", self)
+            return
+        if invalid_info:
+            msg_lines = ["Some sub-directories are missing required files:"]
+            for sd, missing_files in invalid_info.items():
+                msg_lines.append(f" - {sd.name}: {', '.join(missing_files)}")
+            display_error_message("\n".join(msg_lines), self)
             return
 
         num_cpus = self._prepare_and_start_parallel(subdirs, "Batch Run")
@@ -641,7 +657,9 @@ class SolidityDialog(QDialog):
                 self.materials_file_path,
             ]
         ):
-            display_error_message("Please select all input files before starting.")
+            display_error_message(
+                "Please select all input files before starting.", self
+            )
             return
         self._start_btn.setEnabled(False)
         self._cpu_spin_box.setEnabled(False)
