@@ -81,6 +81,18 @@ def run_solidity(parent: QWidget) -> None:
     _solidity_dlg.exec_()
 
 
+def compute_worker_assignment(num_jobs: int) -> tuple[int, int, int]:
+    """Compute the number of CPUs per job and max workers for the executor."""
+    total_cpus = cpu_count() or 1
+    if num_jobs <= total_cpus:
+        num_cpus = max(1, total_cpus // num_jobs)
+        max_workers = num_jobs
+    else:
+        num_cpus = 1
+        max_workers = total_cpus
+    return num_cpus, max_workers, total_cpus
+
+
 class SolidityDialog(QDialog):
     """A dialog for interacting with the Solidity backend and viewing the output."""
 
@@ -183,17 +195,6 @@ class SolidityDialog(QDialog):
                 self._executor.shutdown(wait=False, cancel_futures=cancel_futures)
             self._executor = None
             self._futures.clear()
-
-    def _compute_worker_assignment(self, num_jobs: int) -> tuple[int, int, int]:
-        """Compute the number of CPUs per job and max workers for the executor."""
-        total_cpus = cpu_count() or 1
-        if num_jobs <= total_cpus:
-            num_cpus = max(1, total_cpus // num_jobs)
-            max_workers = num_jobs
-        else:
-            num_cpus = 1
-            max_workers = total_cpus
-        return num_cpus, max_workers, total_cpus
 
     def _make_done_callback(
         self, sweep_dir: Path
@@ -530,150 +531,131 @@ class SolidityDialog(QDialog):
                 "error": str(e),
             }
 
+    def _prepare_and_start_parallel(self, dirs: list[Path], mode_label: str) -> int:
+        """Shared prep for batch / sweep."""
+        # Reset outputs from any previous runs so progress counting is accurate
+        self._job_outputs.clear()
+        self._job_list_widget.clear()
+        self._progress_bar.setValue(0)
+
+        for sweep_dir in dirs:
+            self._job_list_widget.addItem(str(sweep_dir))
+        self._progress_bar.setMaximum(len(dirs))
+        self._progress_bar.setValue(0)
+
+        num_jobs = len(dirs)
+        num_cpus, max_workers, total_cpus = compute_worker_assignment(num_jobs)
+        self._log(
+            f"Running {num_jobs} jobs in parallel "
+            f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
+            f"{total_cpus} CPUs available) ({mode_label})"
+        )
+
+        # Immediately update UI
+        self._set_running_ui(True)
+        self._log(f"Scheduling {mode_label.lower()} jobs...")
+
+        # Cancel any previous run before starting a new one
+        self._shutdown_executor(cancel_futures=True)
+
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+        # remember sweep dirs for shutdown logic
+        self._sweep_dirs = list(dirs)
+        return num_cpus
+
+    def _start_solidity_sweep(self) -> None:
+        self._log("Parameter sweep mode is enabled")
+        dir_path = QFileDialog.getExistingDirectory(
+            self, "Select output directory for parameter sweep"
+        )
+        if not dir_path:
+            self._log("Parameter sweep cancelled.")
+            return
+        material_key = self._sweep_material_combo.currentData()
+        if material_key is None:
+            display_error_message("Please select a material for the sweep.")
+            return
+        try:
+            start = float(self._sweep_start.text())
+            stop = float(self._sweep_stop.text())
+            step = float(self._sweep_step.text())
+        except ValueError:
+            display_error_message("Please enter valid numeric values for the sweep.")
+            return
+        if step <= 0 or stop < start:
+            display_error_message(
+                "Please ensure that Stop > Start and Step > 0 for the sweep."
+            )
+            return
+        sweep_values = [start + i * step for i in range(int((stop - start) / step) + 1)]
+        elastic_property = material_datastore[material_key].properties["elasticity"]
+
+        sweep_dirs: list[Path] = [
+            Path(dir_path) / f"{value:.3e}" for value in sweep_values
+        ]
+
+        num_cpus = self._prepare_and_start_parallel(sweep_dirs, "Parameter Sweep")
+
+        # Submit tasks that first generate outputs then run the container
+        # This keeps the file creation off the UI thread
+        for v in sweep_values:
+            sweep_dir = Path(dir_path) / f"{v:.3e}"
+            executor = self._executor
+            assert executor is not None
+            future = executor.submit(
+                self._sweep_then_run, elastic_property, v, dir_path, num_cpus
+            )
+            future.add_done_callback(self._make_done_callback(sweep_dir))
+            self._futures.append(future)
+
+    def _start_solidity_batch(self) -> None:
+        # Batch Run: use existing sub-directories under a chosen parent directory
+        if not self._batch_parent_dir:
+            display_error_message("Please select a batch run directory first.")
+            return
+
+        parent = Path(self._batch_parent_dir)
+        subdirs = sorted([p for p in parent.iterdir() if p.is_dir()])
+        if not subdirs:
+            display_error_message(
+                "No sub-directories found in the selected batch run directory."
+            )
+            return
+
+        num_cpus = self._prepare_and_start_parallel(subdirs, "Batch Run")
+
+        # Submit tasks: run solver in each subdir
+        for sd in subdirs:
+            executor = self._executor
+            assert executor is not None
+            future = executor.submit(self._run_solidity_job, sd, num_cpus)
+            future.add_done_callback(self._make_done_callback(sd))
+            self._futures.append(future)
+
+    def _start_solidity_single(self) -> None:
+        if not all(
+            [
+                self.y3d_file_path,
+                self.layout_file_path,
+                self.pellet_file_path,
+                self.materials_file_path,
+            ]
+        ):
+            display_error_message("Please select all input files before starting.")
+            return
+        self._start_btn.setEnabled(False)
+        self._cpu_spin_box.setEnabled(False)
+        self._log("Setting up Solidity (this may take some time)...")
+        pub.sendMessage("docker.pull")
+
     def _start_solidity(self) -> None:
         tab = self._mode_tabs.currentIndex()
         if tab == 2:
-            self._log("Parameter sweep mode is enabled")
-            dir_path = QFileDialog.getExistingDirectory(
-                self, "Select output directory for parameter sweep"
-            )
-            if not dir_path:
-                self._log("Parameter sweep cancelled.")
-                return
-            material_key = self._sweep_material_combo.currentData()
-            try:
-                start = float(self._sweep_start.text())
-                stop = float(self._sweep_stop.text())
-                step = float(self._sweep_step.text())
-            except ValueError:
-                display_error_message(
-                    "Please enter valid numeric values for the sweep."
-                )
-                return
-            if step <= 0 or stop < start:
-                display_error_message(
-                    "Please ensure that Stop > Start and Step > 0 for the sweep."
-                )
-                return
-            sweep_values = [
-                start + i * step for i in range(int((stop - start) / step) + 1)
-            ]
-            elastic_property = material_datastore[material_key].properties["elasticity"]
-
-            sweep_dirs: list[Path] = [
-                Path(dir_path) / f"{value:.3e}" for value in sweep_values
-            ]
-            # Reset outputs from any previous runs so progress counting is accurate
-            self._job_outputs.clear()
-            self._job_list_widget.clear()
-            self._progress_bar.setValue(0)
-
-            for sweep_dir in sweep_dirs:
-                # populate the UI immediately with job entries
-                self._job_list_widget.addItem(str(sweep_dir))
-
-            self._progress_bar.setMaximum(len(sweep_dirs))
-            self._progress_bar.setValue(0)
-
-            num_jobs = len(sweep_dirs)
-            num_cpus, max_workers, total_cpus = self._compute_worker_assignment(
-                num_jobs
-            )
-            self._log(
-                f"Running {num_jobs} jobs in parallel "
-                f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
-                f"{total_cpus} CPUs available) (Parameter Sweep)"
-            )
-
-            # Immediately update UI
-            self._set_running_ui(True)
-            self._log("Scheduling parameter sweep jobs...")
-
-            # Cancel any previous run before starting a new one
-            self._shutdown_executor(cancel_futures=True)
-
-            self._executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=max_workers
-            )
-            # remember sweep dirs for shutdown logic
-            self._sweep_dirs = list(sweep_dirs)
-
-            # Submit tasks that first generate outputs then run the container
-            # This keeps the file creation off the UI thread
-            for v in sweep_values:
-                sweep_dir = Path(dir_path) / f"{v:.3e}"
-                future = self._executor.submit(
-                    self._sweep_then_run, elastic_property, v, dir_path, num_cpus
-                )
-                future.add_done_callback(self._make_done_callback(sweep_dir))
-                self._futures.append(future)
-
+            self._start_solidity_sweep()
         elif tab == 1:
-            # Batch Run: use existing sub-directories under a chosen parent directory
-            if not self._batch_parent_dir:
-                display_error_message("Please select a batch run directory first.")
-                return
-
-            parent = Path(self._batch_parent_dir)
-            subdirs = sorted([p for p in parent.iterdir() if p.is_dir()])
-            if not subdirs:
-                display_error_message(
-                    "No sub-directories found in the selected batch run directory."
-                )
-                return
-
-            # Reset outputs from any previous runs so progress counting is accurate
-            self._job_outputs.clear()
-            self._job_list_widget.clear()
-            self._progress_bar.setValue(0)
-            for sd in subdirs:
-                self._job_list_widget.addItem(str(sd))
-            self._progress_bar.setMaximum(len(subdirs))
-
-            num_jobs = len(subdirs)
-            num_cpus, max_workers, total_cpus = self._compute_worker_assignment(
-                num_jobs
-            )
-            self._log(
-                f"Running {num_jobs} jobs in parallel "
-                f"(max_workers={max_workers}, {num_cpus} CPUs per job, "
-                f"{total_cpus} CPUs available) (Batch Run)"
-            )
-
-            # Immediately update UI
-            self._set_running_ui(True)
-            self._log("Scheduling batch run jobs...")
-
-            # Cancel any previous run before starting a new one
-            self._shutdown_executor(cancel_futures=True)
-
-            self._executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=max_workers
-            )
-            # remember sweep dirs for shutdown logic
-            self._sweep_dirs = list(subdirs)
-
-            # Submit tasks: run solver in each subdir
-            for sd in subdirs:
-                future = self._executor.submit(self._run_solidity_job, sd, num_cpus)
-                future.add_done_callback(self._make_done_callback(sd))
-                self._futures.append(future)
-
+            self._start_solidity_batch()
         elif tab == 0:
-            if not all(
-                [
-                    self.y3d_file_path,
-                    self.layout_file_path,
-                    self.pellet_file_path,
-                    self.materials_file_path,
-                ]
-            ):
-                display_error_message("Please select all input files before starting.")
-                return
-            self._start_btn.setEnabled(False)
-            self._cpu_spin_box.setEnabled(False)
-            self._log("Setting up Solidity (this may take some time)...")
-            pub.sendMessage("docker.pull")
+            self._start_solidity_single()
 
     def _on_docker_pulled(self) -> None:
         self._log("Starting Solidity...")
