@@ -38,7 +38,7 @@ class FileMenu(QMenu):
         self.addSeparator()
 
         self.solidity_files_action = create_action(
-            self, "&Create Solidity Input Files", generate_output_files
+            self, "&Create Solidity Input Files", lambda: generate_output_files()
         )
         self.solidity_files_action.setEnabled(False)
         self.addAction(self.solidity_files_action)
