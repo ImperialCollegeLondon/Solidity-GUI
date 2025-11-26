@@ -8,12 +8,11 @@ from PyInstaller.utils.hooks import collect_submodules
 
 block_cipher = None
 
-mac_address_verification_hook = Path.cwd() / "setup_mac_address_verification.py"
+docker_env_hook = Path.cwd() / "solidity_docker_env_hook.py"
 runtime_hooks = []
-if mac_address_verification_hook.exists():
-    logging.warn("setup_mac_address_verification.py found. Adding MAC verification to program.")
-    runtime_hooks.append(str(mac_address_verification_hook))
-
+if docker_env_hook.exists():
+    logging.warn("solidity_docker_env_hook.py found. Adding Docker image env variables to program.")
+    runtime_hooks.append(str(docker_env_hook))
 extra_hiddenimports = os.getenv("PLUGIN_IMPORT_PATHS", "")
 extra_hiddenimports = extra_hiddenimports.strip().split(",")
 extra_hiddenimports = [extra for extra in extra_hiddenimports if extra]
