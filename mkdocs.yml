@@ -1,4 +1,4 @@
-site_name: Solidity-GUI
+site_name: Solidity GUI Documentation
 repo_url: https://github.com/ImperialCollegeLondon/Solidity-GUI
 watch: [solidity_gui]
 
@@ -35,7 +35,14 @@ plugins:
         paths: [solidity_gui]
 
 nav:
-- Solidity-GUI documentation: index.md
-- Developer Documentation: developer.md
-# defer to gen-files + literate-nav
-- Code Reference: reference/
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - User Guide: user_guide.md
+  - Configuration: configuration.md
+  - Developer Guide: developer.md
+  - API Reference:
+    - Overview: reference/index.md
+  - Testing: testing.md
+  - Build & Deployment: build_deployment.md
+  - FAQ: faq.md
+  - Contributing: contributing.md
