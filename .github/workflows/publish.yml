@@ -8,69 +8,12 @@ jobs:
 
   build:
     needs: test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        python-version: ["3.10"]
-
-    steps:
-    - uses: actions/checkout@v5
-
-    - uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: "dev-requirements.txt"
-
-    - name: Install Dependencies (Linux)
-      run: |
-        sudo apt update
-        sudo apt-get install -y libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
-            libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 \
-            x11-utils libegl1 libglu1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
-            libxcb-render-util0 libxkbcommon-x11-0 libxcb-cursor0 libglu1-mesa
-      if: matrix.os == 'ubuntu-latest'
-
-    - name: Setup XServer and Window Manager (Linux)
-      run: |
-        /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid \
-          --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 \
-          1920x1200x24 -ac +extension GLX +render -noreset
-      if: matrix.os == 'ubuntu-latest'
-
-    - name: Install dependencies
-      run: pip install -r dev-requirements.txt
-
-    - name: Build executable
-      run: pyinstaller Solidity-GUI.spec
-
-    - uses: actions/upload-artifact@v5
-      if: success()
-      with:
-        name: Solidity-GUI-${{matrix.os}}
-        path: dist/*
+    uses: ./.github/workflows/build_executable.yml
+    with:
+      python-version: "3.11"
 
   docs:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v5
-
-    - uses: actions/setup-python@v6
-      with:
-        python-version: "3.10"
-
-    - name: Install system dependencies in Linux
-      run: |
-        sudo apt update
-
-        # Without this, PySide6 gives an ImportError
-        sudo apt install libegl1
-
-    - name: Install dependencies
-      run: pip install -r dev-requirements.txt
-
-    - name: Deploy Docs
-      run: mkdocs gh-deploy --force
+    needs: test
+    uses: ./.github/workflows/docs.yml
+    with:
+      python-version: "3.11"
