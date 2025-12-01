@@ -1,5 +1,7 @@
 """Configuration settings for the program."""
 
+import os
+
 APP_NAME = "Solidity GUI"
 """The name of the app."""
 
@@ -54,10 +56,16 @@ SOLIDITY_Y3D_TEMPLATE_FILE = "BST.Y3D.jinja"
 SOLIDITY_MAT_TEMPLATE_FILE = "mat.txt.jinja"
 """Solidity mat.txt template file."""
 
-DOCKER_IMAGE_DIGEST = "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
+DOCKER_IMAGE_DIGEST = os.environ.get(
+    "SOLIDITY_DOCKER_IMAGE_DIGEST",
+    "07007769c02f5b7bddc6d3e3bf94b8bf6f1df693a77c598b1d7b96565bcdb2f0",
+)
 """The SHA256 digest for the Docker image. Used to pull a specific version."""
 
-DOCKER_IMAGE_ID = "4c665268d3d7a883721277912eee966306322921603bf5817e82efa9f01f684b"
+DOCKER_IMAGE_ID = os.environ.get(
+    "SOLIDITY_DOCKER_IMAGE_ID",
+    "07007769c02f5b7bddc6d3e3bf94b8bf6f1df693a77c598b1d7b96565bcdb2f0",
+)
 """The content-addressable image ID for the Docker image. This is different from the
 image digest above. To check what the image ID is, use the get_docker_image_id.py
 script."""
@@ -65,8 +73,9 @@ script."""
 DOCKER_IMAGE_ID_SHORT = DOCKER_IMAGE_ID[:12]
 """A shorter, more human-readable version of the image ID."""
 
-SOLIDITY_DOCKER_IMAGE = (
-    f"ghcr.io/imperialcollegelondon/solidity_project_dev@sha256:{DOCKER_IMAGE_DIGEST}"
+SOLIDITY_DOCKER_IMAGE = os.environ.get(
+    "SOLIDITY_DOCKER_IMAGE",
+    f"ghcr.io/imperialcollegelondon/solidity-solver-open@sha256:{DOCKER_IMAGE_DIGEST}",
 )
 """The path to the Docker image to run."""
 
