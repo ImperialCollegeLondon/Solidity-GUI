@@ -29,8 +29,7 @@ a = Analysis(
     pathex=[],
     binaries=[(gmsh_lib, ".")],
     datas=[("solidity_gui/templates/BST.Y3D.jinja", "solidity_gui/templates"),
-            ("solidity_gui/templates/mat.txt.jinja", "solidity_gui/templates"),
-            ("solidity_gui/plugins/drillco/_keygen_id.py", "solidity_gui/plugins/drillco")],
+            ("solidity_gui/templates/mat.txt.jinja", "solidity_gui/templates")],
     hiddenimports=[
         "gmsh",
         "PySide6.plugins",
