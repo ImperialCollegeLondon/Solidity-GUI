@@ -60,7 +60,7 @@ jobs:
         run: pyinstaller Solidity-GUI.spec
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Solidity-GUI-open-${{ matrix.os }}
           path: dist/*
