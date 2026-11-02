@@ -67,7 +67,7 @@ pygments==2.16.1
     # via rich
 pygmsh==7.1.17
     # via SolidityGUI (pyproject.toml)
-pyparsing==3.0.9
+pyparsing==3.2.5
     # via matplotlib
 pypubsub==4.0.3
     # via SolidityGUI (pyproject.toml)
